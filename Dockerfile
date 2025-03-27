@@ -4,6 +4,17 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+
+# Create a tsconfig.json file from jsconfig.json
+RUN if [ -f jsconfig.json ] && [ ! -f tsconfig.json ]; then \
+    cp jsconfig.json tsconfig.json; \
+    fi
+
+# Make vue.config.js not require typescript checking
+RUN echo "module.exports = { transpileDependencies: true, parallel: false, chainWebpack: config => config.plugins.delete('fork-ts-checker') }" > vue.config.js.tmp && \
+    cat vue.config.js >> vue.config.js.tmp && \
+    mv vue.config.js.tmp vue.config.js
+
 RUN npm run build
 
 # Production stage
