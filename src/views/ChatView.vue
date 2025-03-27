@@ -148,12 +148,10 @@ import { ref, onMounted, nextTick, computed } from 'vue';
 import MarkdownIt from 'markdown-it';
 import { handleStreamingResponse, safeJsonParse } from '../utils/streamUtils';
 
-// Quick action buttons
-const quickActions = ref([
-  '小米15值得买么',
-  '红米k80和IQOO13哪个好',
-  '为我介绍小米集团'
-]);
+import appConfig from '../config/app.config';
+
+// Quick action buttons - loaded from config
+const quickActions = ref(appConfig.quickActionButtons);
 
 // Handler for quick action buttons
 const handleQuickAction = (actionText) => {
@@ -229,14 +227,29 @@ const handleDrag = (event) => {
   // Calculate new height based on drag direction
   // Moving up = increase height, moving down = decrease height
   const deltaY = dragStartY.value - currentY;
-  const windowHeight_vh = document.documentElement.clientHeight / 100;
-  const newHeight = dragStartHeight.value + (deltaY / windowHeight_vh);
+  
+  // Use window height for precise calculation
+  const windowHeight_px = document.documentElement.clientHeight;
+  
+  // Increase sensitivity for downward movement (negative deltaY)
+  const sensitivityFactor = deltaY < 0 ? 1.5 : 1.0; // Increase sensitivity for downward movement
+  const adjustedDeltaY = deltaY * sensitivityFactor;
+  
+  // Convert to percentage of viewport height
+  const deltaPercent = (adjustedDeltaY / windowHeight_px) * 100;
+  const newHeight = dragStartHeight.value + deltaPercent;
   
   // Set limits - minimum 30%, maximum 100%
   windowHeight.value = Math.min(Math.max(newHeight, 30), 100);
   
-  // If we're at 100%, set fullscreen mode
+  // Update fullscreen state based on window height
   isFullscreen.value = windowHeight.value >= 95;
+  
+  // Immediate update to make dragging feel more responsive
+  nextTick(() => {
+    // Force browser to repaint, making the drag feel more responsive
+    window.requestAnimationFrame(() => {});
+  });
 };
 
 const endDrag = () => {
@@ -402,6 +415,9 @@ const sendFollowUpResponse = (optionText) => {
 
 // Using safeJsonParse from streamUtils.js
 
+// Flag to track if this is the first message
+const isFirstMessage = ref(true);
+
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return;
   
@@ -413,6 +429,13 @@ const sendMessage = async () => {
     role: 'user',
     content: userMessage
   });
+  
+  // If this is the first message, update the page title
+  if (isFirstMessage.value) {
+    // Update document title with the user's query
+    document.title = `${userMessage} - ${appConfig.defaultPageTitle}`;
+    isFirstMessage.value = false;
+  }
   
   // Clear input field
   userInput.value = '';
@@ -1098,24 +1121,36 @@ input {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 40px;
-  height: 28px;
+  width: 50px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: grab;
-  background-color: rgba(240, 240, 240, 0.8);
-  border-radius: 12px;
+  background-color: rgba(240, 240, 240, 0.9);
+  border-radius: 16px;
   z-index: 10;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  touch-action: none; /* Improves touch handling */
+}
+
+.drag-handle:hover {
+  background-color: rgba(230, 230, 230, 0.95);
 }
 
 .drag-handle:active {
   cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.05);
+  background-color: rgba(224, 224, 224, 1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
 .drag-icon {
-  font-size: 20px;
-  color: #666;
+  font-size: 22px;
+  color: #555;
+  user-select: none; /* Prevent text selection during drag */
 }
 
 .expand-button, .close-button {
