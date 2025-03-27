@@ -50,6 +50,18 @@
 
     <!-- Chat content -->
     <div class="chat-content" ref="chatContent">
+      <!-- Quick action buttons -->
+      <div class="quick-actions">
+        <button 
+          v-for="(action, index) in quickActions" 
+          :key="index"
+          class="quick-action-button"
+          @click="handleQuickAction(action)"
+        >
+          {{ action }}
+        </button>
+      </div>
+      
       <!-- Messages -->
       <div v-for="(message, index) in messages" :key="index">
         <!-- User message -->
@@ -135,6 +147,21 @@
 import { ref, onMounted, nextTick, computed } from 'vue';
 import MarkdownIt from 'markdown-it';
 import { handleStreamingResponse, safeJsonParse } from '../utils/streamUtils';
+
+// Quick action buttons
+const quickActions = ref([
+  '小米15值得买么',
+  '红米k80和IQOO13哪个好',
+  '为我介绍小米集团'
+]);
+
+// Handler for quick action buttons
+const handleQuickAction = (actionText) => {
+  // Set the input value to the action text
+  userInput.value = actionText;
+  // Send the message
+  sendMessage();
+};
 
 // Product window state
 const showProductWindow = ref(false);
@@ -960,6 +987,42 @@ input {
 .toolbar-item i {
   margin-right: 4px;
   font-size: 14px;
+}
+
+/* Quick action buttons */
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.quick-action-button {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.quick-action-button:hover {
+  background-color: #e9e9e9;
+  border-color: #ccc;
+}
+
+.quick-action-button:active {
+  background-color: #ff6700;
+  color: white;
+  border-color: #ff6700;
 }
 
 /* Product floating window */
