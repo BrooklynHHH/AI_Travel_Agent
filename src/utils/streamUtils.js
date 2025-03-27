@@ -442,7 +442,7 @@ export const handleStreamingResponse = async (response, options = {}) => {
         // Only break if we've already seen an end event
         if (isStreamEnded) {
           debug && console.log('Stream end event received, ending stream reception');
-          reading = false;n
+          reading = false;
           
           // Process any remaining data in the buffer
           if (buffer.trim()) {
