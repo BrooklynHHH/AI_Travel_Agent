@@ -154,6 +154,15 @@ const md = new MarkdownIt({
   breaks: true
 });
 
+// Process custom product format before rendering markdown
+const processCustomProductFormat = (content) => {
+  // Find patterns like <小米15>(aisearch://product/{原有链接})
+  const regex = /<([^>]+)>\(aisearch:\/\/product\/([^)]+)\)/g;
+  
+  // Replace with markdown link syntax [小米15](aisearch://product/{原有链接})
+  return content.replace(regex, '[$1](aisearch://product/$2)');
+};
+
 // Add a custom attribute to links to identify them
 md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
   const token = tokens[idx];
@@ -169,7 +178,13 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
       const productPath = href.substring('aisearch://product/'.length);
       token.attrPush(['data-product-url', productPath]);
       token.attrPush(['data-product', productPath]);
-    } else {
+    } 
+    // Check if it's a jump link (to external URL)
+    else if (href.startsWith('aisearch://jump/')) {
+      const jumpUrl = href.substring('aisearch://jump/'.length);
+      token.attrPush(['data-jump-url', jumpUrl]);
+    }
+    else {
       token.attrPush(['data-product', href.substring('aisearch://'.length)]);
     }
   } else {
@@ -187,9 +202,17 @@ const handleContentClick = (event) => {
   if (event.target.tagName === 'A' && event.target.classList.contains('special-link')) {
     event.preventDefault();
     
+    // Check if it's a jump link (to external URL)
+    const jumpUrl = event.target.getAttribute('data-jump-url');
+    if (jumpUrl) {
+      // Extract the URL and use it in the floating window
+      productName.value = '外部链接';  // Set a generic title for the header
+      productUrl.value = jumpUrl;
+      showProductWindow.value = true;
+    }
     // Check if it has a product URL
-    const productUrlAttr = event.target.getAttribute('data-product-url');
-    if (productUrlAttr) {
+    else if (event.target.hasAttribute('data-product-url')) {
+      const productUrlAttr = event.target.getAttribute('data-product-url');
       productName.value = productUrlAttr;
       productUrl.value = productUrlAttr;
       showProductWindow.value = true;
@@ -221,7 +244,9 @@ const messages = ref([]);
 // Markdown renderer function
 const renderMarkdown = (content) => {
   if (!content) return '';
-  return md.render(content);
+  // Process the custom product format before rendering markdown
+  const processedContent = processCustomProductFormat(content);
+  return md.render(processedContent);
 };
 
 // Methods
@@ -1351,8 +1376,16 @@ input {
   color: black !important;
   font-weight: bold;
   font-style: italic;
-  text-decoration: underline;
+  text-decoration: none; /* Remove underline */
   cursor: pointer;
+  background-color: rgba(255, 103, 0, 0.1); /* Light orange background */
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* Hover effect for special links */
+.special-link:hover {
+  background-color: rgba(255, 103, 0, 0.2);
 }
 
 /* Follow-up question styles */
