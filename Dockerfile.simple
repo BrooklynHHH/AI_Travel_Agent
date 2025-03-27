@@ -1,0 +1,14 @@
+# Use nginx as the base image
+FROM nginx:stable-alpine
+
+# Copy the pre-built application files to nginx's serve directory
+COPY dist/ /usr/share/nginx/html/
+
+# Copy our custom nginx config
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx with global directives and daemon off
+CMD ["nginx", "-g", "daemon off;"]

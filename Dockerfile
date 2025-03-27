@@ -10,10 +10,23 @@ RUN if [ -f jsconfig.json ] && [ ! -f tsconfig.json ]; then \
     cp jsconfig.json tsconfig.json; \
     fi
 
-# Make vue.config.js not require typescript checking
-RUN echo "module.exports = { transpileDependencies: true, parallel: false, chainWebpack: config => config.plugins.delete('fork-ts-checker') }" > vue.config.js.tmp && \
-    cat vue.config.js >> vue.config.js.tmp && \
-    mv vue.config.js.tmp vue.config.js
+# Create a simplified vue.config.js that fixes the entry points and disables TS checking
+RUN echo "const { defineConfig } = require('@vue/cli-service'); \
+module.exports = defineConfig({ \
+  transpileDependencies: true, \
+  chainWebpack: config => { \
+    config.plugins.delete('fork-ts-checker'); \
+    config.entry('app').clear().add('./src/main.js'); \
+  }, \
+  configureWebpack: { \
+    resolve: { \
+      alias: { \
+        '@': '/app/src' \
+      }, \
+      extensions: ['.js', '.vue', '.json'] \
+    } \
+  } \
+});" > vue.config.js
 
 RUN npm run build
 

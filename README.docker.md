@@ -9,23 +9,52 @@ Mi-App 是一个基于 Vue.js 的前端应用，该 Docker 配置将应用打包
 ## 系统要求
 
 - Docker
-- Docker Compose
+- Node.js (仅用于简单部署方式)
+- npm (仅用于简单部署方式)
 
-## Docker 文件结构
+## 部署方式
 
+Mi-App 提供两种 Docker 部署方式：
+
+### 方式一：简单部署（推荐）
+
+这种方式在本地构建应用，然后将构建好的文件打包到 Docker 容器中。这种方式更加可靠，不会遇到构建环境差异问题。
+
+**文件结构:**
 ```
 mi-app/
-├── Dockerfile        # 多阶段构建配置
+├── Dockerfile.simple    # 简单的 Nginx 容器配置
+├── docker-build-simple.sh  # 简单部署脚本
+└── docker/
+    └── nginx.conf       # Nginx 配置
+```
+
+**快速部署:**
+```bash
+cd mi-app
+./docker-build-simple.sh
+```
+
+该脚本会执行以下操作:
+1. 在本地构建 Vue 应用
+2. 使用 Dockerfile.simple 创建 Docker 镜像
+3. 询问是否启动容器
+
+### 方式二：多阶段构建
+
+这种方式使用 Docker 多阶段构建，在 Docker 容器内完成整个应用的构建和部署过程。
+
+**文件结构:**
+```
+mi-app/
+├── Dockerfile           # 多阶段构建配置
 ├── docker-compose.yml   # Docker Compose 配置
 ├── docker-deploy.sh     # 部署脚本
 └── docker/
     └── nginx.conf       # Nginx 配置
 ```
 
-## 快速部署
-
-最简单的部署方式是使用提供的部署脚本:
-
+**快速部署:**
 ```bash
 cd mi-app
 ./docker-deploy.sh
