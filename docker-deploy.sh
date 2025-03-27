@@ -23,6 +23,8 @@ case $deploy_mode in
   1)
     # 构建并启动
     echo "正在构建并启动Mi-App容器..."
+    # 使用当前日期时间作为构建标签，确保每次都会重新构建
+    export BUILD_DATE=$(date +%Y%m%d%H%M%S)
     docker-compose up --build -d
     echo "Mi-App容器已启动!"
     
@@ -40,6 +42,8 @@ case $deploy_mode in
   2)
     # 仅构建镜像
     echo "正在构建Mi-App Docker镜像..."
+    # 使用当前日期时间作为构建标签，确保每次都会重新构建
+    export BUILD_DATE=$(date +%Y%m%d%H%M%S)
     docker-compose build
     echo "Mi-App Docker镜像构建完成!"
     

@@ -1,5 +1,7 @@
 # Build stage
+ARG BUILD_DATE=20250327
 FROM node:16-alpine as build-stage
+LABEL build_date=$BUILD_DATE
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -32,6 +34,7 @@ RUN npm run build
 
 # Production stage
 FROM nginx:stable-alpine as production-stage
+LABEL build_date=$BUILD_DATE
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

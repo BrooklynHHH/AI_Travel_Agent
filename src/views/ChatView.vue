@@ -2,9 +2,20 @@
   <div class="chat-container">
     <!-- Product floating window -->
     <div v-if="showProductWindow" class="product-window" @click="closeProductWindow">
-      <div class="product-window-content" :class="{ 'fullscreen': isFullscreen }" @click.stop>
+      <div 
+        class="product-window-content" 
+        :class="{ 'fullscreen': isFullscreen }" 
+        :style="{ height: windowHeight + '%' }"
+        @click.stop
+      >
         <div class="product-window-header">
-          <h3>商品浮窗</h3>
+          <h3>{{ productPageTitle }}</h3>
+          <div class="drag-handle" 
+            @mousedown="startDrag" 
+            @touchstart="startDrag"
+          >
+            <span class="drag-icon">≡</span>
+          </div>
           <div class="header-buttons">
             <button class="expand-button" @click="toggleFullscreen">{{ isFullscreen ? '▼' : '▲' }}</button>
             <button class="close-button" @click="closeProductWindow">×</button>
@@ -121,7 +132,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, computed } from 'vue';
 import MarkdownIt from 'markdown-it';
 import { handleStreamingResponse, safeJsonParse } from '../utils/streamUtils';
 
@@ -130,6 +141,84 @@ const showProductWindow = ref(false);
 const productName = ref('');
 const productUrl = ref('');
 const isFullscreen = ref(false);
+const windowHeight = ref(50); // Default height is 50%
+const isDragging = ref(false);
+const dragStartY = ref(0);
+const dragStartHeight = ref(0);
+
+// Computed property for the product window title
+const productPageTitle = computed(() => {
+  if (productUrl.value) {
+    // Extract domain name for URLs
+    try {
+      const url = new URL(productUrl.value);
+      return url.hostname.replace('www.', '') || '外部链接';
+    } catch (e) {
+      // If it's not a proper URL, show the URL as is or default text
+      return productName.value || '页面内容';
+    }
+  }
+  return productName.value || '页面内容';
+});
+
+// Drag functionality
+const startDrag = (event) => {
+  event.preventDefault();
+  isDragging.value = true;
+  
+  // Get starting position
+  if (event.type === 'mousedown') {
+    dragStartY.value = event.clientY;
+  } else if (event.type === 'touchstart') {
+    dragStartY.value = event.touches[0].clientY;
+  }
+  
+  // Store current height
+  dragStartHeight.value = windowHeight.value;
+  
+  // Add event listeners for move and end
+  document.addEventListener('mousemove', handleDrag);
+  document.addEventListener('touchmove', handleDrag, { passive: false });
+  document.addEventListener('mouseup', endDrag);
+  document.addEventListener('touchend', endDrag);
+};
+
+const handleDrag = (event) => {
+  if (!isDragging.value) return;
+  
+  // Prevent default touch behavior
+  if (event.type === 'touchmove') {
+    event.preventDefault();
+  }
+  
+  // Calculate movement
+  let currentY;
+  if (event.type === 'mousemove') {
+    currentY = event.clientY;
+  } else if (event.type === 'touchmove') {
+    currentY = event.touches[0].clientY;
+  }
+  
+  // Calculate new height based on drag direction
+  // Moving up = increase height, moving down = decrease height
+  const deltaY = dragStartY.value - currentY;
+  const windowHeight_vh = document.documentElement.clientHeight / 100;
+  const newHeight = dragStartHeight.value + (deltaY / windowHeight_vh);
+  
+  // Set limits - minimum 30%, maximum 100%
+  windowHeight.value = Math.min(Math.max(newHeight, 30), 100);
+  
+  // If we're at 100%, set fullscreen mode
+  isFullscreen.value = windowHeight.value >= 95;
+};
+
+const endDrag = () => {
+  isDragging.value = false;
+  document.removeEventListener('mousemove', handleDrag);
+  document.removeEventListener('touchmove', handleDrag);
+  document.removeEventListener('mouseup', endDrag);
+  document.removeEventListener('touchend', endDrag);
+};
 
 // Function to close product window
 const closeProductWindow = () => {
@@ -142,6 +231,13 @@ const closeProductWindow = () => {
 const toggleFullscreen = (event) => {
   event.stopPropagation();
   isFullscreen.value = !isFullscreen.value;
+  
+  // Also update window height to match fullscreen state
+  if (isFullscreen.value) {
+    windowHeight.value = 100; // Full height when fullscreen
+  } else {
+    windowHeight.value = 50; // Default height when not fullscreen
+  }
 };
 
 // Initialize markdown-it renderer with custom link rendering
@@ -914,6 +1010,7 @@ input {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .header-buttons {
@@ -926,6 +1023,36 @@ input {
   color: #333;
   font-size: 18px;
   font-weight: 600;
+  text-align: left;
+  margin-right: 50px; /* Make room for the drag handle */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drag-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  background-color: rgba(240, 240, 240, 0.8);
+  border-radius: 12px;
+  z-index: 10;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-icon {
+  font-size: 20px;
+  color: #666;
 }
 
 .expand-button, .close-button {
