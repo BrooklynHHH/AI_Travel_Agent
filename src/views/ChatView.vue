@@ -22,7 +22,21 @@
           </div>
         </div>
         <div class="product-window-body">
-          <iframe v-if="productUrl" :src="productUrl" class="product-iframe" frameborder="0" allow="scripts" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation allow-top-navigation-by-user-activation"></iframe>
+          <iframe 
+            v-if="productUrl" 
+            :src="productUrl" 
+            :key="iframeKey"
+            class="product-iframe" 
+            frameborder="0" 
+            allow="scripts"
+            referrerpolicy="origin" 
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation allow-top-navigation-by-user-activation"
+            @load="onIframeLoad"
+          ></iframe>
+          <div v-else-if="isLoading" class="iframe-loading">
+            <div class="loading-spinner"></div>
+            <p>正在加载内容...</p>
+          </div>
           <p v-else class="product-name">{{ productName }}</p>
         </div>
       </div>
@@ -201,6 +215,14 @@ const windowHeight = ref(50); // Default height is 50%
 const isDragging = ref(false);
 const dragStartY = ref(0);
 const dragStartHeight = ref(0);
+const iframeKey = ref(0); // 用于强制重新加载iframe
+const isLoading = ref(false); // 加载状态
+
+// iframe加载事件处理
+const onIframeLoad = () => {
+  console.log('Iframe加载完成');
+  isLoading.value = false;
+};
 
 // Computed property for the product window title
 const productPageTitle = computed(() => {
@@ -514,7 +536,7 @@ const saveApiKey = () => {
 const currentTime = ref('');
 const userInput = ref('');
 const chatContent = ref(null);
-const isLoading = ref(false);
+// isLoading在前面已经声明，此处不再重复声明
 const streamingMessage = ref('');
 const streamingMessageFollowUp = ref(null);
 const conversationId = ref('');
@@ -552,13 +574,39 @@ const scrollToBottom = () => {
 
 // Function to handle sending follow-up responses
 const sendFollowUpResponse = (optionText) => {
-  // 使用代理百度搜索URL，避免跨域问题
-  const searchUrl = `/baidu-proxy/s?wd=${encodeURIComponent(optionText)}`;
+  console.log('处理跟进搜索:', optionText);
   
-  // Open product window with the search URL
+  // 端口可能变化，因此使用相对路径
+  const searchUrl = `/baidu-proxy/s?wd=${encodeURIComponent(optionText)}`;
+  console.log('生成的搜索URL:', searchUrl);
+  
+  // 清除当前浮窗内容并显示加载状态
+  productUrl.value = '';
+  isLoading.value = true;
+  
+  // 设置浮窗标题和显示状态
   productName.value = optionText;
-  productUrl.value = searchUrl;
   showProductWindow.value = true;
+  
+  // 增加iframeKey使iframe强制重新加载
+  iframeKey.value++;
+  
+  // 使用较长的延迟确保DOM已更新
+  setTimeout(() => {
+    productUrl.value = searchUrl;
+    console.log('浮窗URL已设置为:', productUrl.value);
+    
+    // 设置超时处理，如果30秒后仍未加载完成，重置加载状态
+    setTimeout(() => {
+      if (isLoading.value) {
+        console.log('加载超时，重置状态');
+        isLoading.value = false;
+        // 显示错误信息
+        productUrl.value = '';
+        productName.value = '加载失败，请重试';
+      }
+    }, 30000);
+  }, 300);
 };
 
 // Using safeJsonParse from streamUtils.js
@@ -1331,6 +1379,36 @@ input {
   font-weight: 500;
   color: #333;
   margin: 16px;
+}
+
+/* 加载状态样式 */
+.iframe-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: #f7f8fc;
+}
+
+.iframe-loading p {
+  margin-top: 16px;
+  color: #666;
+  font-size: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 103, 0, 0.1);
+  border-top-color: #ff6700;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Style for special links (aisearch://) */

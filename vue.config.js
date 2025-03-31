@@ -1,79 +1,34 @@
-const { defineConfig } = require('@vue/cli-service')
-module.exports = defineConfig({
-  transpileDependencies: true,
+module.exports = {
+  transpileDependencies: [],
   devServer: {
     port: 9051,
     proxy: {
       '/baidu-proxy': {
         target: 'https://www.baidu.com',
         changeOrigin: true,
+        secure: false,
         pathRewrite: {
           '^/baidu-proxy': ''
         },
-        headers: function(req) {
-          // 如果存在原始referer，使用它，否则默认使用百度域名
-          const originalReferer = req.headers.referer;
-          // 尝试从referer中提取域名
-          let refererDomain = 'https://www.baidu.com';
-          if (originalReferer) {
-            try {
-              const url = new URL(originalReferer);
-              refererDomain = `${url.protocol}//${url.host}`;
-            } catch (e) {
-              // 如果解析失败，使用默认值
-            }
+        // 最简单的请求头设置
+        onProxyReq: function(proxyReq, req, res) {
+          proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36');
+          proxyReq.setHeader('Referer', 'https://www.baidu.com/');
+          
+          // 移除_source=app参数防止干扰
+          if (req.url.includes('_source=app')) {
+            proxyReq.path = req.url.replace(/[?&]_source=app/, '');
           }
-          return {
-            Referer: refererDomain,
-            // 添加Host头，确保百度认为请求来自百度域名
-            Host: 'www.baidu.com'
-          };
         },
-        // 添加响应处理器，修复百度返回中的本地IP链接
+        // 极简响应处理 - 只移除安全头
         onProxyRes: function(proxyRes, req, res) {
-          // 检查是否是来自应用的特殊标记请求
-          const isAppRequest = req.url.includes('_source=app');
+          // 仅删除会阻止iframe加载的安全头
+          delete proxyRes.headers['x-frame-options'];
+          delete proxyRes.headers['content-security-policy'];
           
-          // 如果不是HTML响应或非应用请求，不处理
-          const contentType = proxyRes.headers['content-type'] || '';
-          if (!isAppRequest || !contentType.includes('text/html')) {
-            return;
-          }
-          
-          // 获取本地服务器的地址
-          const localAddress = req.headers.host || 'localhost:9051';
-          
-          // 设置响应编码处理
-          const _write = res.write;
-          const _end = res.end;
-          
-          // 重写响应流，替换本地IP为百度域名
-          let responseBody = '';
-          
-          // 监听数据块
-          proxyRes.on('data', (data) => {
-            responseBody += data.toString('utf8');
-          });
-          
-          // 在响应结束时处理内容
-          proxyRes.on('end', () => {
-            // 替换所有形如 http://192.168.31.223:9051/s?... 的链接为 https://www.baidu.com/s?...
-            const modifiedBody = responseBody.replace(
-              new RegExp(`http:\\/\\/${localAddress.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\/`, 'g'), 
-              'https://www.baidu.com/'
-            );
-            
-            // 更新Content-Length头
-            const bodyBuffer = Buffer.from(modifiedBody, 'utf8');
-            res.setHeader('Content-Length', bodyBuffer.length);
-            
-            // 发送修改后的响应
-            res.end(bodyBuffer);
-          });
-          
-          // 禁用原始的写入和结束方法
-          res.write = function() { return true; };
-          res.end = function() { return true; };
+          // 更改响应类型的日志
+          console.log('收到响应:', proxyRes.statusCode, proxyRes.statusMessage);
+          console.log('内容类型:', proxyRes.headers['content-type']);
         }
       },
       '/external-proxy': {
@@ -103,4 +58,4 @@ module.exports = defineConfig({
       }
     }
   }
-})
+}
