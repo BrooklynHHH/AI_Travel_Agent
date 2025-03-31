@@ -1,20 +1,22 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import ChatView from '../views/ChatView.vue'
-
-Vue.use(VueRouter)
+import MovieChatView from '../views/MovieChatView.vue'
 
 const routes = [
   {
     path: '/',
     name: 'chat',
     component: ChatView
+  },
+  {
+    path: '/movieChat',
+    name: 'movieChat',
+    component: MovieChatView
   }
 ]
 
-const router = new VueRouter({
-  mode: 'history',
-  base: process.env.BASE_URL,
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL),
   routes
 })
 
