@@ -376,24 +376,25 @@ const handleContentClick = (event) => {
       // Extract the URL and use it in the floating window
       productName.value = '外部链接';  // Set a generic title for the header
       
-      // 直接使用jumpUrl，因为它已经是完整的URL（以http开头）
+      // 确保URL格式正确
       let actualUrl = jumpUrl;
-      
-      // 如果不是以http开头，则添加https://前缀
       if (!jumpUrl.startsWith('http://') && !jumpUrl.startsWith('https://')) {
         actualUrl = 'https://' + jumpUrl;
       }
       
       console.log('使用URL:', actualUrl);
       
-      // Check if this is a Baidu URL and use our proxy if it is
+      // Check if this is a Baidu URL and use our baidu-proxy if it is
       if (actualUrl.includes('baidu.com')) {
         // Replace the Baidu domain with our proxy
         const proxyUrl = actualUrl.replace(/https?:\/\/([^/]*\.)?baidu\.com/, '/baidu-proxy');
         console.log('使用百度代理URL:', proxyUrl);
         productUrl.value = proxyUrl;
       } else {
-        productUrl.value = actualUrl;
+        // 对于非百度域名，使用我们的通用外部代理
+        const proxyUrl = `/external-proxy/${actualUrl}`;
+        console.log('使用外部代理URL:', proxyUrl);
+        productUrl.value = proxyUrl;
       }
       
       showProductWindow.value = true;
