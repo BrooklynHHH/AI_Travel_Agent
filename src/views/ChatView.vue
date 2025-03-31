@@ -347,6 +347,7 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
     // Check if it's a jump link (to external URL)
     else if (href.startsWith('aisearch://jump/')) {
       const jumpUrl = href.substring('aisearch://jump/'.length);
+      console.log('Found jump URL:', jumpUrl);
       token.attrPush(['data-jump-url', jumpUrl]);
     }
     else {
@@ -370,16 +371,29 @@ const handleContentClick = (event) => {
     // Check if it's a jump link (to external URL)
     const jumpUrl = event.target.getAttribute('data-jump-url');
     if (jumpUrl) {
+      console.log('处理跳转链接:', jumpUrl);
+      
       // Extract the URL and use it in the floating window
       productName.value = '外部链接';  // Set a generic title for the header
       
+      // 直接使用jumpUrl，因为它已经是完整的URL（以http开头）
+      let actualUrl = jumpUrl;
+      
+      // 如果不是以http开头，则添加https://前缀
+      if (!jumpUrl.startsWith('http://') && !jumpUrl.startsWith('https://')) {
+        actualUrl = 'https://' + jumpUrl;
+      }
+      
+      console.log('使用URL:', actualUrl);
+      
       // Check if this is a Baidu URL and use our proxy if it is
-      if (jumpUrl.includes('baidu.com')) {
+      if (actualUrl.includes('baidu.com')) {
         // Replace the Baidu domain with our proxy
-        const proxyUrl = jumpUrl.replace(/https?:\/\/([^/]*\.)?baidu\.com/, '/baidu-proxy');
+        const proxyUrl = actualUrl.replace(/https?:\/\/([^/]*\.)?baidu\.com/, '/baidu-proxy');
+        console.log('使用百度代理URL:', proxyUrl);
         productUrl.value = proxyUrl;
       } else {
-        productUrl.value = jumpUrl;
+        productUrl.value = actualUrl;
       }
       
       showProductWindow.value = true;
