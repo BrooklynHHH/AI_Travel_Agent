@@ -480,8 +480,19 @@ const messages = ref([]);
 // Markdown renderer function
 const renderMarkdown = (content) => {
   if (!content) return '';
-  // Process the custom product format before rendering markdown
-  const processedContent = processCustomProductFormat(content);
+  
+  // Process picture tags first
+  const pictureRegex = /<picture>(.*?)<\/picture>/g;
+  const processedPictureContent = content.replace(pictureRegex, (match, url) => {
+    // Basic URL validation
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return `<img src="${url}" class="chat-image" />`;
+    }
+    return match;
+  });
+  
+  // Then process the custom product format
+  const processedContent = processCustomProductFormat(processedPictureContent);
   return md.render(processedContent);
 };
 

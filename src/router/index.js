@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ChatView from '../views/ChatView.vue'
-import MovieChatView from '../views/MovieChatView.vue'
+import MovieView from '../views/MovieView.vue'
 
 const routes = [
   {
@@ -9,9 +9,9 @@ const routes = [
     component: ChatView
   },
   {
-    path: '/movieChat',
-    name: 'movieChat',
-    component: MovieChatView
+    path: '/movie',
+    name: 'movie',
+    component: MovieView
   }
 ]
 
