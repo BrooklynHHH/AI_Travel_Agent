@@ -27,6 +27,32 @@
         </div>
       </div>
     </div>
+    <!-- Settings modal -->
+    <div v-if="showSettingsModal" class="settings-modal" @click="closeSettingsModal">
+      <div class="settings-modal-content" @click.stop>
+        <div class="settings-modal-header">
+          <h3>设置</h3>
+          <button class="close-button" @click="closeSettingsModal">×</button>
+        </div>
+        <div class="settings-modal-body">
+          <div class="settings-form">
+            <div class="form-group">
+              <label for="apiKey">API Key</label>
+              <input 
+                type="text" 
+                id="apiKey" 
+                placeholder="请输入app-xxxx格式的key" 
+                v-model="apiKeyInput"
+                pattern="app-[a-zA-Z0-9]+"
+              />
+              <small class="form-text">格式：app-xxxx</small>
+            </div>
+            <button class="save-button" @click="saveApiKey">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!-- Mobile header -->
     <div class="mobile-header">
       <div class="status-bar">
@@ -48,6 +74,11 @@
       </div>
     </div>
 
+    <!-- Settings Button -->
+    <button class="settings-button" @click="openSettingsModal">
+      <span class="settings-icon">⚙️</span>
+    </button>
+    
     <!-- Chat content -->
     <div class="chat-content" ref="chatContent">
       <!-- Quick action buttons -->
@@ -341,7 +372,16 @@ const handleContentClick = (event) => {
     if (jumpUrl) {
       // Extract the URL and use it in the floating window
       productName.value = '外部链接';  // Set a generic title for the header
-      productUrl.value = jumpUrl;
+      
+      // Check if this is a Baidu URL and use our proxy if it is
+      if (jumpUrl.includes('baidu.com')) {
+        // Replace the Baidu domain with our proxy
+        const proxyUrl = jumpUrl.replace(/https?:\/\/([^/]*\.)?baidu\.com/, '/baidu-proxy');
+        productUrl.value = proxyUrl;
+      } else {
+        productUrl.value = jumpUrl;
+      }
+      
       showProductWindow.value = true;
     }
     // Check if it has a product URL
@@ -360,6 +400,63 @@ const handleContentClick = (event) => {
       }
     }
   }
+};
+
+// Settings state
+const showSettingsModal = ref(false);
+const apiKeyInput = ref('');
+
+// Settings functions
+const openSettingsModal = () => {
+  // Load existing API key from cookie if available
+  const savedApiKey = getCookie('api_key');
+  if (savedApiKey) {
+    apiKeyInput.value = savedApiKey;
+  }
+  showSettingsModal.value = true;
+};
+
+const closeSettingsModal = () => {
+  showSettingsModal.value = false;
+};
+
+// Cookie utility functions
+const setCookie = (name, value, days = 365) => {
+  const d = new Date();
+  d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+  const expires = "expires=" + d.toUTCString();
+  document.cookie = name + "=" + value + ";" + expires + ";path=/";
+};
+
+const getCookie = (name) => {
+  const cookieName = name + "=";
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const cookieArray = decodedCookie.split(';');
+  
+  for (let i = 0; i < cookieArray.length; i++) {
+    let cookie = cookieArray[i].trim();
+    if (cookie.indexOf(cookieName) === 0) {
+      return cookie.substring(cookieName.length, cookie.length);
+    }
+  }
+  return "";
+};
+
+const saveApiKey = () => {
+  // Validate the API key format (app-xxxx)
+  if (!apiKeyInput.value || !apiKeyInput.value.match(/^app-[a-zA-Z0-9]+$/)) {
+    alert('请输入正确格式的API Key (app-xxxx)');
+    return;
+  }
+  
+  // Save to cookie
+  setCookie('api_key', apiKeyInput.value);
+  
+  // Close the settings modal
+  closeSettingsModal();
+  
+  // Provide feedback to user
+  alert('API Key 已保存');
 };
 
 // Data
@@ -404,8 +501,8 @@ const scrollToBottom = () => {
 
 // Function to handle sending follow-up responses
 const sendFollowUpResponse = (optionText) => {
-  // Create Baidu search URL with the option text
-  const searchUrl = `https://www.baidu.com/s?wd=${encodeURIComponent(optionText)}`;
+  // Create Baidu search URL with the option text using our proxy
+  const searchUrl = `/baidu-proxy/s?wd=${encodeURIComponent(optionText)}`;
   
   // Open product window with the search URL
   productName.value = optionText;
@@ -463,8 +560,11 @@ const sendMessage = async () => {
     // Call Xiaomi API
     const url = 'https://mify-be.pt.xiaomi.com/api/v1/chat-messages';
     
+    // 从cookie中获取API key，如果不存在则使用默认值
+    const savedApiKey = getCookie('api_key') || 'app-u456N01sF3Us7rg7QBpcOI2R';
+    
     const headers = {
-      'Authorization': 'Bearer app-u456N01sF3Us7rg7QBpcOI2R',
+      'Authorization': `Bearer ${savedApiKey}`,
       'Content-Type': 'application/json'
     };
     
@@ -1243,5 +1343,146 @@ input {
   background-color: #ff6700;
   color: white;
   border-color: #ff6700;
+}
+
+/* Settings Button */
+.settings-button {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: white;
+  border: 1px solid #eee;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.2s ease;
+}
+
+.settings-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.settings-icon {
+  font-size: 20px;
+}
+
+/* Settings Modal */
+.settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.settings-modal-content {
+  width: 90%;
+  max-width: 400px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: fade-in 0.3s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-modal-header {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-modal-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.settings-modal-body {
+  padding: 20px;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #f8f8f8;
+}
+
+.form-group input:focus {
+  border-color: #ff6700;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 103, 0, 0.1);
+}
+
+.form-text {
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+  display: block;
+}
+
+.save-button {
+  background-color: #ff6700;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  align-self: flex-end;
+}
+
+.save-button:hover {
+  background-color: #e65c00;
+}
+
+.save-button:active {
+  transform: translateY(1px);
 }
 </style>
