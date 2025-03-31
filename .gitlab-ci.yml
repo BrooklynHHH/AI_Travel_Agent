@@ -17,10 +17,10 @@ package_binary_pre:
   stage: package_binary_pre
   script:
     - mkdir output
-    - cp -r `ls |grep -v output|xargs` ./output
+    - cp -r `ls |grep -v output|xargs` ./
   artifacts:
     paths:
-      - output/
+      - ./
   only:
     refs:
       - preview
@@ -30,10 +30,10 @@ package_binary_prd:
   stage: package_binary_prd
   script:
     - mkdir output
-    - cp -r `ls |grep -v output|xargs` ./output
+    - cp -r `ls |grep -v output|xargs` ./
   artifacts:
     paths:
-      - output/
+      - ./
   only:
     refs:
       - main
@@ -44,7 +44,7 @@ build_image_pre:
     name: cr.d.xiaomi.net/containercloud/kaniko-executor-xiaomi:release
     entrypoint: [ "" ]
   script:
-    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/ai-search-rerank-server:preview-$CI_COMMIT_SHORT_SHA
+    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:preview-$CI_COMMIT_SHORT_SHA
     - echo "{\"auths\":{\"$REPO_SERVER\":{\"username\":\"$REPO_USER\",\"password\":\"$REPO_PASS\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --context $CI_PROJECT_DIR --destination $APP_IMAGE --validate-image
   only:
@@ -60,7 +60,7 @@ build_image_prd:
     name: cr.d.xiaomi.net/containercloud/kaniko-executor-xiaomi:release
     entrypoint: [ "" ]
   script:
-    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/ai-search-rerank-server:production-$CI_COMMIT_SHORT_SHA
+    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:production-$CI_COMMIT_SHORT_SHA
     - echo "{\"auths\":{\"$REPO_SERVER\":{\"username\":\"$REPO_USER\",\"password\":\"$REPO_PASS\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --context $CI_PROJECT_DIR --destination $APP_IMAGE --validate-image
   only:
