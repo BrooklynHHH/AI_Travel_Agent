@@ -22,7 +22,7 @@
           </div>
         </div>
         <div class="product-window-body">
-          <iframe v-if="productUrl" :src="productUrl" class="product-iframe" frameborder="0"></iframe>
+          <iframe v-if="productUrl" :src="productUrl" class="product-iframe" frameborder="0" allow="scripts" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation allow-top-navigation-by-user-activation"></iframe>
           <p v-else class="product-name">{{ productName }}</p>
         </div>
       </div>
@@ -160,22 +160,22 @@
         </div>
       </div>
       
-      <div class="bottom-toolbar">
-        <div class="toolbar-item">
-          <i class="depth-icon">🔍</i>
-          <span>深度思考</span>
-        </div>
-        <div class="toolbar-item">
-          <i class="web-icon">🌐</i>
-          <span>联网搜索</span>
-        </div>
-      </div>
+<div class="bottom-toolbar" style="display: none;">
+  <div class="toolbar-item">
+    <i class="depth-icon">🔍</i>
+    <span>深度思考</span>
+  </div>
+  <div class="toolbar-item">
+    <i class="web-icon">🌐</i>
+    <span>联网搜索</span>
+  </div>
+</div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, computed } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import MarkdownIt from 'markdown-it';
 import { handleStreamingResponse, safeJsonParse } from '../utils/streamUtils';
 
@@ -362,6 +362,38 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
   return self.renderToken(tokens, idx, options);
 };
 
+// 监听iframe内部的消息，处理链接点击事件
+const handleIframeMessages = (event) => {
+  // 安全检查，确保消息来源是我们期望的
+  if (event.data && event.data.type === 'linkClick') {
+    console.log('收到iframe链接点击:', event.data.url);
+    
+    // 使用原生方式处理链接
+    if (event.data.url) {
+      const url = event.data.url;
+      
+      // 更新浮窗URL
+      productName.value = '外部链接';
+      productUrl.value = url.startsWith('/') ? url : (url.startsWith('http') ? url : `https://${url}`);
+      
+      // 刷新浮窗内容
+      nextTick(() => {
+        console.log('刷新浮窗内容为:', productUrl.value);
+      });
+    }
+  }
+};
+
+// 添加全局事件监听
+onMounted(() => {
+  window.addEventListener('message', handleIframeMessages);
+});
+
+// 移除事件监听以防内存泄漏
+onUnmounted(() => {
+  window.removeEventListener('message', handleIframeMessages);
+});
+
 // Function to handle click on rendered content
 const handleContentClick = (event) => {
   // Check if clicked element is an aisearch link (with the special-link class)
@@ -384,12 +416,16 @@ const handleContentClick = (event) => {
       
       console.log('使用URL:', actualUrl);
       
-      // Check if this is a Baidu URL and use our baidu-proxy if it is
+      // 使用代理处理第一次访问，避免跨域问题
       if (actualUrl.includes('baidu.com')) {
-        // Replace the Baidu domain with our proxy
+        // 保持百度原始URL结构，仅更换域名部分为代理
+        // 并添加一个特殊参数，标记这是通过我们的应用打开的
         const proxyUrl = actualUrl.replace(/https?:\/\/([^/]*\.)?baidu\.com/, '/baidu-proxy');
         console.log('使用百度代理URL:', proxyUrl);
-        productUrl.value = proxyUrl;
+        
+        // 添加特殊参数，告知我们的代理这是一个百度搜索请求
+        // 在vue.config.js中会根据这个参数特殊处理
+        productUrl.value = `${proxyUrl}${proxyUrl.includes('?') ? '&' : '?'}_source=app`;
       } else {
         // 对于非百度域名，使用我们的通用外部代理
         const proxyUrl = `/external-proxy/${actualUrl}`;
@@ -516,7 +552,7 @@ const scrollToBottom = () => {
 
 // Function to handle sending follow-up responses
 const sendFollowUpResponse = (optionText) => {
-  // Create Baidu search URL with the option text using our proxy
+  // 使用代理百度搜索URL，避免跨域问题
   const searchUrl = `/baidu-proxy/s?wd=${encodeURIComponent(optionText)}`;
   
   // Open product window with the search URL
@@ -1061,7 +1097,7 @@ setInterval(() => {
   width: 100%;
   background-color: #f7f8fc;
   padding: 8px 16px;
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 20px); /* 增加20像素的底部间距 */
   border-top: 1px solid #eee;
   z-index: 100;
 }
