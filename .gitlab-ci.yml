@@ -17,10 +17,10 @@ package_binary_pre:
   stage: package_binary_pre
   script:
     - mkdir output
-    - cp -r `ls |grep -v output|xargs` ./
+    - cp -r `ls |grep -v output|xargs` ./output
   artifacts:
     paths:
-      - ./
+      - output/
   only:
     refs:
       - preview
@@ -30,10 +30,10 @@ package_binary_prd:
   stage: package_binary_prd
   script:
     - mkdir output
-    - cp -r `ls |grep -v output|xargs` ./
+    - cp -r `ls |grep -v output|xargs` ./output
   artifacts:
     paths:
-      - ./
+      - output/
   only:
     refs:
       - main
