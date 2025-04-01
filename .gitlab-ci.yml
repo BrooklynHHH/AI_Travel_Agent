@@ -1,7 +1,7 @@
 stages:
-  - package_binary_pre
+  - package_binary_movie
   - package_binary_prd
-  - build_image_pre
+  - build_image_movie
   - build_image_prd
 
 # request，limit表示允许使用的最大资源
@@ -13,8 +13,8 @@ variables:
   KUBERNETES_MEMORY_LIMIT: 8Gi
 
 # 测试
-package_binary_pre:
-  stage: package_binary_pre
+package_binary_movie:
+  stage: package_binary_movie
   script:
     - mkdir output
     - cp -r `ls |grep -v output|xargs` ./output
@@ -23,7 +23,7 @@ package_binary_pre:
       - output/
   only:
     refs:
-      - preview
+      - movie
 
 # 线上
 package_binary_prd:
@@ -38,18 +38,18 @@ package_binary_prd:
     refs:
       - main
 
-build_image_pre:
-  stage: build_image_pre
+build_image_movie:
+  stage: build_image_movie
   image:
     name: cr.d.xiaomi.net/containercloud/kaniko-executor-xiaomi:release
     entrypoint: [ "" ]
   script:
-    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:preview-$CI_COMMIT_SHORT_SHA
+    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:movie-$CI_COMMIT_SHORT_SHA
     - echo "{\"auths\":{\"$REPO_SERVER\":{\"username\":\"$REPO_USER\",\"password\":\"$REPO_PASS\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --context $CI_PROJECT_DIR --destination $APP_IMAGE --validate-image
   only:
     refs:
-      - preview
+      - movie
   tags:
     - special-shared
 
