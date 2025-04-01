@@ -6,7 +6,7 @@ const routes = [
   {
     path: '/',
     name: 'chat',
-    component: ChatView
+    component: MovieView
   },
   {
     path: '/movie',
