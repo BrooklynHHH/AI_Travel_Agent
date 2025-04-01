@@ -1,0 +1,70 @@
+stages:
+  - package_binary_movie
+  - package_binary_mi
+  - build_image_movie
+  - build_image_mi
+
+# request，limit表示允许使用的最大资源
+# CPU单位是m, 对应1/1000core. 比如100m表示0.1core；Memory单位是Mi或Gi, 对应MB/GB. 比如100Mi表示100MB
+variables:
+  KUBERNETES_CPU_REQUEST: 4000m
+  KUBERNETES_CPU_LIMIT: 8000m
+  KUBERNETES_MEMORY_REQUEST: 4Gi
+  KUBERNETES_MEMORY_LIMIT: 8Gi
+
+# 测试
+package_binary_movie:
+  stage: package_binary_movie
+  script:
+    - mkdir output
+    - cp -r `ls |grep -v output|xargs` ./output
+  artifacts:
+    paths:
+      - output/
+  only:
+    refs:
+      - movie
+
+# 线上
+package_binary_mi:
+  stage: package_binary_mi
+  script:
+    - mkdir output
+    - cp -r `ls |grep -v output|xargs` ./output
+  artifacts:
+    paths:
+      - output/
+  only:
+    refs:
+      - mi
+
+build_image_movie:
+  stage: build_image_movie
+  image:
+    name: cr.d.xiaomi.net/containercloud/kaniko-executor-xiaomi:release
+    entrypoint: [ "" ]
+  script:
+    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:movie-$CI_COMMIT_SHORT_SHA
+    - echo "{\"auths\":{\"$REPO_SERVER\":{\"username\":\"$REPO_USER\",\"password\":\"$REPO_PASS\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --destination $APP_IMAGE --validate-image
+  only:
+    refs:
+      - movie
+  tags:
+    - special-shared
+
+
+build_image_mi:
+  stage: build_image_mi
+  image:
+    name: cr.d.xiaomi.net/containercloud/kaniko-executor-xiaomi:release
+    entrypoint: [ "" ]
+  script:
+    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:mi-$CI_COMMIT_SHORT_SHA
+    - echo "{\"auths\":{\"$REPO_SERVER\":{\"username\":\"$REPO_USER\",\"password\":\"$REPO_PASS\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --destination $APP_IMAGE --validate-image
+  only:
+    refs:
+      - mi
+  tags:
+    - special-shared
