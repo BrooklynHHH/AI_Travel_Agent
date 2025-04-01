@@ -1,13 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import ChatView from '../views/ChatView.vue'
 import MovieView from '../views/MovieView.vue'
 
 const routes = [
-  {
-    path: '/',
-    name: 'chat',
-    component: MovieView
-  },
   {
     path: '/movie',
     name: 'movie',
