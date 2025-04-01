@@ -486,7 +486,7 @@ const renderMarkdown = (content) => {
   const processedPictureContent = content.replace(pictureRegex, (match, url) => {
     // Basic URL validation
     if (url.startsWith('http://') || url.startsWith('https://')) {
-      return `<img src="${url}" class="chat-image" />`;
+      return `\n<div class="custom-picture"><img src="${url}" style="max-width:100%;height:auto;display:block;margin:0 auto;" /></div>\n`;
     }
     return match;
   });
