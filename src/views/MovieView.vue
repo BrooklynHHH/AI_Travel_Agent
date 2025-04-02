@@ -335,46 +335,68 @@ style.textContent = `
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-width: 100%;
   }
   
   .movie-top-section {
     display: flex;
+    flex-direction: column;
+    @media (min-width: 768px) {
+      flex-direction: row;
+    }
   }
   
   .movie-poster {
-    flex: 0 0 150px;
+    flex: 0 0 auto;
     background: #eee;
+    min-height: 200px;
+    max-height: 300px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    @media (min-width: 768px) {
+      flex: 0 0 150px;
+    }
   }
   
   .movie-poster img {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
     display: block;
   }
   
   .movie-details {
     flex: 1;
     padding: 16px;
+    overflow: hidden;
   }
   
   .movie-detail-item {
     margin-bottom: 8px;
     line-height: 1.4;
+    display: flex;
+    flex-wrap: wrap;
   }
   
   .detail-label {
     color: #666;
     margin-right: 4px;
+    flex: 0 0 80px;
   }
   
   .detail-value {
     color: #333;
+    flex: 1;
+    word-break: break-word;
   }
   
   .movie-plot {
     padding: 16px;
     border-top: 1px solid #eee;
     line-height: 1.6;
+    word-break: break-word;
   }
 `;
 document.head.appendChild(style);
@@ -597,7 +619,7 @@ const renderMarkdown = (content) => {
   const pictureRegex = /<picture>(.*?)<\/picture>/g;
   const processedPictureContent = processedMovieContent.replace(pictureRegex, (match, url) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
-      return `\n<div class="custom-picture"><img src="${url}" style="max-width:100%;height:auto;display:block;margin:0 auto;" /></div>\n`;
+      return `\n<div class="custom-picture"><img src="${url}" referrerPolicy="no-referrer" style="max-width:100%;height:auto;display:block;margin:0 auto;" /></div>\n`;
     }
     return match;
   });
