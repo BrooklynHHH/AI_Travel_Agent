@@ -1,20 +1,21 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import ChatView from '../views/ChatView.vue'
-
-Vue.use(VueRouter)
+import { createRouter, createWebHistory } from 'vue-router'
+import MiView from '../views/MiView.vue'
 
 const routes = [
   {
+    path: '/mi',
+    name: 'mi',
+    component: MiView
+  },
+  {
     path: '/',
-    name: 'chat',
-    component: ChatView
+    name: 'mi',
+    component: MiView
   }
 ]
 
-const router = new VueRouter({
-  mode: 'history',
-  base: process.env.BASE_URL,
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL),
   routes
 })
 

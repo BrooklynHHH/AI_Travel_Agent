@@ -1,11 +1,10 @@
 <template>
   <div id="app">
-    <ChatView />
+    <router-view />
   </div>
 </template>
 
 <script setup>
-import ChatView from './views/ChatView.vue';
 </script>
 
 <style>
