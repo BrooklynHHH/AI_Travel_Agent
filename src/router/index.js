@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MiView from '../views/MiView.vue'
+import MovieView from '../views/MovieView.vue'
 
 const routes = [
   {
@@ -8,9 +9,9 @@ const routes = [
     component: MiView
   },
   {
-    path: '/',
-    name: 'default',
-    component: MiView
+    path: '/movie',
+    name: 'movie',
+    component: MovieView
   }
 ]
 

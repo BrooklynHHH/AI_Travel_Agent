@@ -15,4 +15,7 @@ app.config.globalProperties.$appConfig = appConfig
 // Use router
 app.use(router)
 
+// Register router
+app.use(router)
+
 app.mount('#app')
