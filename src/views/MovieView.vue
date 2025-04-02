@@ -548,7 +548,7 @@ const renderMarkdown = (content) => {
       
       // Left side - poster
       if (movieData.海报) {
-        html += `<div class="movie-poster"><img src="${movieData.海报}" alt="${movieData.片名 || ''}" /></div>`;
+        html += `<div class="movie-poster"><img src="${movieData.海报}" referrerPolicy="no-referrer" alt="${movieData.片名 || ''}" /></div>`;
       }
       
       // Right side - details
