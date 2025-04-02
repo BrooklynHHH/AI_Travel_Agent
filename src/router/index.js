@@ -1,12 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import MiView from '../views/MiView.vue'
+import ChatView from '../views/ChatView.vue'
 import MovieView from '../views/MovieView.vue'
 
 const routes = [
   {
     path: '/mi',
     name: 'mi',
-    component: MiView
+    component: ChatView
   },
   {
     path: '/movie',
