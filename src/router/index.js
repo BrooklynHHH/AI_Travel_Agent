@@ -9,7 +9,7 @@ const routes = [
   },
   {
     path: '/',
-    name: 'mi',
+    name: 'default',
     component: MiView
   }
 ]
