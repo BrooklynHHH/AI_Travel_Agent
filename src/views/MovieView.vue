@@ -324,6 +324,61 @@ const md = new MarkdownIt({
   breaks: true
 });
 
+// Add CSS for movie container
+const style = document.createElement('style');
+style.textContent = `
+  .movie-container {
+    display: flex;
+    flex-direction: column;
+    margin: 16px 0;
+    background: #f9f9f9;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .movie-top-section {
+    display: flex;
+  }
+  
+  .movie-poster {
+    flex: 0 0 150px;
+    background: #eee;
+  }
+  
+  .movie-poster img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  .movie-details {
+    flex: 1;
+    padding: 16px;
+  }
+  
+  .movie-detail-item {
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  
+  .detail-label {
+    color: #666;
+    margin-right: 4px;
+  }
+  
+  .detail-value {
+    color: #333;
+  }
+  
+  .movie-plot {
+    padding: 16px;
+    border-top: 1px solid #eee;
+    line-height: 1.6;
+  }
+`;
+document.head.appendChild(style);
+
 // Process custom product format before rendering markdown
 const processCustomProductFormat = (content) => {
   // Find patterns like <小米15>(aisearch://product/{原有链接})
@@ -481,10 +536,66 @@ const messages = ref([]);
 const renderMarkdown = (content) => {
   if (!content) return '';
   
-  // Process picture tags first
+  // Process movie tags first
+  const movieRegex = /<movie>(.*?)<\/movie>/g;
+  const processedMovieContent = content.replace(movieRegex, (match, jsonStr) => {
+    try {
+      const movieData = JSON.parse(jsonStr);
+      let html = '<div class="movie-container">';
+      
+      // Top section (poster + details)
+      html += '<div class="movie-top-section">';
+      
+      // Left side - poster
+      if (movieData.海报) {
+        html += `<div class="movie-poster"><img src="${movieData.海报}" alt="${movieData.片名 || ''}" /></div>`;
+      }
+      
+      // Right side - details
+      html += '<div class="movie-details">';
+      
+      // Generate detail items
+      const details = [
+        { label: '片名', value: movieData.片名 },
+        { label: '原名', value: movieData.原名 },
+        { label: '年份', value: movieData.年份 },
+        { label: '导演', value: movieData.导演 },
+        { label: '编剧', value: movieData.编剧 ? movieData.编剧.join('、') : '' },
+        { label: '主演', value: movieData.主演 ? movieData.主演.join('、') : '' },
+        { label: '类型', value: movieData.类型 ? movieData.类型.join('、') : '' },
+        { label: '国家/地区', value: movieData['国家/地区'] ? movieData['国家/地区'].join('、') : '' },
+        { label: '语言', value: movieData.语言 },
+        { label: '上映日期', value: movieData.上映日期 },
+        { label: '片长', value: movieData.片长 ? `${movieData.片长}分钟` : '' },
+        { label: '别名', value: movieData.别名 ? movieData.别名.join('、') : '' },
+        { label: '豆瓣', value: movieData.豆瓣ID ? `<a href="https://movie.douban.com/subject/${movieData.豆瓣ID}/" target="_blank">${movieData.豆瓣ID}</a>` : '' }
+      ];
+      
+      // Add non-empty details to HTML
+      details.forEach(item => {
+        if (item.value) {
+          html += `<div class="movie-detail-item"><span class="detail-label">${item.label}：</span><span class="detail-value">${item.value}</span></div>`;
+        }
+      });
+      
+      html += '</div></div>'; // Close top section
+      
+      // Bottom section - plot
+      if (movieData.剧情概述) {
+        html += `<div class="movie-plot">${movieData.剧情概述}</div>`;
+      }
+      
+      html += '</div>';
+      return html;
+    } catch (e) {
+      console.error('Failed to parse movie data:', e);
+      return match;
+    }
+  });
+  
+  // Process picture tags
   const pictureRegex = /<picture>(.*?)<\/picture>/g;
-  const processedPictureContent = content.replace(pictureRegex, (match, url) => {
-    // Basic URL validation
+  const processedPictureContent = processedMovieContent.replace(pictureRegex, (match, url) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return `\n<div class="custom-picture"><img src="${url}" style="max-width:100%;height:auto;display:block;margin:0 auto;" /></div>\n`;
     }
