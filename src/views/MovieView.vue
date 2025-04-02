@@ -184,7 +184,7 @@ import appConfig from '../config/app.config';
 // Quick action buttons - loaded from config
 const quickActions = ref([
   '大江大河最新剧情',
-  '雁回时隐藏剧情',
+  '介绍下《雁回时》这部电视剧',
   '热门剧集分析',
   '经典影视解读'
 ]);
