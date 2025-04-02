@@ -1,8 +1,8 @@
 stages:
-  - package_binary_movie
-  - package_binary_mi
-  - build_image_movie
-  - build_image_mi
+  - package_binary_main
+  - package_binary_preview
+  - build_image_main
+  - build_image_preview
 
 # request，limit表示允许使用的最大资源
 # CPU单位是m, 对应1/1000core. 比如100m表示0.1core；Memory单位是Mi或Gi, 对应MB/GB. 比如100Mi表示100MB
@@ -13,8 +13,8 @@ variables:
   KUBERNETES_MEMORY_LIMIT: 8Gi
 
 # 测试
-package_binary_movie:
-  stage: package_binary_movie
+package_binary_main:
+  stage: package_binary_main
   script:
     - mkdir output
     - cp -r `ls |grep -v output|xargs` ./output
@@ -23,11 +23,11 @@ package_binary_movie:
       - output/
   only:
     refs:
-      - movie
+      - main
 
 # 线上
-package_binary_mi:
-  stage: package_binary_mi
+package_binary_preview:
+  stage: package_binary_preview
   script:
     - mkdir output
     - cp -r `ls |grep -v output|xargs` ./output
@@ -36,35 +36,35 @@ package_binary_mi:
       - output/
   only:
     refs:
-      - mi
+      - preview
 
-build_image_movie:
-  stage: build_image_movie
+build_image_main:
+  stage: build_image_main
   image:
     name: cr.d.xiaomi.net/containercloud/kaniko-executor-xiaomi:release
     entrypoint: [ "" ]
   script:
-    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:movie-$CI_COMMIT_SHORT_SHA
+    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:main-$CI_COMMIT_SHORT_SHA
     - echo "{\"auths\":{\"$REPO_SERVER\":{\"username\":\"$REPO_USER\",\"password\":\"$REPO_PASS\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --context $CI_PROJECT_DIR --destination $APP_IMAGE --validate-image
   only:
     refs:
-      - movie
+      - main
   tags:
     - special-shared
 
 
-build_image_mi:
-  stage: build_image_mi
+build_image_preview:
+  stage: build_image_preview
   image:
     name: cr.d.xiaomi.net/containercloud/kaniko-executor-xiaomi:release
     entrypoint: [ "" ]
   script:
-    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:mi-$CI_COMMIT_SHORT_SHA
+    - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:preview-$CI_COMMIT_SHORT_SHA
     - echo "{\"auths\":{\"$REPO_SERVER\":{\"username\":\"$REPO_USER\",\"password\":\"$REPO_PASS\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --context $CI_PROJECT_DIR --destination $APP_IMAGE --validate-image
   only:
     refs:
-      - mi
+      - preview
   tags:
     - special-shared
