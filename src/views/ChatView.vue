@@ -22,7 +22,21 @@
           </div>
         </div>
         <div class="product-window-body">
-          <iframe v-if="productUrl" :src="productUrl" class="product-iframe" frameborder="0"></iframe>
+          <iframe 
+            v-if="productUrl" 
+            :src="productUrl" 
+            :key="iframeKey"
+            class="product-iframe" 
+            frameborder="0" 
+            allow="scripts"
+            referrerpolicy="origin" 
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation allow-top-navigation-by-user-activation"
+            @load="onIframeLoad"
+          ></iframe>
+          <div v-else-if="isLoading" class="iframe-loading">
+            <div class="loading-spinner"></div>
+            <p>正在加载内容...</p>
+          </div>
           <p v-else class="product-name">{{ productName }}</p>
         </div>
       </div>
@@ -160,22 +174,22 @@
         </div>
       </div>
       
-      <div class="bottom-toolbar">
-        <div class="toolbar-item">
-          <i class="depth-icon">🔍</i>
-          <span>深度思考</span>
-        </div>
-        <div class="toolbar-item">
-          <i class="web-icon">🌐</i>
-          <span>联网搜索</span>
-        </div>
-      </div>
+<div class="bottom-toolbar" style="display: none;">
+  <div class="toolbar-item">
+    <i class="depth-icon">🔍</i>
+    <span>深度思考</span>
+  </div>
+  <div class="toolbar-item">
+    <i class="web-icon">🌐</i>
+    <span>联网搜索</span>
+  </div>
+</div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, computed } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import MarkdownIt from 'markdown-it';
 import { handleStreamingResponse, safeJsonParse } from '../utils/streamUtils';
 
@@ -201,6 +215,14 @@ const windowHeight = ref(50); // Default height is 50%
 const isDragging = ref(false);
 const dragStartY = ref(0);
 const dragStartHeight = ref(0);
+const iframeKey = ref(0); // 用于强制重新加载iframe
+const isLoading = ref(false); // 加载状态
+
+// iframe加载事件处理
+const onIframeLoad = () => {
+  console.log('Iframe加载完成');
+  isLoading.value = false;
+};
 
 // Computed property for the product window title
 const productPageTitle = computed(() => {
@@ -347,6 +369,7 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
     // Check if it's a jump link (to external URL)
     else if (href.startsWith('aisearch://jump/')) {
       const jumpUrl = href.substring('aisearch://jump/'.length);
+      console.log('Found jump URL:', jumpUrl);
       token.attrPush(['data-jump-url', jumpUrl]);
     }
     else {
@@ -361,6 +384,38 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
   return self.renderToken(tokens, idx, options);
 };
 
+// 监听iframe内部的消息，处理链接点击事件
+const handleIframeMessages = (event) => {
+  // 安全检查，确保消息来源是我们期望的
+  if (event.data && event.data.type === 'linkClick') {
+    console.log('收到iframe链接点击:', event.data.url);
+    
+    // 使用原生方式处理链接
+    if (event.data.url) {
+      const url = event.data.url;
+      
+      // 更新浮窗URL
+      productName.value = '外部链接';
+      productUrl.value = url.startsWith('/') ? url : (url.startsWith('http') ? url : `https://${url}`);
+      
+      // 刷新浮窗内容
+      nextTick(() => {
+        console.log('刷新浮窗内容为:', productUrl.value);
+      });
+    }
+  }
+};
+
+// 添加全局事件监听
+onMounted(() => {
+  window.addEventListener('message', handleIframeMessages);
+});
+
+// 移除事件监听以防内存泄漏
+onUnmounted(() => {
+  window.removeEventListener('message', handleIframeMessages);
+});
+
 // Function to handle click on rendered content
 const handleContentClick = (event) => {
   // Check if clicked element is an aisearch link (with the special-link class)
@@ -370,16 +425,34 @@ const handleContentClick = (event) => {
     // Check if it's a jump link (to external URL)
     const jumpUrl = event.target.getAttribute('data-jump-url');
     if (jumpUrl) {
+      console.log('处理跳转链接:', jumpUrl);
+      
       // Extract the URL and use it in the floating window
       productName.value = '外部链接';  // Set a generic title for the header
       
-      // Check if this is a Baidu URL and use our proxy if it is
-      if (jumpUrl.includes('baidu.com')) {
-        // Replace the Baidu domain with our proxy
-        const proxyUrl = jumpUrl.replace(/https?:\/\/([^/]*\.)?baidu\.com/, '/baidu-proxy');
-        productUrl.value = proxyUrl;
+      // 确保URL格式正确
+      let actualUrl = jumpUrl;
+      if (!jumpUrl.startsWith('http://') && !jumpUrl.startsWith('https://')) {
+        actualUrl = 'https://' + jumpUrl;
+      }
+      
+      console.log('使用URL:', actualUrl);
+      
+      // 使用代理处理第一次访问，避免跨域问题
+      if (actualUrl.includes('baidu.com')) {
+        // 保持百度原始URL结构，仅更换域名部分为代理
+        // 并添加一个特殊参数，标记这是通过我们的应用打开的
+        const proxyUrl = actualUrl.replace(/https?:\/\/([^/]*\.)?baidu\.com/, '/baidu-proxy');
+        console.log('使用百度代理URL:', proxyUrl);
+        
+        // 添加特殊参数，告知我们的代理这是一个百度搜索请求
+        // 在vue.config.js中会根据这个参数特殊处理
+        productUrl.value = `${proxyUrl}${proxyUrl.includes('?') ? '&' : '?'}_source=app`;
       } else {
-        productUrl.value = jumpUrl;
+        // 对于非百度域名，使用我们的通用外部代理
+        const proxyUrl = `/external-proxy/${actualUrl}`;
+        console.log('使用外部代理URL:', proxyUrl);
+        productUrl.value = proxyUrl;
       }
       
       showProductWindow.value = true;
@@ -463,7 +536,7 @@ const saveApiKey = () => {
 const currentTime = ref('');
 const userInput = ref('');
 const chatContent = ref(null);
-const isLoading = ref(false);
+// isLoading在前面已经声明，此处不再重复声明
 const streamingMessage = ref('');
 const streamingMessageFollowUp = ref(null);
 const conversationId = ref('');
@@ -501,13 +574,39 @@ const scrollToBottom = () => {
 
 // Function to handle sending follow-up responses
 const sendFollowUpResponse = (optionText) => {
-  // Create Baidu search URL with the option text using our proxy
-  const searchUrl = `/baidu-proxy/s?wd=${encodeURIComponent(optionText)}`;
+  console.log('处理跟进搜索:', optionText);
   
-  // Open product window with the search URL
+  // 端口可能变化，因此使用相对路径
+  const searchUrl = `/baidu-proxy/s?wd=${encodeURIComponent(optionText)}`;
+  console.log('生成的搜索URL:', searchUrl);
+  
+  // 清除当前浮窗内容并显示加载状态
+  productUrl.value = '';
+  isLoading.value = true;
+  
+  // 设置浮窗标题和显示状态
   productName.value = optionText;
-  productUrl.value = searchUrl;
   showProductWindow.value = true;
+  
+  // 增加iframeKey使iframe强制重新加载
+  iframeKey.value++;
+  
+  // 使用较长的延迟确保DOM已更新
+  setTimeout(() => {
+    productUrl.value = searchUrl;
+    console.log('浮窗URL已设置为:', productUrl.value);
+    
+    // 设置超时处理，如果30秒后仍未加载完成，重置加载状态
+    setTimeout(() => {
+      if (isLoading.value) {
+        console.log('加载超时，重置状态');
+        isLoading.value = false;
+        // 显示错误信息
+        productUrl.value = '';
+        productName.value = '加载失败，请重试';
+      }
+    }, 30000);
+  }, 300);
 };
 
 // Using safeJsonParse from streamUtils.js
@@ -1046,7 +1145,7 @@ setInterval(() => {
   width: 100%;
   background-color: #f7f8fc;
   padding: 8px 16px;
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 20px); /* 增加20像素的底部间距 */
   border-top: 1px solid #eee;
   z-index: 100;
 }
@@ -1280,6 +1379,36 @@ input {
   font-weight: 500;
   color: #333;
   margin: 16px;
+}
+
+/* 加载状态样式 */
+.iframe-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: #f7f8fc;
+}
+
+.iframe-loading p {
+  margin-top: 16px;
+  color: #666;
+  font-size: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 103, 0, 0.1);
+  border-top-color: #ff6700;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Style for special links (aisearch://) */
