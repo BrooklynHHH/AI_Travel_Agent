@@ -12,11 +12,6 @@ const routes = [
     path: '/movie',
     name: 'movie',
     component: MovieView
-  },
-  {
-    path: '/',
-    name: 'mi',
-    component: ChatView
   }
 ]
 
