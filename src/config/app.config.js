@@ -15,7 +15,7 @@ export default {
    * These can be modified to change the default suggestions
    */
   quickActionButtons: [
-    '小米15值得买么',
+    'Xiao 15值得买么',
     '红米k80和IQOO13哪个好',
     '为我介绍小米集团'
   ]
