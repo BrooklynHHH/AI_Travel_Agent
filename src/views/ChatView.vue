@@ -350,7 +350,7 @@ const processCustomProductFormat = (content) => {
   return content.replace(regex, '[$1](aisearch://product/$2)');
 };
 
-// Add a custom attribute to links to identify them
+  // Add a custom attribute to links to identify them
 md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
   const token = tokens[idx];
   const href = token.attrGet('href');
@@ -371,6 +371,12 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
       const jumpUrl = href.substring('aisearch://jump/'.length);
       console.log('Found jump URL:', jumpUrl);
       token.attrPush(['data-jump-url', jumpUrl]);
+    }
+    // Check if it's an image jump link
+    else if (href.startsWith('aisearch://imgjump/')) {
+      const imgJumpUrl = href.substring('aisearch://imgjump/'.length);
+      console.log('Found image jump URL:', imgJumpUrl);
+      token.attrPush(['data-imgjump-url', imgJumpUrl]);
     }
     else {
       token.attrPush(['data-product', href.substring('aisearch://'.length)]);
@@ -456,6 +462,51 @@ const handleContentClick = (event) => {
       }
       
       showProductWindow.value = true;
+    }
+    // Check if it's an image jump link
+    else if (event.target.hasAttribute('data-imgjump-url')) {
+      const imgJumpUrl = event.target.getAttribute('data-imgjump-url');
+      console.log('处理图片跳转链接:', imgJumpUrl);
+      
+      // Extract the URL and use it in the floating window
+      productName.value = '图片搜索';  // Set a title for the header
+      
+      // 确保URL格式正确
+      let actualUrl = imgJumpUrl;
+      if (!imgJumpUrl.startsWith('http://') && !imgJumpUrl.startsWith('https://')) {
+        actualUrl = 'https://' + imgJumpUrl;
+      }
+      
+      console.log('使用图片搜索URL:', actualUrl);
+      
+      // 直接使用外部代理处理图片搜索请求，不使用baidu-proxy
+      // 这样可以确保原始URL的完整性，包括移动版百度的域名和路径
+      const proxyUrl = `/external-proxy/${actualUrl}`;
+      console.log('使用外部代理URL (图片搜索):', proxyUrl);
+      
+      // 清除当前浮窗内容并显示加载状态
+      productUrl.value = '';
+      isLoading.value = true;
+      
+      // 增加iframeKey使iframe强制重新加载
+      iframeKey.value++;
+      
+      // 显示产品窗口
+      showProductWindow.value = true;
+      
+      // 稍微延迟设置URL，确保浮窗完全初始化
+      setTimeout(() => {
+        productUrl.value = proxyUrl;
+        console.log('浮窗URL已设置为:', productUrl.value);
+        
+        // 设置超时处理，如果30秒后仍未加载完成，重置加载状态
+        setTimeout(() => {
+          if (isLoading.value) {
+            console.log('加载超时，重置状态');
+            isLoading.value = false;
+          }
+        }, 30000);
+      }, 300);
     }
     // Check if it has a product URL
     else if (event.target.hasAttribute('data-product-url')) {
@@ -702,6 +753,52 @@ const sendMessage = async () => {
           
           // Update the message content
           messages.value[lastIndex].content = streamingMessage.value;
+          
+          // 检查是否包含aisearch://imgjump/格式的链接
+          const imgJumpRegex = /aisearch:\/\/imgjump\/([^\s)]+)/;
+          const match = data.answer.match(imgJumpRegex);
+          
+          if (match && match[1]) {
+            const imgJumpUrl = match[1];
+            console.log('检测到图片跳转链接，自动打开:', imgJumpUrl);
+            
+            // 确保URL格式正确
+            let actualUrl = imgJumpUrl;
+            if (!imgJumpUrl.startsWith('http://') && !imgJumpUrl.startsWith('https://')) {
+              actualUrl = 'https://' + imgJumpUrl;
+            }
+            
+            // 使用外部代理处理图片搜索请求
+            const proxyUrl = `/external-proxy/${actualUrl}`;
+            console.log('使用外部代理URL (图片搜索):', proxyUrl);
+            
+            // 设置浮窗标题和显示状态
+            productName.value = '图片搜索';
+            
+            // 清除当前浮窗内容并显示加载状态
+            productUrl.value = '';
+            isLoading.value = true;
+            
+            // 增加iframeKey使iframe强制重新加载
+            iframeKey.value++;
+            
+            // 显示产品窗口
+            showProductWindow.value = true;
+            
+            // 稍微延迟设置URL，确保浮窗完全初始化
+            setTimeout(() => {
+              productUrl.value = proxyUrl;
+              console.log('浮窗URL已设置为:', productUrl.value);
+              
+              // 设置超时处理，如果30秒后仍未加载完成，重置加载状态
+              setTimeout(() => {
+                if (isLoading.value) {
+                  console.log('加载超时，重置状态');
+                  isLoading.value = false;
+                }
+              }, 30000);
+            }, 300);
+          }
           
           // Scroll to bottom with new content
           nextTick(() => {
