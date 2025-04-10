@@ -67,6 +67,11 @@
       </div>
     </div>
     
+    <!-- Progress bar (visible when loading or streaming) -->
+    <div v-if="isLoading || isStreaming" class="progress-container top-progress">
+      <div class="progress-bar"></div>
+    </div>
+    
     <!-- Mobile header -->
     <div class="mobile-header">
       <div class="status-bar">
@@ -148,11 +153,6 @@
         </template>
       </div>
 
-      <!-- Progress bar (visible when loading or streaming) -->
-      <div v-if="isLoading || isStreaming" class="progress-container">
-        <div class="progress-bar"></div>
-      </div>
-      
       <!-- Small padding at bottom to ensure some space after last message -->
       <div style="height: 20px"></div>
     </div>
@@ -347,7 +347,18 @@ const processCustomProductFormat = (content) => {
   const regex = /<([^>]+)>\(aisearch:\/\/product\/([^)]+)\)/g;
   
   // Replace with markdown link syntax [小米15](aisearch://product/{原有链接})
-  return content.replace(regex, '[$1](aisearch://product/$2)');
+  let processedContent = content.replace(regex, '[$1](aisearch://product/$2)');
+  
+  // Also handle other aisearch protocols to ensure complete URLs are captured
+  // For jump links
+  const jumpRegex = /<([^>]+)>\(aisearch:\/\/jump\/([^)]+)\)/g;
+  processedContent = processedContent.replace(jumpRegex, '[$1](aisearch://jump/$2)');
+  
+  // For image jump links
+  const imgJumpRegex = /<([^>]+)>\(aisearch:\/\/imgjump\/([^)]+)\)/g;
+  processedContent = processedContent.replace(imgJumpRegex, '[$1](aisearch://imgjump/$2)');
+  
+  return processedContent;
 };
 
   // Add a custom attribute to links to identify them
@@ -424,6 +435,18 @@ onUnmounted(() => {
 
 // Function to handle click on rendered content
 const handleContentClick = (event) => {
+  // Check if clicked element is a video thumbnail or one of its children
+  const videoThumbnail = event.target.closest('.mi-video-thumbnail');
+  if (videoThumbnail) {
+    const dpLink = videoThumbnail.getAttribute('data-dp-link');
+    if (dpLink) {
+      console.log('Opening video link:', dpLink);
+      // Open the dp link in a new tab
+      window.open(dpLink, '_blank');
+    }
+    return;
+  }
+  
   // Check if clicked element is an aisearch link (with the special-link class)
   if (event.target.tagName === 'A' && event.target.classList.contains('special-link')) {
     event.preventDefault();
@@ -436,10 +459,13 @@ const handleContentClick = (event) => {
       // Extract the URL and use it in the floating window
       productName.value = '外部链接';  // Set a generic title for the header
       
-      // 确保URL格式正确
+      // 确保URL格式正确 - 处理完整的URL
       let actualUrl = jumpUrl;
-      if (!jumpUrl.startsWith('http://') && !jumpUrl.startsWith('https://')) {
-        actualUrl = 'https://' + jumpUrl;
+      // 移除可能的引号或其他包装字符
+      actualUrl = actualUrl.replace(/^["']+|["']+$/g, '');
+      
+      if (!actualUrl.startsWith('http://') && !actualUrl.startsWith('https://')) {
+        actualUrl = 'https://' + actualUrl;
       }
       
       console.log('使用URL:', actualUrl);
@@ -471,18 +497,46 @@ const handleContentClick = (event) => {
       // Extract the URL and use it in the floating window
       productName.value = '图片搜索';  // Set a title for the header
       
-      // 确保URL格式正确
+      // 确保URL格式正确 - 处理完整的URL
       let actualUrl = imgJumpUrl;
-      if (!imgJumpUrl.startsWith('http://') && !imgJumpUrl.startsWith('https://')) {
-        actualUrl = 'https://' + imgJumpUrl;
+      // 移除可能的引号或其他包装字符
+      actualUrl = actualUrl.replace(/^["']+|["']+$/g, '');
+      
+      if (!actualUrl.startsWith('http://') && !actualUrl.startsWith('https://')) {
+        actualUrl = 'https://' + actualUrl;
       }
       
       console.log('使用图片搜索URL:', actualUrl);
       
       // 直接使用外部代理处理图片搜索请求，不使用baidu-proxy
       // 这样可以确保原始URL的完整性，包括移动版百度的域名和路径
-      const proxyUrl = `/external-proxy/${actualUrl}`;
-      console.log('使用外部代理URL (图片搜索):', proxyUrl);
+      
+      let proxyUrl;
+      // 解析URL以正确处理中文参数
+      try {
+        const urlObj = new URL(actualUrl);
+        // 保留原始查询参数，确保中文字符正确编码
+        const searchParams = new URLSearchParams(urlObj.search);
+        
+        // 特别处理word参数，确保中文字符正确编码
+        if (searchParams.has('word')) {
+          const wordValue = searchParams.get('word');
+          console.log('原始word参数值:', wordValue);
+          // 重新设置word参数，确保正确编码
+          searchParams.set('word', wordValue);
+        }
+        
+        // 构建新的URL路径和查询字符串
+        const newPath = urlObj.pathname;
+        const newSearch = searchParams.toString();
+        proxyUrl = `/external-proxy/${urlObj.origin}${newPath}?${newSearch}`;
+        console.log('使用外部代理URL (图片搜索):', proxyUrl);
+      } catch (e) {
+        console.error('URL解析错误:', e);
+        // 如果URL解析失败，回退到原始方法
+        proxyUrl = `/external-proxy/${actualUrl}`;
+        console.log('使用外部代理URL (图片搜索-回退):', proxyUrl);
+      }
       
       // 清除当前浮窗内容并显示加载状态
       productUrl.value = '';
@@ -592,6 +646,8 @@ const streamingMessage = ref('');
 const streamingMessageFollowUp = ref(null);
 const conversationId = ref('');
 const isStreaming = ref(false);
+// Store about_mi data during streaming
+const aboutMiData = ref(null);
 
 // Store messages
 const messages = ref([]);
@@ -755,22 +811,58 @@ const sendMessage = async () => {
           messages.value[lastIndex].content = streamingMessage.value;
           
           // 检查是否包含aisearch://imgjump/格式的链接
+          // 使用更宽松的正则表达式来捕获完整的URL，直到空格、括号结束或行尾
           const imgJumpRegex = /aisearch:\/\/imgjump\/([^\s)]+)/;
-          const match = data.answer.match(imgJumpRegex);
+          const jumpRegex = /aisearch:\/\/jump\/([^\s)]+)/;
+          
+          // 先检查图片跳转链接
+          const imgMatch = data.answer.match(imgJumpRegex);
+          const jumpMatch = data.answer.match(jumpRegex);
+          
+          // 优先处理图片跳转链接
+          const match = imgMatch || jumpMatch;
           
           if (match && match[1]) {
             const imgJumpUrl = match[1];
             console.log('检测到图片跳转链接，自动打开:', imgJumpUrl);
             
-            // 确保URL格式正确
+            // 确保URL格式正确 - 处理完整的URL
             let actualUrl = imgJumpUrl;
-            if (!imgJumpUrl.startsWith('http://') && !imgJumpUrl.startsWith('https://')) {
-              actualUrl = 'https://' + imgJumpUrl;
+            // 移除可能的引号或其他包装字符
+            actualUrl = actualUrl.replace(/^["']+|["']+$/g, '');
+            
+            if (!actualUrl.startsWith('http://') && !actualUrl.startsWith('https://')) {
+              actualUrl = 'https://' + actualUrl;
             }
             
             // 使用外部代理处理图片搜索请求
-            const proxyUrl = `/external-proxy/${actualUrl}`;
-            console.log('使用外部代理URL (图片搜索):', proxyUrl);
+            let proxyUrl;
+            
+            // 解析URL以正确处理中文参数
+            try {
+              const urlObj = new URL(actualUrl);
+              // 保留原始查询参数，确保中文字符正确编码
+              const searchParams = new URLSearchParams(urlObj.search);
+              
+              // 特别处理word参数，确保中文字符正确编码
+              if (searchParams.has('word')) {
+                const wordValue = searchParams.get('word');
+                console.log('原始word参数值:', wordValue);
+                // 重新设置word参数，确保正确编码
+                searchParams.set('word', wordValue);
+              }
+              
+              // 构建新的URL路径和查询字符串
+              const newPath = urlObj.pathname;
+              const newSearch = searchParams.toString();
+              proxyUrl = `/external-proxy/${urlObj.origin}${newPath}?${newSearch}`;
+              console.log('使用外部代理URL (图片搜索):', proxyUrl);
+            } catch (e) {
+              console.error('URL解析错误:', e);
+              // 如果URL解析失败，回退到原始方法
+              proxyUrl = `/external-proxy/${actualUrl}`;
+              console.log('使用外部代理URL (图片搜索-回退):', proxyUrl);
+            }
             
             // 设置浮窗标题和显示状态
             productName.value = '图片搜索';
@@ -833,9 +925,62 @@ const sendMessage = async () => {
             }
           }
         }
+        
+        // Handle about_mi event
+        if (data.event === "node_finished" && data.data && data.data.title === "about_mi") {
+          console.log('About MI content detected:', data.data);
+          
+          if (data.data.outputs) {
+            // Store thumbnail and dp values for later use
+            aboutMiData.value = {
+              thumbnail: data.data.outputs.thumbnail,
+              dp: data.data.outputs.dp
+            };
+            
+            console.log('Stored about_mi data:', aboutMiData.value);
+          }
+        }
       },
       onComplete: () => {
         console.log('Streaming response completed');
+        
+        // Add the about_mi thumbnail HTML to the message content if available
+        if (aboutMiData.value && aboutMiData.value.thumbnail && aboutMiData.value.dp) {
+          console.log('Adding about_mi thumbnail to message');
+          
+          // Create HTML for the thumbnail with play button overlay
+          let thumbnailHtml = '';
+          
+          // Handle single thumbnail or multiple thumbnails
+          const thumbnails = Array.isArray(aboutMiData.value.thumbnail) 
+            ? aboutMiData.value.thumbnail 
+            : [aboutMiData.value.thumbnail];
+          
+          thumbnails.forEach(imgUrl => {
+            thumbnailHtml += `
+              <div class="mi-video-thumbnail" data-dp-link="${aboutMiData.value.dp}">
+                <img src="${imgUrl}" alt="Xiaomi Video" class="thumbnail-image">
+                <div class="play-button-overlay">
+                  <div class="play-button-icon">▶</div>
+                </div>
+              </div>
+            `;
+          });
+          
+          // Append the thumbnail HTML to the message content
+          streamingMessage.value += thumbnailHtml;
+          
+          // Update the message content
+          messages.value[lastIndex].content = streamingMessage.value;
+          
+          // Reset the about_mi data
+          aboutMiData.value = null;
+          
+          // Scroll to bottom with new content
+          nextTick(() => {
+            scrollToBottom();
+          });
+        }
         
         // Mark streaming as complete
         messages.value[lastIndex].streaming = false;
@@ -1217,6 +1362,19 @@ setInterval(() => {
   background-color: #f0f0f0;
   border-radius: 2px;
   overflow: hidden;
+}
+
+/* Top progress bar */
+.top-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  margin: 0;
+  height: 3px;
+  background-color: transparent;
+  border-radius: 0;
 }
 
 .progress-bar {
@@ -1710,5 +1868,66 @@ input {
 
 .save-button:active {
   transform: translateY(1px);
+}
+
+/* Video thumbnail styles */
+.mi-video-thumbnail {
+  position: relative;
+  display: inline-block;
+  margin: 10px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  max-width: 100%;
+}
+
+.mi-video-thumbnail:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.thumbnail-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.play-button-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  transition: background-color 0.2s ease;
+}
+
+.mi-video-thumbnail:hover .play-button-overlay {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.play-button-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 103, 0, 0.9);
+  border-radius: 50%;
+  color: white;
+  font-size: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.mi-video-thumbnail:hover .play-button-icon {
+  transform: scale(1.1);
+  background-color: #ff6700;
 }
 </style>
