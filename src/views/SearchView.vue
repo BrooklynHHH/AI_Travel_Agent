@@ -111,7 +111,7 @@
               </div>
               <div class="message-bubble main-response">
                 <div class="response-text">
-                  <div v-if="message.think" class="thinking-container" style="border-left: 3px solid #ddd; padding-left: 12px; margin-bottom: 8px; color: #666; white-space: pre-wrap; line-height: 0.8;">
+                  <div v-if="message.think" class="thinking-container" style="border-left: 3px solid #ddd; padding-left: 12px; margin-bottom: 8px; color: #666; white-space: pre-wrap; line-height: 1.0;">
                     <div v-html="renderMarkdown(message.think)"></div>
                   </div>
                   <div v-html="renderMarkdown(message.content)"></div>
