@@ -5,6 +5,11 @@ import BaiduView from '../views/BaiduView.vue'
 
 const routes = [
   {
+    path: '/search',
+    name: 'Search',
+    component: () => import('../views/SearchView.vue')
+  },
+  {
     path: '/mi',
     name: 'mi',
     component: ChatView
