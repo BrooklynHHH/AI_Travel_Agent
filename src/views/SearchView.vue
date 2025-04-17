@@ -708,7 +708,7 @@
         annotations: [],
         references: [],
         streaming: true,
-        showThinking: false // Initially collapsed
+        showThinking: true // Initially expanded
       }) - 1;
       
       // Set streaming state to true
@@ -805,7 +805,7 @@
         role: 'assistant',
         content: '抱歉，我遇到了一些问题，无法回答您的问题。',
         error: true,
-        showThinking: false
+        showThinking: true
       });
       
     } finally {
