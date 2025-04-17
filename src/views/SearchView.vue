@@ -81,73 +81,75 @@
       
       <!-- Chat content -->
       <div class="chat-content" ref="chatContent">
-        <!-- Quick action buttons -->
-        <div class="quick-actions">
-          <button 
-            v-for="(action, index) in quickActions" 
-            :key="index"
-            class="quick-action-button"
-            @click="handleQuickAction(action)"
-          >
-            {{ action }}
-          </button>
-        </div>
-        
-        <!-- Messages -->
-        <div v-for="(message, index) in messages" :key="index">
-          <!-- User message -->
-          <div v-if="message.role === 'user'" class="message-container user-message">
-            <div class="message-bubble">
-              {{ message.content }}
-            </div>
+        <div class="messages-container">
+          <!-- Quick action buttons -->
+          <div class="quick-actions">
+            <button 
+              v-for="(action, index) in quickActions" 
+              :key="index"
+              class="quick-action-button"
+              @click="handleQuickAction(action)"
+            >
+              {{ action }}
+            </button>
           </div>
-  
-          <!-- Bot message -->
-          <template v-else-if="message.role === 'assistant'">
-            <!-- Main response -->
-            <div class="message-container bot-message">
-              <div class="mi-logo">
-                <div class="mi-logo-text">MI</div>
-              </div>
-              <div class="message-bubble main-response">
-                <div class="response-text">
-                  <div v-if="message.think" class="thinking-container" :class="{ 'collapsed': !message.showThinking }">
-                    <div class="thinking-header" @click="toggleThinking(message)">
-                      <span class="thinking-title">思考过程</span>
-                      <span class="thinking-toggle">{{ message.showThinking ? '收起' : '展开' }}</span>
-                    </div>
-                    <div class="thinking-content" v-show="message.showThinking">
-                      <div v-html="renderMarkdown(message.think)"></div>
-                    </div>
-                  </div>
-                  <div v-html="renderMarkdown(message.content)"></div>
-                </div>
-                <!-- Follow-up question section -->
-                <div v-if="message.followUpQuestion" class="follow-up-question">
-                  <p class="question-text">{{ message.followUpQuestion.question }}</p>
-                  <div class="option-buttons">
-                    <button 
-                      v-for="(option, index) in message.followUpQuestion.options" 
-                      :key="index" 
-                      class="option-button"
-                      @click="sendFollowUpResponse(option)"
-                    >
-                      {{ option }}
-                    </button>
-                  </div>
-                </div>
+          
+          <!-- Messages -->
+          <div v-for="(message, index) in messages" :key="index">
+            <!-- User message -->
+            <div v-if="message.role === 'user'" class="message-container user-message">
+              <div class="message-bubble">
+                {{ message.content }}
               </div>
             </div>
-          </template>
+    
+            <!-- Bot message -->
+            <template v-else-if="message.role === 'assistant'">
+              <!-- Main response -->
+              <div class="message-container bot-message">
+                <div class="mi-logo">
+                  <div class="mi-logo-text">MI</div>
+                </div>
+                <div class="message-bubble main-response">
+                  <div class="response-text">
+                    <div v-if="message.think" class="thinking-container" :class="{ 'collapsed': !message.showThinking }">
+                      <div class="thinking-header" @click="toggleThinking(message)">
+                        <span class="thinking-title">思考过程</span>
+                        <span class="thinking-toggle">{{ message.showThinking ? '收起' : '展开' }}</span>
+                      </div>
+                      <div class="thinking-content" v-show="message.showThinking">
+                        <div v-html="renderMarkdown(message.think)"></div>
+                      </div>
+                    </div>
+                    <div v-html="renderMarkdown(message.content)"></div>
+                  </div>
+                  <!-- Follow-up question section -->
+                  <div v-if="message.followUpQuestion" class="follow-up-question">
+                    <p class="question-text">{{ message.followUpQuestion.question }}</p>
+                    <div class="option-buttons">
+                      <button 
+                        v-for="(option, index) in message.followUpQuestion.options" 
+                        :key="index" 
+                        class="option-button"
+                        @click="sendFollowUpResponse(option)"
+                      >
+                        {{ option }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+    
+          <!-- Progress bar (visible when loading or streaming) -->
+          <div v-if="isLoading || isStreaming" class="progress-container">
+            <div class="progress-bar"></div>
+          </div>
+          
+          <!-- Small padding at bottom to ensure some space after last message -->
+          <div style="height: 20px"></div>
         </div>
-  
-        <!-- Progress bar (visible when loading or streaming) -->
-        <div v-if="isLoading || isStreaming" class="progress-container">
-          <div class="progress-bar"></div>
-        </div>
-        
-        <!-- Small padding at bottom to ensure some space after last message -->
-        <div style="height: 20px"></div>
       </div>
   
       <!-- Input area -->
@@ -411,7 +413,7 @@
     // Find patterns like <小米15>(aisearch://product/{原有链接})
     const regex = /<([^>]+)>\(aisearch:\/\/product\/([^)]+)\)/g;
     
-    // Replace with markdown link syntax [小米15](aisearch://product/{原有链接})
+    // Replace with markdown link syntax [小米15](aisearch://product/$2)
     return content.replace(regex, '[$1](aisearch://product/$2)');
   };
   
@@ -962,9 +964,7 @@
   .thinking-content {
     padding: 12px 16px;
     white-space: pre-wrap;
-    max-height: 500px;
-    overflow: auto;
-    transition: max-height 0.3s ease, opacity 0.3s ease;
+    transition: opacity 0.3s ease;
     opacity: 1;
   }
 
@@ -1137,6 +1137,34 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+    align-items: center; /* Center content horizontally */
+  }
+  
+  /* Container for each message to maintain consistent width */
+  .messages-container {
+    width: 100%;
+    max-width: 800px; /* Maximum width on large screens */
+    min-width: 320px; /* Minimum width on small screens */
+    margin: 0 auto;
+    padding: 0 16px; /* Add some padding on the sides */
+  }
+  
+  /* Media queries for responsive design */
+  @media (max-width: 768px) {
+    .messages-container {
+      width: 100%;
+      padding: 0 12px;
+    }
+    
+    .message-bubble {
+      max-width: 90%; /* Allow bubbles to be wider on small screens */
+    }
+  }
+  
+  @media (min-width: 1200px) {
+    .messages-container {
+      max-width: 900px; /* Slightly wider on very large screens */
+    }
   }
   
   .message-container {
@@ -1157,7 +1185,7 @@
   }
   
   .message-bubble {
-    max-width: 90%;
+    max-width: 85%; /* Slightly reduced max width for better proportions */
     min-width: 0;
     padding: 12px 16px;
     border-radius: 18px;
@@ -1341,11 +1369,12 @@
   /* Progress bar */
   .progress-container {
     width: 100%;
-    height: 4px;
-    margin: 12px 0;
+    max-width: 800px; /* Match message container max width */
+    margin: 12px auto;
     background-color: #f0f0f0;
     border-radius: 2px;
     overflow: hidden;
+    height: 4px;
   }
   
   .progress-bar {
@@ -1374,6 +1403,22 @@
     padding-bottom: env(safe-area-inset-bottom, 16px);
     border-top: 1px solid #eee;
     z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .chat-input .input-container, 
+  .chat-input .bottom-toolbar {
+    width: 100%;
+    max-width: 800px;
+  }
+  
+  @media (min-width: 1200px) {
+    .chat-input .input-container, 
+    .chat-input .bottom-toolbar {
+      max-width: 900px;
+    }
   }
   
   .input-container {
@@ -1419,7 +1464,8 @@
     display: flex;
     margin-top: 8px;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0;
+    width: 100%;
   }
   
   .toolbar-item {
@@ -1439,10 +1485,12 @@
   
   /* Quick action buttons */
   .quick-actions {
+    width: 100%;
+    max-width: 800px; /* Match message container max width */
+    margin: 0 auto 20px auto;
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 20px;
     justify-content: center;
   }
   
