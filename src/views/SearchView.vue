@@ -111,8 +111,14 @@
               </div>
               <div class="message-bubble main-response">
                 <div class="response-text">
-                  <div v-if="message.think" class="thinking-container" style="border-left: 3px solid #ddd; padding-left: 12px; margin-bottom: 8px; color: #666; white-space: pre-wrap; line-height: 1.0;">
-                    <div v-html="renderMarkdown(message.think)"></div>
+                  <div v-if="message.think" class="thinking-container" :class="{ 'collapsed': !message.showThinking }">
+                    <div class="thinking-header" @click="toggleThinking(message)">
+                      <span class="thinking-title">思考过程</span>
+                      <span class="thinking-toggle">{{ message.showThinking ? '收起' : '展开' }}</span>
+                    </div>
+                    <div class="thinking-content" v-show="message.showThinking">
+                      <div v-html="renderMarkdown(message.think)"></div>
+                    </div>
                   </div>
                   <div v-html="renderMarkdown(message.content)"></div>
                 </div>
@@ -701,7 +707,8 @@
         think: '',
         annotations: [],
         references: [],
-        streaming: true
+        streaming: true,
+        showThinking: false // Initially collapsed
       }) - 1;
       
       // Set streaming state to true
@@ -797,7 +804,8 @@
       messages.value.push({
         role: 'assistant',
         content: '抱歉，我遇到了一些问题，无法回答您的问题。',
-        error: true
+        error: true,
+        showThinking: false
       });
       
     } finally {
@@ -836,6 +844,17 @@
       el.style.opacity = el.style.opacity === '0' ? '1' : '0';
     });
   }, 500);
+  
+  // Add a new function to toggle thinking visibility
+  const toggleThinking = (message) => {
+    // If the showThinking property doesn't exist yet, initialize it
+    if (typeof message.showThinking === 'undefined') {
+      message.showThinking = true;
+    }
+    
+    // Toggle the visibility state
+    message.showThinking = !message.showThinking;
+  };
   </script>
   
   <style scoped>
@@ -889,6 +908,146 @@
     color: #007aff;
     font-size: 0.85em;
     text-decoration: none;
+  }
+
+  /* Thinking container styles */
+  .thinking-container {
+    background-color: #f9f9f9;
+    border-left: 3px solid #aaa;
+    padding: 0;
+    margin-bottom: 16px;
+    border-radius: 0 6px 6px 0;
+    color: #505050;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+  }
+
+  .thinking-container.collapsed {
+    background-color: #f5f5f5;
+  }
+
+  .thinking-header {
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background-color: #fcfcfc;
+    border-bottom: 1px solid #eee;
+    user-select: none;
+  }
+
+  .thinking-header:hover {
+    background-color: #f5f5f5;
+  }
+
+  .thinking-title {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .thinking-toggle {
+    font-size: 0.8em;
+    color: #999;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background-color: #f0f0f0;
+  }
+
+  .thinking-content {
+    padding: 12px 16px;
+    white-space: pre-wrap;
+    max-height: 500px;
+    overflow: auto;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    opacity: 1;
+  }
+
+  /* Add animation effects for content toggling */
+  .thinking-container .thinking-content[style*="display: none"] {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+  }
+
+  .thinking-container p {
+    margin: 8px 0;
+    line-height: 1.5;
+    font-size: 0.95em;
+  }
+
+  .thinking-container code {
+    background-color: #f1f1f1;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: #e83e8c;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  .thinking-container pre {
+    background-color: #222;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 10px 0;
+    border: none;
+    color: #fff;
+  }
+
+  .thinking-container pre code {
+    background-color: transparent;
+    padding: 0;
+    color: #eee;
+    text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    line-height: 1.5;
+  }
+
+  /* Add keyword highlighting */
+  .thinking-container pre code .keyword {
+    color: #f92672;
+  }
+
+  .thinking-container pre code .string {
+    color: #a6e22e;
+  }
+
+  .thinking-container pre code .function {
+    color: #66d9ef;
+  }
+
+  .thinking-container pre code .comment {
+    color: #75715e;
+  }
+
+  /* Re-add list styling */
+  .thinking-container ul,
+  .thinking-container ol {
+    padding-left: 20px;
+    margin: 8px 0;
+  }
+
+  .thinking-container li {
+    margin: 4px 0;
+    line-height: 1.5;
+  }
+
+  /* Enhance blockquote styling */
+  .thinking-container blockquote {
+    border-left: 3px solid #aaa;
+    padding: 10px 15px;
+    margin: 10px 0;
+    background-color: rgba(170, 170, 170, 0.05);
+    color: #505050;
+    font-style: italic;
+    border-radius: 0 4px 4px 0;
   }
 
   </style>
