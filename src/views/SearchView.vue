@@ -765,7 +765,7 @@
                     thinkingMessage.value += parsedContent.data?.think;
                   } 
                   if (parsedContent.data?.annotation) {
-                    thinkingMessage.value += parsedContent.data?.annotation;
+                    thinkingMessage.value += `<b>${parsedContent.data?.annotation}</b>`;
                   }
                   if (parsedContent.data?.references) {
                     messages.value[lastIndex].references = parsedContent.data?.references.map(ref => ({
