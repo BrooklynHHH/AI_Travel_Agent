@@ -118,7 +118,7 @@
                         <span class="thinking-toggle">{{ message.showThinking ? '收起' : '展开' }}</span>
                       </div>
                       <div class="thinking-content" v-show="message.showThinking">
-                        <div v-html="renderMarkdown(message.think)"></div>
+                        <div v-html="message.think"></div>
                       </div>
                     </div>
                     <div v-html="renderMarkdown(message.content)"></div>
@@ -717,8 +717,8 @@
       isStreaming.value = true;
       
       // Call Xiaomi API
-      const apiHost = 'http://10.108.145.59';
-      // const apiHost = 'http://localhost:8001';
+      // const apiHost = 'http://10.108.145.59';
+      const apiHost = 'http://localhost:8001';
       const savedApiKey = getCookie('movie_api_key') || 'app-default-key';
       
       const params = new URLSearchParams({
