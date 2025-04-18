@@ -193,7 +193,9 @@
   // Quick action buttons - loaded from config
   const quickActions = ref([
     '2014年冬奥会，男子花样滑冰的冠军的妻子是谁?',
-    '《雁回时》这部电视剧的女主的演绎经历'
+    '《雁回时》这部电视剧的女主的演绎经历',
+    '虎门到泉州开车要多久',
+    '最近三年小米的营收总和是多少'
   ]);
   
   // Handler for quick action buttons
@@ -717,8 +719,8 @@
       isStreaming.value = true;
       
       // Call Xiaomi API
-      // const apiHost = 'http://10.108.145.59';
-      const apiHost = 'http://localhost:8001';
+      const apiHost = 'http://10.108.145.59';
+      // const apiHost = 'http://localhost:8001';
       const savedApiKey = getCookie('movie_api_key') || 'app-default-key';
       
       const params = new URLSearchParams({
