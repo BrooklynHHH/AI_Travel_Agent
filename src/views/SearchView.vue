@@ -122,13 +122,13 @@
                       </div>
                     </div>
                     <div v-html="renderMarkdown(message.content)"></div>
-                    <button 
+                    <!-- <button 
                       class="copy-button"
                       @click="copyToClipboard(message.content)"
                       title="复制内容"
                     >
                     复制答案
-                    </button>
+                    </button> -->
                   </div>
                   <!-- Follow-up question section -->
                   <div v-if="message.followUpQuestion" class="follow-up-question">
@@ -214,15 +214,15 @@
     sendMessage();
   };
 
-  const copyToClipboard = (content) => {
-    navigator.clipboard.writeText(content).then(() => {
-      const el = document.createElement('div');
-      el.className = 'copy-notice';
-      el.textContent = '已复制!';
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 1500);
-    }).catch(err => console.error('复制失败:', err));
-  };
+  // const copyToClipboard = (content) => {
+  //   navigator.clipboard.writeText(content).then(() => {
+  //     const el = document.createElement('div');
+  //     el.className = 'copy-notice';
+  //     el.textContent = '已复制!';
+  //     document.body.appendChild(el);
+  //     setTimeout(() => el.remove(), 1500);
+  //   }).catch(err => console.error('复制失败:', err));
+  // };
   
   // Product window state
   const showProductWindow = ref(false);
