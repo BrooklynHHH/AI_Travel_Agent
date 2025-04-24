@@ -737,8 +737,8 @@
       isStreaming.value = true;
       
       // Call Xiaomi API
-      // const apiHost = 'http://10.108.145.59';
-      const apiHost = 'http://localhost:8001';
+      const apiHost = 'http://10.108.145.59';
+      // const apiHost = 'http://localhost:8001';
       const savedApiKey = getCookie('movie_api_key') || 'app-default-key';
       
       const params = new URLSearchParams({
