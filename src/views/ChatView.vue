@@ -565,7 +565,8 @@ const handleContentClick = (event) => {
     // Check if it has a product URL
     else if (event.target.hasAttribute('data-product-url')) {
       const productUrlAttr = event.target.getAttribute('data-product-url');
-      productName.value = productUrlAttr;
+      // 使用链接的文本内容（产品名称）作为浮窗标题
+      productName.value = event.target.textContent || '产品详情';
       productUrl.value = productUrlAttr;
       showProductWindow.value = true;
     } else {
@@ -648,6 +649,9 @@ const conversationId = ref('');
 const isStreaming = ref(false);
 // Store about_mi data during streaming
 const aboutMiData = ref(null);
+
+// 存储product_urls数据（缓存id不为null的项）
+const cachedProductUrls = ref([]);
 
 // Store messages
 const messages = ref([]);
@@ -804,10 +808,40 @@ const sendMessage = async () => {
         
         // Handle message event (contains answer content)
         if (data.event === "message" && data.answer) {
-          // Append new content to streaming message
-          streamingMessage.value += data.answer;
+          let newContent = data.answer;
           
-          // Update the message content
+          // 添加处理后的内容
+          streamingMessage.value += newContent;
+          
+          // 如果有缓存的产品数据，尝试匹配并替换streamingMessage.value中的产品名称为链接
+          if (cachedProductUrls.value && cachedProductUrls.value.length > 0) {
+            // 遍历所有缓存的产品
+            cachedProductUrls.value.forEach(product => {
+              if (product.name && product.id) {
+                // 创建一个正则表达式来匹配产品名称
+                // 使用 `\\b` 确保匹配整个单词，避免部分匹配
+                const regex = new RegExp(product.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                
+                // 创建一个正则表达式来匹配产品名称，但排除已经在链接中的产品名称
+                // 使用否定前瞻（negative lookahead）确保不匹配已经是链接格式的文本
+                const linkPattern = new RegExp(`\\[${product.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]\\(aisearch://product/https://m.mi.com/commodity/detail/${product.id}\\)`, 'g');
+                
+                // 检查是否已经有替换过的链接
+                if (!linkPattern.test(streamingMessage.value)) {
+                  // 只替换那些不在链接中的产品名称
+                  const oldContent = streamingMessage.value;
+                  streamingMessage.value = streamingMessage.value.replace(regex, `[${product.name}](aisearch://product/https://m.mi.com/commodity/detail/${product.id})`);
+                  
+                  // 只有在内容确实被替换时才输出日志
+                  if (oldContent !== streamingMessage.value) {
+                    console.log('处理后的内容:', streamingMessage.value);
+                  }
+                }
+              }
+            });
+          }
+          
+          // 更新消息内容
           messages.value[lastIndex].content = streamingMessage.value;
           
           // 检查是否包含aisearch://imgjump/格式的链接
@@ -938,6 +972,31 @@ const sendMessage = async () => {
             };
             
             console.log('Stored about_mi data:', aboutMiData.value);
+          }
+        }
+        
+        // 处理product_urls节点
+        if (data.event === "iteration_completed" && data.data && data.data.title === "product_urls") {
+          console.log('Product URLs detected:', data.data);
+          
+          if (data.data.outputs && Array.isArray(data.data.outputs.output)) {
+            console.log('Product URLs data received:', data.data.outputs.output);
+            
+            // 筛选出id不为null的项
+            const validProducts = data.data.outputs.output.filter(item => item.id !== null);
+            
+            if (validProducts.length > 0) {
+              // 缓存有效的产品数据
+              cachedProductUrls.value = validProducts;
+              console.log('缓存的产品数据:', cachedProductUrls.value);
+              console.log('缓存的产品数量:', cachedProductUrls.value.length);
+              console.log('缓存的产品详情:');
+              cachedProductUrls.value.forEach((product, index) => {
+                console.log(`  ${index + 1}. name: ${product.name}, id: ${product.id}`);
+              });
+            } else {
+              console.log('没有找到id不为null的产品数据');
+            }
           }
         }
       },

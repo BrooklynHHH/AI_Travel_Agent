@@ -381,8 +381,6 @@ export const handleStreamingResponse = async (response, options = {}) => {
         return;
       }
       
-      debug && console.log(`Processing data line. Length: ${dataContent.length}`);
-      
       // Special case for ping events
       if (line === 'event: ping') {
         debug && console.log('Received ping event');
@@ -464,7 +462,6 @@ export const handleStreamingResponse = async (response, options = {}) => {
       // Decode the chunk and add to buffer
       const chunk = decoder.decode(value, { stream: true });
       buffer += chunk;
-      debug && console.log('Received chunk, length:', chunk.length, 'Buffer length:', buffer.length);
       
       // Process complete lines from the buffer
       try {
