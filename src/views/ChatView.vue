@@ -1,5 +1,45 @@
 <template>
   <div class="chat-container">
+    <!-- 全屏图片查看器 -->
+    <div v-if="showImageViewer" class="image-viewer" @click="closeImageViewer">
+      <div class="image-viewer-header">
+        <span class="image-viewer-title">{{ currentImageKeyword }}</span>
+        <button class="close-button" @click.stop="closeImageViewer">×</button>
+      </div>
+      <div class="image-viewer-content" @click.stop>
+        <div class="image-slider-container" ref="imageSlider">
+          <div 
+            class="image-slider" 
+            :style="{ transform: `translateX(${-currentImageIndex * 100}%)` }"
+          >
+            <div 
+              v-for="(image, index) in viewerImages" 
+              :key="index"
+              class="image-slide"
+            >
+              <img :src="image.url" :alt="image.keyword" class="viewer-image" />
+            </div>
+          </div>
+        </div>
+        
+        <button v-if="currentImageIndex > 0" 
+          class="slider-nav-button prev-button" 
+          @click.stop="prevImage"
+        >
+          ◀
+        </button>
+        <button v-if="currentImageIndex < viewerImages.length - 1" 
+          class="slider-nav-button next-button" 
+          @click.stop="nextImage"
+        >
+          ▶
+        </button>
+        
+        <div class="image-viewer-counter">
+          {{ currentImageIndex + 1 }} / {{ viewerImages.length }}
+        </div>
+      </div>
+    </div>
     <!-- Product floating window -->
     <div v-if="showProductWindow" class="product-window" @click="closeProductWindow">
       <div 
@@ -449,36 +489,133 @@ onUnmounted(() => {
 });
 
 // Function to handle click on rendered content
-// 处理图片点击，在浮窗中打开大图
+// 图片查看器状态
+const showImageViewer = ref(false);
+const viewerImages = ref([]);
+const currentImageIndex = ref(0);
+const currentImageKeyword = ref('');
+const imageSlider = ref(null);
+const initialTouchX = ref(0);
+const isSwiping = ref(false);
+const swipeThreshold = 50; // 滑动切换阈值，单位为像素
+
+// 打开图片查看器
+const openImageInViewer = (imageUrl, keyword, allImages, index = 0) => {
+  console.log('在全屏查看器中打开图片:', imageUrl);
+  
+  // 如果提供了所有图片数组，使用它，否则只用当前图片创建数组
+  if (Array.isArray(allImages) && allImages.length > 0) {
+    viewerImages.value = allImages;
+    currentImageIndex.value = index;
+  } else {
+    viewerImages.value = [{url: imageUrl, keyword: keyword}];
+    currentImageIndex.value = 0;
+  }
+  
+  // 设置标题
+  currentImageKeyword.value = keyword || '相关图片';
+  
+  // 显示查看器
+  showImageViewer.value = true;
+  
+  // 禁止背景滚动
+  document.body.style.overflow = 'hidden';
+  
+  // 等待DOM更新后添加触摸事件监听
+  nextTick(() => {
+    if (imageSlider.value) {
+      imageSlider.value.addEventListener('touchstart', handleTouchStart);
+      imageSlider.value.addEventListener('touchmove', handleTouchMove);
+      imageSlider.value.addEventListener('touchend', handleTouchEnd);
+    }
+  });
+};
+
+// 关闭图片查看器
+const closeImageViewer = () => {
+  showImageViewer.value = false;
+  
+  // 恢复背景滚动
+  document.body.style.overflow = '';
+  
+  // 移除触摸事件监听
+  if (imageSlider.value) {
+    imageSlider.value.removeEventListener('touchstart', handleTouchStart);
+    imageSlider.value.removeEventListener('touchmove', handleTouchMove);
+    imageSlider.value.removeEventListener('touchend', handleTouchEnd);
+  }
+};
+
+// 切换到上一张图片
+const prevImage = () => {
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value--;
+    currentImageKeyword.value = viewerImages.value[currentImageIndex.value].keyword || '相关图片';
+  }
+};
+
+// 切换到下一张图片
+const nextImage = () => {
+  if (currentImageIndex.value < viewerImages.value.length - 1) {
+    currentImageIndex.value++;
+    currentImageKeyword.value = viewerImages.value[currentImageIndex.value].keyword || '相关图片';
+  }
+};
+
+// 触摸事件处理
+const handleTouchStart = (event) => {
+  initialTouchX.value = event.touches[0].clientX;
+  isSwiping.value = true;
+};
+
+const handleTouchMove = () => {
+  if (!isSwiping.value) return;
+  // 触摸移动时的逻辑可以添加在这里
+  // 例如添加动态效果
+};
+
+const handleTouchEnd = (event) => {
+  if (!isSwiping.value) return;
+  
+  const touchEndX = event.changedTouches[0].clientX;
+  const diffX = touchEndX - initialTouchX.value;
+  
+  if (Math.abs(diffX) > swipeThreshold) {
+    // 左滑：下一张
+    if (diffX < 0 && currentImageIndex.value < viewerImages.value.length - 1) {
+      nextImage();
+    }
+    // 右滑：上一张
+    else if (diffX > 0 && currentImageIndex.value > 0) {
+      prevImage();
+    }
+  }
+  
+  isSwiping.value = false;
+};
+
+// 处理图片点击，在全屏查看器中打开图片
 const openImageInProductWindow = (imageUrl, keyword) => {
-  console.log('在浮窗中打开图片:', imageUrl);
+  // 查找当前消息中的所有图片
+  let currentImages = [];
+  let imageIndex = 0;
   
-  // 设置浮窗标题和图片URL
-  productName.value = keyword || '相关图片';
-  
-  // 清除当前浮窗内容并显示加载状态
-  productUrl.value = '';
-  isLoading.value = true;
-  
-  // 增加iframeKey使iframe强制重新加载
-  iframeKey.value++;
-  
-  // 显示产品窗口
-  showProductWindow.value = true;
-  
-  // 直接在iframe中打开图片URL
-  setTimeout(() => {
-    productUrl.value = imageUrl;
-    console.log('浮窗URL已设置为:', productUrl.value);
-    
-    // 设置超时处理
-    setTimeout(() => {
-      if (isLoading.value) {
-        console.log('加载超时，重置状态');
-        isLoading.value = false;
+  // 遍历消息寻找当前点击图片所在的消息
+  for (const message of messages.value) {
+    if (message.relatedImages && message.relatedImages.length > 0) {
+      // 检查这个图片是否在当前消息的relatedImages中
+      const index = message.relatedImages.findIndex(img => img.url === imageUrl);
+      if (index !== -1) {
+        // 找到了图片所在的消息和索引
+        currentImages = message.relatedImages;
+        imageIndex = index;
+        break;
       }
-    }, 15000);
-  }, 300);
+    }
+  }
+  
+  // 打开全屏查看器
+  openImageInViewer(imageUrl, keyword, currentImages, imageIndex);
 };
 
 const handleContentClick = (event) => {
@@ -1142,9 +1279,7 @@ const sendMessage = async () => {
                               const imageUrls = [];
                               
                               answerArray.forEach((item, index) => {
-                                if (item && typeof item === 'string' && (item.startsWith('http') && 
-                                    (item.includes('.jpg') || item.includes('.png') || item.includes('.jpeg') || 
-                                     item.includes('.gif') || item.includes('.webp')))) {
+                                if (item && typeof item === 'string' && item.startsWith('http')) {
                                   console.log(`Image URL ${index + 1} for "${relateKeyword}":`, item);
                                   // 存储图片链接
                                   imageUrls.push({
@@ -2217,5 +2352,119 @@ input {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 全屏图片查看器样式 */
+.image-viewer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: fade-in 0.2s ease-out;
+}
+
+.image-viewer-header {
+  width: 100%;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  z-index: 10;
+}
+
+.image-viewer-title {
+  font-size: 18px;
+  font-weight: 500;
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-viewer-content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-slider-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.image-slider {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
+}
+
+.image-slide {
+  min-width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.viewer-image {
+  max-width: 100%;
+  max-height: 95vh;
+  object-fit: contain;
+}
+
+.slider-nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: background-color 0.2s ease;
+}
+
+.slider-nav-button:hover {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.prev-button {
+  left: 16px;
+}
+
+.next-button {
+  right: 16px;
+}
+
+.image-viewer-counter {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
 }
 </style>
