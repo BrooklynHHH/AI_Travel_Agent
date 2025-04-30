@@ -129,6 +129,21 @@
               <div class="mi-logo-text">MI</div>
             </div>
             <div class="message-bubble main-response">
+              <!-- 相关图片展示区域 -->
+              <div v-if="message.relatedImages && message.relatedImages.length > 0" class="related-images-container">
+                <p class="related-images-title">相关图片</p>
+                <div class="related-images-grid">
+                  <div 
+                    v-for="(image, imgIndex) in message.relatedImages" 
+                    :key="imgIndex" 
+                    class="related-image-item"
+                    @click="openImageInProductWindow(image.url, image.keyword)"
+                  >
+                    <img :src="image.url" :alt="image.keyword" class="related-image" />
+                  </div>
+                </div>
+              </div>
+              
               <div v-if="message.streaming" class="response-text">
                 <div v-html="renderMarkdown(message.content)"></div><span class="cursor">|</span>
               </div>
@@ -434,6 +449,38 @@ onUnmounted(() => {
 });
 
 // Function to handle click on rendered content
+// 处理图片点击，在浮窗中打开大图
+const openImageInProductWindow = (imageUrl, keyword) => {
+  console.log('在浮窗中打开图片:', imageUrl);
+  
+  // 设置浮窗标题和图片URL
+  productName.value = keyword || '相关图片';
+  
+  // 清除当前浮窗内容并显示加载状态
+  productUrl.value = '';
+  isLoading.value = true;
+  
+  // 增加iframeKey使iframe强制重新加载
+  iframeKey.value++;
+  
+  // 显示产品窗口
+  showProductWindow.value = true;
+  
+  // 直接在iframe中打开图片URL
+  setTimeout(() => {
+    productUrl.value = imageUrl;
+    console.log('浮窗URL已设置为:', productUrl.value);
+    
+    // 设置超时处理
+    setTimeout(() => {
+      if (isLoading.value) {
+        console.log('加载超时，重置状态');
+        isLoading.value = false;
+      }
+    }, 15000);
+  }, 300);
+};
+
 const handleContentClick = (event) => {
   // Check if clicked element is a video thumbnail or one of its children
   const videoThumbnail = event.target.closest('.mi-video-thumbnail');
@@ -996,6 +1043,146 @@ const sendMessage = async () => {
               });
             } else {
               console.log('没有找到id不为null的产品数据');
+            }
+          }
+        }
+        
+        // 处理product_keyword节点
+        if (data.event === "node_finished" && data.data && data.data.title === "product_keyword") {
+          console.log('Product Keyword detected:', data.data);
+          
+          if (data.data.outputs) {
+            try {
+              // 解析outputs中的数据
+              const outputData = typeof data.data.outputs === 'string' 
+                ? JSON.parse(data.data.outputs) 
+                : data.data.outputs;
+              
+              console.log('Product Keyword data parsed:', outputData);
+              
+              // 提取relate数组
+              if (outputData.relate && Array.isArray(outputData.relate) && outputData.relate.length > 0) {
+                console.log('Found relate keywords:', outputData.relate);
+                
+                // 遍历relate数组，调用API
+                outputData.relate.forEach(async (relateKeyword) => {
+                  console.log('Processing relate keyword:', relateKeyword);
+                  
+                  try {
+                    // 调用API（使用blocking模式一次性获取结果）
+                    const response = await fetch('https://mify-be.pt.xiaomi.com/api/v1/workflows/run', {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': 'Bearer app-WfbP069tyYjaP4VpUKS8M0EN',
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({
+                        inputs: {
+                          query: relateKeyword
+                        },
+                        response_mode: "blocking",
+                        user: "abc-123"
+                      })
+                    });
+                    
+                    // 获取响应数据
+                    const responseData = await response.json();
+                    
+                    // 处理响应数据
+                    if (responseData.data && responseData.data.outputs && responseData.data.outputs.body) {
+                      try {
+                        // 第一次解析 - 解析body字段为JSON对象
+                        const bodyData = typeof responseData.data.outputs.body === 'string' 
+                          ? JSON.parse(responseData.data.outputs.body) 
+                          : responseData.data.outputs.body;
+                        
+                        // 检查是否有answer字段
+                        if (bodyData && bodyData.answer) {
+                          // 第二次解析 - 因为answer是字符串形式的数组
+                          let answerArray;
+                          
+                          try {
+                            // 尝试将字符串answer解析为数组
+                            if (typeof bodyData.answer === 'string') {
+                              // 处理字符串数组表示
+                              const answerStr = bodyData.answer.trim();
+                              
+                              // 检查是否是字符串形式的数组
+                              if (answerStr.startsWith('[') && answerStr.endsWith(']')) {
+                                // 解析为JavaScript数组
+                                // 使用正则表达式匹配所有URL
+                                const urlRegex = /'(http[^']+)'/g;
+                                const urls = [];
+                                let match;
+                                
+                                while ((match = urlRegex.exec(answerStr)) !== null) {
+                                  urls.push(match[1]); // 添加捕获组1（URL部分）
+                                }
+                                
+                                answerArray = urls;
+                              } else {
+                                // 不是数组形式，可能是单个URL
+                                answerArray = [answerStr];
+                              }
+                            } else if (Array.isArray(bodyData.answer)) {
+                              // 已经是数组，直接使用
+                              answerArray = bodyData.answer;
+                            } else {
+                              // 不是期望的格式
+                              console.log('Unexpected answer format:', bodyData.answer);
+                              return;
+                            }
+                            
+                            // 检查解析出的数组
+                            if (answerArray && answerArray.length > 0) {
+                              console.log('Found answer array for keyword:', relateKeyword, 'length:', answerArray.length);
+                              
+                              // 遍历answer数组，打印图片URL
+                              // 创建一个存储关键词和图片链接的对象
+                              const imageUrls = [];
+                              
+                              answerArray.forEach((item, index) => {
+                                if (item && typeof item === 'string' && (item.startsWith('http') && 
+                                    (item.includes('.jpg') || item.includes('.png') || item.includes('.jpeg') || 
+                                     item.includes('.gif') || item.includes('.webp')))) {
+                                  console.log(`Image URL ${index + 1} for "${relateKeyword}":`, item);
+                                  // 存储图片链接
+                                  imageUrls.push({
+                                    url: item,
+                                    keyword: relateKeyword
+                                  });
+                                }
+                              });
+                              
+                              // 如果找到了图片，存储到与当前关键词相关的图片数组中
+                              if (imageUrls.length > 0) {
+                                // 将图片链接与当前消息关联
+                                if (!messages.value[lastIndex].relatedImages) {
+                                  messages.value[lastIndex].relatedImages = [];
+                                }
+                                messages.value[lastIndex].relatedImages = 
+                                  messages.value[lastIndex].relatedImages.concat(imageUrls);
+                                  
+                                console.log('已添加相关图片:', imageUrls.length);
+                              }
+                            }
+                          } catch (parseAnswerError) {
+                            console.error('Error parsing answer field:', parseAnswerError);
+                          }
+                        }
+                      } catch (parseBodyError) {
+                        console.error('Error parsing body field:', parseBodyError);
+                      }
+                    }
+                  } catch (apiError) {
+                    console.error('Error calling API for keyword:', relateKeyword, apiError);
+                  }
+                });
+              } else {
+                console.log('No relate keywords found in the response');
+              }
+            } catch (error) {
+              console.error('Error processing product_keyword data:', error);
             }
           }
         }
@@ -1988,5 +2175,47 @@ input {
 .mi-video-thumbnail:hover .play-button-icon {
   transform: scale(1.1);
   background-color: #ff6700;
+}
+
+/* 相关图片样式 */
+.related-images-container {
+  margin: 0 0 16px 0;
+  background-color: #f8f8f8;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.related-images-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.related-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.related-image-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  aspect-ratio: 1;
+}
+
+.related-image-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.related-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>
