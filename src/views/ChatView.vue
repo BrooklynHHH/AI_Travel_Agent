@@ -1,5 +1,45 @@
 <template>
   <div class="chat-container">
+    <!-- 全屏图片查看器 -->
+    <div v-if="showImageViewer" class="image-viewer" @click="closeImageViewer">
+      <div class="image-viewer-header">
+        <span class="image-viewer-title">{{ currentImageKeyword }}</span>
+        <button class="close-button" @click.stop="closeImageViewer">×</button>
+      </div>
+      <div class="image-viewer-content" @click.stop>
+        <div class="image-slider-container" ref="imageSlider">
+          <div 
+            class="image-slider" 
+            :style="{ transform: `translateX(${-currentImageIndex * 100}%)` }"
+          >
+            <div 
+              v-for="(image, index) in viewerImages" 
+              :key="index"
+              class="image-slide"
+            >
+              <img :src="image.url" :alt="image.keyword" class="viewer-image" />
+            </div>
+          </div>
+        </div>
+        
+        <button v-if="currentImageIndex > 0" 
+          class="slider-nav-button prev-button" 
+          @click.stop="prevImage"
+        >
+          ◀
+        </button>
+        <button v-if="currentImageIndex < viewerImages.length - 1" 
+          class="slider-nav-button next-button" 
+          @click.stop="nextImage"
+        >
+          ▶
+        </button>
+        
+        <div class="image-viewer-counter">
+          {{ currentImageIndex + 1 }} / {{ viewerImages.length }}
+        </div>
+      </div>
+    </div>
     <!-- Product floating window -->
     <div v-if="showProductWindow" class="product-window" @click="closeProductWindow">
       <div 
@@ -129,6 +169,21 @@
               <div class="mi-logo-text">MI</div>
             </div>
             <div class="message-bubble main-response">
+              <!-- 相关图片展示区域 -->
+              <div v-if="message.relatedImages && message.relatedImages.length > 0" class="related-images-container">
+                <p class="related-images-title">相关图片</p>
+                <div class="related-images-grid">
+                  <div 
+                    v-for="(image, imgIndex) in message.relatedImages" 
+                    :key="imgIndex" 
+                    class="related-image-item"
+                    @click="openImageInProductWindow(image.url, image.keyword)"
+                  >
+                    <img :src="image.url" :alt="image.keyword" class="related-image" />
+                  </div>
+                </div>
+              </div>
+              
               <div v-if="message.streaming" class="response-text">
                 <div v-html="renderMarkdown(message.content)"></div><span class="cursor">|</span>
               </div>
@@ -434,6 +489,135 @@ onUnmounted(() => {
 });
 
 // Function to handle click on rendered content
+// 图片查看器状态
+const showImageViewer = ref(false);
+const viewerImages = ref([]);
+const currentImageIndex = ref(0);
+const currentImageKeyword = ref('');
+const imageSlider = ref(null);
+const initialTouchX = ref(0);
+const isSwiping = ref(false);
+const swipeThreshold = 50; // 滑动切换阈值，单位为像素
+
+// 打开图片查看器
+const openImageInViewer = (imageUrl, keyword, allImages, index = 0) => {
+  console.log('在全屏查看器中打开图片:', imageUrl);
+  
+  // 如果提供了所有图片数组，使用它，否则只用当前图片创建数组
+  if (Array.isArray(allImages) && allImages.length > 0) {
+    viewerImages.value = allImages;
+    currentImageIndex.value = index;
+  } else {
+    viewerImages.value = [{url: imageUrl, keyword: keyword}];
+    currentImageIndex.value = 0;
+  }
+  
+  // 设置标题
+  currentImageKeyword.value = keyword || '相关图片';
+  
+  // 显示查看器
+  showImageViewer.value = true;
+  
+  // 禁止背景滚动
+  document.body.style.overflow = 'hidden';
+  
+  // 等待DOM更新后添加触摸事件监听
+  nextTick(() => {
+    if (imageSlider.value) {
+      imageSlider.value.addEventListener('touchstart', handleTouchStart);
+      imageSlider.value.addEventListener('touchmove', handleTouchMove);
+      imageSlider.value.addEventListener('touchend', handleTouchEnd);
+    }
+  });
+};
+
+// 关闭图片查看器
+const closeImageViewer = () => {
+  showImageViewer.value = false;
+  
+  // 恢复背景滚动
+  document.body.style.overflow = '';
+  
+  // 移除触摸事件监听
+  if (imageSlider.value) {
+    imageSlider.value.removeEventListener('touchstart', handleTouchStart);
+    imageSlider.value.removeEventListener('touchmove', handleTouchMove);
+    imageSlider.value.removeEventListener('touchend', handleTouchEnd);
+  }
+};
+
+// 切换到上一张图片
+const prevImage = () => {
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value--;
+    currentImageKeyword.value = viewerImages.value[currentImageIndex.value].keyword || '相关图片';
+  }
+};
+
+// 切换到下一张图片
+const nextImage = () => {
+  if (currentImageIndex.value < viewerImages.value.length - 1) {
+    currentImageIndex.value++;
+    currentImageKeyword.value = viewerImages.value[currentImageIndex.value].keyword || '相关图片';
+  }
+};
+
+// 触摸事件处理
+const handleTouchStart = (event) => {
+  initialTouchX.value = event.touches[0].clientX;
+  isSwiping.value = true;
+};
+
+const handleTouchMove = () => {
+  if (!isSwiping.value) return;
+  // 触摸移动时的逻辑可以添加在这里
+  // 例如添加动态效果
+};
+
+const handleTouchEnd = (event) => {
+  if (!isSwiping.value) return;
+  
+  const touchEndX = event.changedTouches[0].clientX;
+  const diffX = touchEndX - initialTouchX.value;
+  
+  if (Math.abs(diffX) > swipeThreshold) {
+    // 左滑：下一张
+    if (diffX < 0 && currentImageIndex.value < viewerImages.value.length - 1) {
+      nextImage();
+    }
+    // 右滑：上一张
+    else if (diffX > 0 && currentImageIndex.value > 0) {
+      prevImage();
+    }
+  }
+  
+  isSwiping.value = false;
+};
+
+// 处理图片点击，在全屏查看器中打开图片
+const openImageInProductWindow = (imageUrl, keyword) => {
+  // 查找当前消息中的所有图片
+  let currentImages = [];
+  let imageIndex = 0;
+  
+  // 遍历消息寻找当前点击图片所在的消息
+  for (const message of messages.value) {
+    if (message.relatedImages && message.relatedImages.length > 0) {
+      // 检查这个图片是否在当前消息的relatedImages中
+      const index = message.relatedImages.findIndex(img => img.url === imageUrl);
+      if (index !== -1) {
+        // 找到了图片所在的消息和索引
+        currentImages = message.relatedImages;
+        imageIndex = index;
+        break;
+      }
+    }
+  }
+  
+  // 打开全屏查看器
+  openImageInViewer(imageUrl, keyword, currentImages, imageIndex);
+};
+
 const handleContentClick = (event) => {
   // Check if clicked element is a video thumbnail or one of its children
   const videoThumbnail = event.target.closest('.mi-video-thumbnail');
@@ -996,6 +1180,144 @@ const sendMessage = async () => {
               });
             } else {
               console.log('没有找到id不为null的产品数据');
+            }
+          }
+        }
+        
+        // 处理product_keyword节点
+        if (data.event === "node_finished" && data.data && data.data.title === "product_keyword") {
+          console.log('Product Keyword detected:', data.data);
+          
+          if (data.data.outputs) {
+            try {
+              // 解析outputs中的数据
+              const outputData = typeof data.data.outputs === 'string' 
+                ? JSON.parse(data.data.outputs) 
+                : data.data.outputs;
+              
+              console.log('Product Keyword data parsed:', outputData);
+              
+              // 提取relate数组
+              if (outputData.relate && Array.isArray(outputData.relate) && outputData.relate.length > 0) {
+                console.log('Found relate keywords:', outputData.relate);
+                
+                // 遍历relate数组，调用API
+                outputData.relate.forEach(async (relateKeyword) => {
+                  console.log('Processing relate keyword:', relateKeyword);
+                  
+                  try {
+                    // 调用API（使用blocking模式一次性获取结果）
+                    const response = await fetch('https://mify-be.pt.xiaomi.com/api/v1/workflows/run', {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': 'Bearer app-WfbP069tyYjaP4VpUKS8M0EN',
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({
+                        inputs: {
+                          query: relateKeyword
+                        },
+                        response_mode: "blocking",
+                        user: "abc-123"
+                      })
+                    });
+                    
+                    // 获取响应数据
+                    const responseData = await response.json();
+                    
+                    // 处理响应数据
+                    if (responseData.data && responseData.data.outputs && responseData.data.outputs.body) {
+                      try {
+                        // 第一次解析 - 解析body字段为JSON对象
+                        const bodyData = typeof responseData.data.outputs.body === 'string' 
+                          ? JSON.parse(responseData.data.outputs.body) 
+                          : responseData.data.outputs.body;
+                        
+                        // 检查是否有answer字段
+                        if (bodyData && bodyData.answer) {
+                          // 第二次解析 - 因为answer是字符串形式的数组
+                          let answerArray;
+                          
+                          try {
+                            // 尝试将字符串answer解析为数组
+                            if (typeof bodyData.answer === 'string') {
+                              // 处理字符串数组表示
+                              const answerStr = bodyData.answer.trim();
+                              
+                              // 检查是否是字符串形式的数组
+                              if (answerStr.startsWith('[') && answerStr.endsWith(']')) {
+                                // 解析为JavaScript数组
+                                // 使用正则表达式匹配所有URL
+                                const urlRegex = /'(http[^']+)'/g;
+                                const urls = [];
+                                let match;
+                                
+                                while ((match = urlRegex.exec(answerStr)) !== null) {
+                                  urls.push(match[1]); // 添加捕获组1（URL部分）
+                                }
+                                
+                                answerArray = urls;
+                              } else {
+                                // 不是数组形式，可能是单个URL
+                                answerArray = [answerStr];
+                              }
+                            } else if (Array.isArray(bodyData.answer)) {
+                              // 已经是数组，直接使用
+                              answerArray = bodyData.answer;
+                            } else {
+                              // 不是期望的格式
+                              console.log('Unexpected answer format:', bodyData.answer);
+                              return;
+                            }
+                            
+                            // 检查解析出的数组
+                            if (answerArray && answerArray.length > 0) {
+                              console.log('Found answer array for keyword:', relateKeyword, 'length:', answerArray.length);
+                              
+                              // 遍历answer数组，打印图片URL
+                              // 创建一个存储关键词和图片链接的对象
+                              const imageUrls = [];
+                              
+                              answerArray.forEach((item, index) => {
+                                if (item && typeof item === 'string' && item.startsWith('http')) {
+                                  console.log(`Image URL ${index + 1} for "${relateKeyword}":`, item);
+                                  // 存储图片链接
+                                  imageUrls.push({
+                                    url: item,
+                                    keyword: relateKeyword
+                                  });
+                                }
+                              });
+                              
+                              // 如果找到了图片，存储到与当前关键词相关的图片数组中
+                              if (imageUrls.length > 0) {
+                                // 将图片链接与当前消息关联
+                                if (!messages.value[lastIndex].relatedImages) {
+                                  messages.value[lastIndex].relatedImages = [];
+                                }
+                                messages.value[lastIndex].relatedImages = 
+                                  messages.value[lastIndex].relatedImages.concat(imageUrls);
+                                  
+                                console.log('已添加相关图片:', imageUrls.length);
+                              }
+                            }
+                          } catch (parseAnswerError) {
+                            console.error('Error parsing answer field:', parseAnswerError);
+                          }
+                        }
+                      } catch (parseBodyError) {
+                        console.error('Error parsing body field:', parseBodyError);
+                      }
+                    }
+                  } catch (apiError) {
+                    console.error('Error calling API for keyword:', relateKeyword, apiError);
+                  }
+                });
+              } else {
+                console.log('No relate keywords found in the response');
+              }
+            } catch (error) {
+              console.error('Error processing product_keyword data:', error);
             }
           }
         }
@@ -1988,5 +2310,161 @@ input {
 .mi-video-thumbnail:hover .play-button-icon {
   transform: scale(1.1);
   background-color: #ff6700;
+}
+
+/* 相关图片样式 */
+.related-images-container {
+  margin: 0 0 16px 0;
+  background-color: #f8f8f8;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.related-images-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.related-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.related-image-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  aspect-ratio: 1;
+}
+
+.related-image-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.related-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 全屏图片查看器样式 */
+.image-viewer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: fade-in 0.2s ease-out;
+}
+
+.image-viewer-header {
+  width: 100%;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  z-index: 10;
+}
+
+.image-viewer-title {
+  font-size: 18px;
+  font-weight: 500;
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-viewer-content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-slider-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.image-slider {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
+}
+
+.image-slide {
+  min-width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.viewer-image {
+  max-width: 100%;
+  max-height: 95vh;
+  object-fit: contain;
+}
+
+.slider-nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: background-color 0.2s ease;
+}
+
+.slider-nav-button:hover {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.prev-button {
+  left: 16px;
+}
+
+.next-button {
+  right: 16px;
+}
+
+.image-viewer-counter {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
 }
 </style>
