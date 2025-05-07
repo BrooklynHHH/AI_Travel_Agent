@@ -188,6 +188,8 @@
                 <div v-html="renderMarkdown(message.content)"></div><span class="cursor">|</span>
               </div>
               <div v-else class="response-text" v-html="renderMarkdown(message.content)"></div>
+
+              <div v-if="message.videoThumbnails" v-html="message.videoThumbnails"></div>
               
               <!-- Follow-up question section -->
               <div v-if="message.followUpQuestion" class="follow-up-question">
@@ -241,6 +243,58 @@
 </div>
     </div>
   </div>
+  <!-- 视频播放浮层 -->
+  <div v-if="showVideoPlayer" class="video-player-overlay" @click="closeVideoPlayer">
+    <div class="video-player-content" @click.stop>
+      <div class="video-player-header">
+        <button class="back-button" @click="closeVideoPlayer">
+          <i class="back-icon">←</i>
+        </button>
+        <div class="video-title">{{ videoTitle }}</div>
+        <div class="header-spacer"></div>
+      </div>
+      <!-- 视频信息区（右侧垂直居中排列） -->
+      <div v-if="videoAvatar || videoLikeCount || videoCommentCount" class="video-info-bar-custom-abs">
+        <div class="video-info-right-custom">
+          <img v-if="videoAvatar" :src="videoAvatar" alt="avatar" class="video-avatar-custom-abs" />
+          <div class="video-like-comment-group-abs">
+            <div v-if="videoLikeCount" class="video-like-custom-abs">👍 {{ videoLikeCount }}</div>
+            <div v-if="videoCommentCount !== undefined" class="video-comment-custom-abs">💬 {{ videoCommentCount }}</div>
+          </div>
+        </div>
+      </div>
+      <!-- 视频标题区（底部，距底20px，左对齐30px） -->
+      <div v-if="videoTitle" class="video-title-bottom-abs" :style="{ textAlign: 'left', left: '30px', right: '0', paddingLeft: '0', paddingRight: '24px' }">{{ videoTitle || '' }}</div>
+      <!-- 视频描述区（底部，左下角30px，底30px，优先显示 description） -->
+      <div
+        v-if="videoDescription && videoDescription.trim() !== ''"
+        class="video-description-bottom-abs"
+      >
+        {{ videoDescription }}
+      </div>
+      <div class="video-player-body">
+        <!-- mp4 直链用 video 标签自动播放，否则用 iframe 并尝试加 autoplay 参数 -->
+        <video
+          v-if="videoUrl && (videoUrl.endsWith('.mp4') || videoUrl.endsWith('.webm') || videoUrl.endsWith('.ogg'))"
+          :src="videoUrl"
+          class="video-iframe"
+          controls
+          autoplay
+          playsinline
+          loop
+        ></video>
+        <iframe
+          v-else-if="videoUrl"
+          :src="getAutoplayUrl(videoUrl)"
+          class="video-iframe"
+          frameborder="0"
+          allow="autoplay; fullscreen"
+          allowfullscreen
+        ></iframe>
+      </div>
+      <!-- 去除全屏观看按钮，footer不再显示 -->
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -259,6 +313,43 @@ const handleQuickAction = (actionText) => {
   userInput.value = actionText;
   // Send the message
   sendMessage();
+};
+
+/** 视频播放器浮层状态 */
+const showVideoPlayer = ref(false);
+const videoUrl = ref('');
+const videoTitle = ref('');
+const videoAvatar = ref('');
+const videoName = ref('');
+const videoLikeCount = ref(0);
+const videoCommentCount = ref(0);
+const videoDescription = ref('');
+
+/** 自动播放兼容处理 */
+const getAutoplayUrl = (url) => {
+  // 常见平台支持 ?autoplay=1 或 &autoplay=1
+  if (url.includes('autoplay=1')) return url;
+  if (url.includes('?')) return url + '&autoplay=1';
+  return url + '?autoplay=1';
+};
+
+/** 打开视频播放器，支持更多信息 */
+const openVideoPlayer = (url, title = '视频播放', opts = {}) => {
+  videoUrl.value = url;
+  videoTitle.value = title;
+  videoAvatar.value = opts.avatar || '';
+  videoName.value = opts.name || '';
+  videoLikeCount.value = opts.likeCount || 0;
+  videoCommentCount.value = opts.commentCount || 0;
+  videoDescription.value = opts.description || '';
+  showVideoPlayer.value = true;
+  document.body.style.overflow = 'hidden';
+};
+/** 关闭视频播放器 */
+const closeVideoPlayer = () => {
+  showVideoPlayer.value = false;
+  videoUrl.value = '';
+  document.body.style.overflow = '';
 };
 
 // Product window state
@@ -623,10 +714,20 @@ const handleContentClick = (event) => {
   const videoThumbnail = event.target.closest('.mi-video-thumbnail');
   if (videoThumbnail) {
     const dpLink = videoThumbnail.getAttribute('data-dp-link');
+    const avatar = videoThumbnail.getAttribute('data-avatar') || '';
+    const name = videoThumbnail.getAttribute('data-name') || '';
+    const likeCount = Number(videoThumbnail.getAttribute('data-like-count')) || 0;
+    const commentCount = Number(videoThumbnail.getAttribute('data-comment-count')) || 0;
+    const description = videoThumbnail.getAttribute('data-description') || '';
     if (dpLink) {
-      console.log('Opening video link:', dpLink);
-      // Open the dp link in a new tab
-      window.open(dpLink, '_blank');
+      // 用浮层播放视频，带上更多信息
+      openVideoPlayer(dpLink, '', {
+        avatar,
+        name,
+        likeCount,
+        commentCount,
+        description
+      });
     }
     return;
   }
@@ -1149,10 +1250,15 @@ const sendMessage = async () => {
           console.log('About MI content detected:', data.data);
           
           if (data.data.outputs) {
-            // Store thumbnail and dp values for later use
+            // Store thumbnail, dp, and extra video info for later use
             aboutMiData.value = {
               thumbnail: data.data.outputs.thumbnail,
-              dp: data.data.outputs.dp
+              dp: data.data.outputs.dp,
+              avatar: data.data.outputs.avatar || '',
+              name: data.data.outputs.name || '',
+              likeCount: data.data.outputs.likeCount || 0,
+              commentCount: data.data.outputs.commentCount || 0,
+              description: data.data.outputs.title || ''
             };
             
             console.log('Stored about_mi data:', aboutMiData.value);
@@ -1339,7 +1445,13 @@ const sendMessage = async () => {
           
           thumbnails.forEach(imgUrl => {
             thumbnailHtml += `
-              <div class="mi-video-thumbnail" data-dp-link="${aboutMiData.value.dp}">
+              <div class="mi-video-thumbnail" data-dp-link="${aboutMiData.value.dp}"
+                data-avatar="${aboutMiData.value.avatar || ''}"
+                data-name="${aboutMiData.value.name || ''}"
+                data-like-count="${aboutMiData.value.likeCount || 0}"
+                data-comment-count="${aboutMiData.value.commentCount || 0}"
+                data-description="${aboutMiData.value.description || ''}"
+              >
                 <img src="${imgUrl}" alt="Xiaomi Video" class="thumbnail-image">
                 <div class="play-button-overlay">
                   <div class="play-button-icon">▶</div>
@@ -1347,16 +1459,13 @@ const sendMessage = async () => {
               </div>
             `;
           });
-          
-          // Append the thumbnail HTML to the message content
-          streamingMessage.value += thumbnailHtml;
-          
-          // Update the message content
-          messages.value[lastIndex].content = streamingMessage.value;
-          
+
+          // 不再拼接到 streamingMessage.value，而是单独存储
+          messages.value[lastIndex].videoThumbnails = thumbnailHtml;
+
           // Reset the about_mi data
           aboutMiData.value = null;
-          
+
           // Scroll to bottom with new content
           nextTick(() => {
             scrollToBottom();
@@ -1447,10 +1556,149 @@ setInterval(() => {
 </script>
 
 <style scoped>
+/* 视频信息区右侧绝对定位，垂直居中 */
+.video-info-bar-custom-abs {
+  position: absolute;
+  top: 50%;
+  right: 32px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 10;
+  pointer-events: none;
+}
+.video-info-right-custom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  pointer-events: auto;
+}
+.video-avatar-custom-abs {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  border: 2px solid #fff;
+  background: #fff;
+}
+.video-like-comment-group-abs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.video-like-custom-abs, .video-comment-custom-abs {
+  color: #fff;
+  font-size: 18px;
+  background: rgba(0,0,0,0.45);
+  border-radius: 16px;
+  padding: 6px 18px;
+  margin: 0;
+  min-width: 60px;
+  text-align: center;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+/* 视频标题底部绝对定位，距底20px */
+.video-title-bottom-abs {
+  position: absolute;
+  left: 30px;
+  right: 0;
+  bottom: 20px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: left;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  z-index: 10;
+  pointer-events: none;
+  padding: 0 24px 0 0;
+  line-height: 1.4;
+}
+.video-description-bottom-abs {
+  position: absolute;
+  left: 30px;
+  right: 30px;
+  bottom: 30px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 400;
+  text-align: left;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  z-index: 11;
+  pointer-events: none;
+  line-height: 1.6;
+  background: rgba(0,0,0,0.32);
+  border-radius: 8px;
+  padding: 8px 16px;
+  max-width: calc(100vw - 60px);
+  word-break: break-word;
+}
 </style>
 
 <!-- Non-scoped styles for dynamically injected HTML content -->
 <style>
+/* 视频播放器浮层样式 */
+.video-player-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #000;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+}
+.video-player-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.video-player-header {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  color: white;
+}
+.video-player-header .back-button {
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+.video-title {
+  margin-left: 16px;
+  font-size: 16px;
+  flex: 1;
+}
+.header-spacer {
+  width: 32px;
+}
+.video-player-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.video-iframe {
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+}
+.video-player-footer {
+  display: none;
+}
+.fullscreen-button {
+  display: none;
+}
 /* Reset and global styles */
 * {
   box-sizing: border-box;
