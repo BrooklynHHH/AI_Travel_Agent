@@ -1,112 +1,37 @@
 <template>
   <div class="chat-container">
-    <!-- 全屏图片查看器 -->
-    <div v-if="showImageViewer" class="image-viewer" @click="closeImageViewer">
-      <div class="image-viewer-header">
-        <span class="image-viewer-title">{{ currentImageKeyword }}</span>
-        <button class="close-button" @click.stop="closeImageViewer">×</button>
-      </div>
-      <div class="image-viewer-content" @click.stop>
-        <div class="image-slider-container" ref="imageSlider">
-          <div 
-            class="image-slider" 
-            :style="{ transform: `translateX(${-currentImageIndex * 100}%)` }"
-          >
-            <div 
-              v-for="(image, index) in viewerImages" 
-              :key="index"
-              class="image-slide"
-            >
-              <img :src="image.url" :alt="image.keyword" class="viewer-image" />
-            </div>
-          </div>
-        </div>
-        
-        <button v-if="currentImageIndex > 0" 
-          class="slider-nav-button prev-button" 
-          @click.stop="prevImage"
-        >
-          ◀
-        </button>
-        <button v-if="currentImageIndex < viewerImages.length - 1" 
-          class="slider-nav-button next-button" 
-          @click.stop="nextImage"
-        >
-          ▶
-        </button>
-        
-        <div class="image-viewer-counter">
-          {{ currentImageIndex + 1 }} / {{ viewerImages.length }}
-        </div>
-      </div>
-    </div>
-    <!-- Product floating window -->
-    <div v-if="showProductWindow" class="product-window" @click="closeProductWindow">
-      <div 
-        class="product-window-content" 
-        :class="{ 'fullscreen': isFullscreen }" 
-        :style="{ height: windowHeight + '%' }"
-        @click.stop
-      >
-        <div class="product-window-header">
-          <h3>{{ productPageTitle }}</h3>
-          <div class="drag-handle" 
-            @mousedown="startDrag" 
-            @touchstart="startDrag"
-          >
-            <span class="drag-icon">≡</span>
-          </div>
-          <div class="header-buttons">
-            <button class="expand-button" @click="toggleFullscreen">{{ isFullscreen ? '▼' : '▲' }}</button>
-            <button class="close-button" @click="closeProductWindow">×</button>
-          </div>
-        </div>
-        <div class="product-window-body">
-          <iframe 
-            v-if="productUrl" 
-            :src="productUrl" 
-            :key="iframeKey"
-            class="product-iframe" 
-            frameborder="0" 
-            allow="scripts"
-            referrerpolicy="origin" 
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation allow-top-navigation-by-user-activation"
-            @load="onIframeLoad"
-          ></iframe>
-          <div v-else-if="isLoading" class="iframe-loading">
-            <div class="loading-spinner"></div>
-            <p>正在加载内容...</p>
-          </div>
-          <p v-else class="product-name">{{ productName }}</p>
-        </div>
-      </div>
-    </div>
-    <!-- Settings modal -->
-    <div v-if="showSettingsModal" class="settings-modal" @click="closeSettingsModal">
-      <div class="settings-modal-content" @click.stop>
-        <div class="settings-modal-header">
-          <h3>设置</h3>
-          <button class="close-button" @click="closeSettingsModal">×</button>
-        </div>
-        <div class="settings-modal-body">
-          <div class="settings-form">
-            <div class="form-group">
-              <label for="apiKey">API Key</label>
-              <input 
-                type="text" 
-                id="apiKey" 
-                placeholder="请输入app-xxxx格式的key" 
-                v-model="apiKeyInput"
-                pattern="app-[a-zA-Z0-9]+"
-              />
-              <small class="form-text">格式：app-xxxx</small>
-            </div>
-            <button class="save-button" @click="saveApiKey">保存</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
+    <!-- 浮层组件 -->
+    <ImageViewer
+      v-model:show="showImageViewer"
+      :images="viewerImages"
+      v-model:currentIndex="currentImageIndex"
+      :keyword="currentImageKeyword"
+    />
+    <ProductWindow
+      v-model:show="showProductWindow"
+      :productName="productName"
+      :productUrl="productUrl"
+      v-model:isFullscreen="isFullscreen"
+      v-model:windowHeight="windowHeight"
+      :isLoading="isLoading"
+      :iframeKey="iframeKey"
+      @iframe-load="onIframeLoad"
+    />
+    <SettingsModal
+      v-model:show="showSettingsModal"
+      :apiKey="apiKeyInput"
+      @save="saveApiKey"
+    />
+    <VideoPlayer
+      v-model:show="showVideoPlayer"
+      :videoUrl="videoUrl"
+      :videoTitle="videoTitle"
+      :videoAvatar="videoAvatar"
+      :videoLikeCount="videoLikeCount"
+      :videoCommentCount="videoCommentCount"
+      :videoDescription="videoDescription"
+    />
+
     <!-- Progress bar (visible when loading or streaming) -->
     <div v-if="isLoading || isStreaming" class="progress-container top-progress">
       <div class="progress-bar"></div>
@@ -243,62 +168,14 @@
 </div>
     </div>
   </div>
-  <!-- 视频播放浮层 -->
-  <div v-if="showVideoPlayer" class="video-player-overlay" @click="closeVideoPlayer">
-    <div class="video-player-content" @click.stop>
-      <div class="video-player-header">
-        <button class="back-button" @click="closeVideoPlayer">
-          <i class="back-icon">←</i>
-        </button>
-        <div class="video-title">{{ videoTitle }}</div>
-        <div class="header-spacer"></div>
-      </div>
-      <!-- 视频信息区（右侧垂直居中排列） -->
-      <div v-if="videoAvatar || videoLikeCount || videoCommentCount" class="video-info-bar-custom-abs">
-        <div class="video-info-right-custom">
-          <img v-if="videoAvatar" :src="videoAvatar" alt="avatar" class="video-avatar-custom-abs" />
-          <div class="video-like-comment-group-abs">
-            <div v-if="videoLikeCount" class="video-like-custom-abs">👍 {{ videoLikeCount }}</div>
-            <div v-if="videoCommentCount !== undefined" class="video-comment-custom-abs">💬 {{ videoCommentCount }}</div>
-          </div>
-        </div>
-      </div>
-      <!-- 视频标题区（底部，距底20px，左对齐30px） -->
-      <div v-if="videoTitle" class="video-title-bottom-abs" :style="{ textAlign: 'left', left: '30px', right: '0', paddingLeft: '0', paddingRight: '24px' }">{{ videoTitle || '' }}</div>
-      <!-- 视频描述区（底部，左下角30px，底30px，优先显示 description） -->
-      <div
-        v-if="videoDescription && videoDescription.trim() !== ''"
-        class="video-description-bottom-abs"
-      >
-        {{ videoDescription }}
-      </div>
-      <div class="video-player-body">
-        <!-- mp4 直链用 video 标签自动播放，否则用 iframe 并尝试加 autoplay 参数 -->
-        <video
-          v-if="videoUrl && (videoUrl.endsWith('.mp4') || videoUrl.endsWith('.webm') || videoUrl.endsWith('.ogg'))"
-          :src="videoUrl"
-          class="video-iframe"
-          controls
-          autoplay
-          playsinline
-          loop
-        ></video>
-        <iframe
-          v-else-if="videoUrl"
-          :src="getAutoplayUrl(videoUrl)"
-          class="video-iframe"
-          frameborder="0"
-          allow="autoplay; fullscreen"
-          allowfullscreen
-        ></iframe>
-      </div>
-      <!-- 去除全屏观看按钮，footer不再显示 -->
-    </div>
-  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import ImageViewer from '../components/modals/ImageViewer.vue';
+import ProductWindow from '../components/modals/ProductWindow.vue';
+import SettingsModal from '../components/modals/SettingsModal.vue';
+import VideoPlayer from '../components/modals/VideoPlayer.vue';
 import MarkdownIt from 'markdown-it';
 import { handleStreamingResponse, safeJsonParse } from '../utils/streamUtils';
 
@@ -325,42 +202,12 @@ const videoLikeCount = ref(0);
 const videoCommentCount = ref(0);
 const videoDescription = ref('');
 
-/** 自动播放兼容处理 */
-const getAutoplayUrl = (url) => {
-  // 常见平台支持 ?autoplay=1 或 &autoplay=1
-  if (url.includes('autoplay=1')) return url;
-  if (url.includes('?')) return url + '&autoplay=1';
-  return url + '?autoplay=1';
-};
-
-/** 打开视频播放器，支持更多信息 */
-const openVideoPlayer = (url, title = '视频播放', opts = {}) => {
-  videoUrl.value = url;
-  videoTitle.value = title;
-  videoAvatar.value = opts.avatar || '';
-  videoName.value = opts.name || '';
-  videoLikeCount.value = opts.likeCount || 0;
-  videoCommentCount.value = opts.commentCount || 0;
-  videoDescription.value = opts.description || '';
-  showVideoPlayer.value = true;
-  document.body.style.overflow = 'hidden';
-};
-/** 关闭视频播放器 */
-const closeVideoPlayer = () => {
-  showVideoPlayer.value = false;
-  videoUrl.value = '';
-  document.body.style.overflow = '';
-};
-
 // Product window state
 const showProductWindow = ref(false);
 const productName = ref('');
 const productUrl = ref('');
 const isFullscreen = ref(false);
 const windowHeight = ref(50); // Default height is 50%
-const isDragging = ref(false);
-const dragStartY = ref(0);
-const dragStartHeight = ref(0);
 const iframeKey = ref(0); // 用于强制重新加载iframe
 const isLoading = ref(false); // 加载状态
 
@@ -368,115 +215,6 @@ const isLoading = ref(false); // 加载状态
 const onIframeLoad = () => {
   console.log('Iframe加载完成');
   isLoading.value = false;
-};
-
-// Computed property for the product window title
-const productPageTitle = computed(() => {
-  if (productUrl.value) {
-    // Extract domain name for URLs
-    try {
-      const url = new URL(productUrl.value);
-      return url.hostname.replace('www.', '') || '外部链接';
-    } catch (e) {
-      // If it's not a proper URL, show the URL as is or default text
-      return productName.value || '页面内容';
-    }
-  }
-  return productName.value || '页面内容';
-});
-
-// Drag functionality
-const startDrag = (event) => {
-  event.preventDefault();
-  isDragging.value = true;
-  
-  // Get starting position
-  if (event.type === 'mousedown') {
-    dragStartY.value = event.clientY;
-  } else if (event.type === 'touchstart') {
-    dragStartY.value = event.touches[0].clientY;
-  }
-  
-  // Store current height
-  dragStartHeight.value = windowHeight.value;
-  
-  // Add event listeners for move and end
-  document.addEventListener('mousemove', handleDrag);
-  document.addEventListener('touchmove', handleDrag, { passive: false });
-  document.addEventListener('mouseup', endDrag);
-  document.addEventListener('touchend', endDrag);
-};
-
-const handleDrag = (event) => {
-  if (!isDragging.value) return;
-  
-  // Prevent default touch behavior
-  if (event.type === 'touchmove') {
-    event.preventDefault();
-  }
-  
-  // Calculate movement
-  let currentY;
-  if (event.type === 'mousemove') {
-    currentY = event.clientY;
-  } else if (event.type === 'touchmove') {
-    currentY = event.touches[0].clientY;
-  }
-  
-  // Calculate new height based on drag direction
-  // Moving up = increase height, moving down = decrease height
-  const deltaY = dragStartY.value - currentY;
-  
-  // Use window height for precise calculation
-  const windowHeight_px = document.documentElement.clientHeight;
-  
-  // Increase sensitivity for downward movement (negative deltaY)
-  const sensitivityFactor = deltaY < 0 ? 1.5 : 1.0; // Increase sensitivity for downward movement
-  const adjustedDeltaY = deltaY * sensitivityFactor;
-  
-  // Convert to percentage of viewport height
-  const deltaPercent = (adjustedDeltaY / windowHeight_px) * 100;
-  const newHeight = dragStartHeight.value + deltaPercent;
-  
-  // Set limits - minimum 30%, maximum 100%
-  windowHeight.value = Math.min(Math.max(newHeight, 30), 100);
-  
-  // Update fullscreen state based on window height
-  isFullscreen.value = windowHeight.value >= 95;
-  
-  // Immediate update to make dragging feel more responsive
-  nextTick(() => {
-    // Force browser to repaint, making the drag feel more responsive
-    window.requestAnimationFrame(() => {});
-  });
-};
-
-const endDrag = () => {
-  isDragging.value = false;
-  document.removeEventListener('mousemove', handleDrag);
-  document.removeEventListener('touchmove', handleDrag);
-  document.removeEventListener('mouseup', endDrag);
-  document.removeEventListener('touchend', endDrag);
-};
-
-// Function to close product window
-const closeProductWindow = () => {
-  showProductWindow.value = false;
-  productUrl.value = '';
-  isFullscreen.value = false;
-};
-
-// Function to toggle fullscreen mode
-const toggleFullscreen = (event) => {
-  event.stopPropagation();
-  isFullscreen.value = !isFullscreen.value;
-  
-  // Also update window height to match fullscreen state
-  if (isFullscreen.value) {
-    windowHeight.value = 100; // Full height when fullscreen
-  } else {
-    windowHeight.value = 50; // Default height when not fullscreen
-  }
 };
 
 // Initialize markdown-it renderer with custom link rendering
@@ -579,134 +317,44 @@ onUnmounted(() => {
   window.removeEventListener('message', handleIframeMessages);
 });
 
-// Function to handle click on rendered content
-// 图片查看器状态
+/** 浮层图片查看器状态 */
 const showImageViewer = ref(false);
 const viewerImages = ref([]);
 const currentImageIndex = ref(0);
 const currentImageKeyword = ref('');
-const imageSlider = ref(null);
-const initialTouchX = ref(0);
-const isSwiping = ref(false);
-const swipeThreshold = 50; // 滑动切换阈值，单位为像素
 
-// 打开图片查看器
-const openImageInViewer = (imageUrl, keyword, allImages, index = 0) => {
-  console.log('在全屏查看器中打开图片:', imageUrl);
-  
-  // 如果提供了所有图片数组，使用它，否则只用当前图片创建数组
-  if (Array.isArray(allImages) && allImages.length > 0) {
-    viewerImages.value = allImages;
-    currentImageIndex.value = index;
-  } else {
-    viewerImages.value = [{url: imageUrl, keyword: keyword}];
-    currentImageIndex.value = 0;
-  }
-  
-  // 设置标题
-  currentImageKeyword.value = keyword || '相关图片';
-  
-  // 显示查看器
-  showImageViewer.value = true;
-  
-  // 禁止背景滚动
+/** 打开视频播放器，支持更多信息 */
+const openVideoPlayer = (url, title = '视频播放', opts = {}) => {
+  videoUrl.value = url;
+  videoTitle.value = title;
+  videoAvatar.value = opts.avatar || '';
+  videoName.value = opts.name || '';
+  videoLikeCount.value = opts.likeCount || 0;
+  videoCommentCount.value = opts.commentCount || 0;
+  videoDescription.value = opts.description || '';
+  showVideoPlayer.value = true;
   document.body.style.overflow = 'hidden';
-  
-  // 等待DOM更新后添加触摸事件监听
-  nextTick(() => {
-    if (imageSlider.value) {
-      imageSlider.value.addEventListener('touchstart', handleTouchStart);
-      imageSlider.value.addEventListener('touchmove', handleTouchMove);
-      imageSlider.value.addEventListener('touchend', handleTouchEnd);
-    }
-  });
 };
 
-// 关闭图片查看器
-const closeImageViewer = () => {
-  showImageViewer.value = false;
-  
-  // 恢复背景滚动
-  document.body.style.overflow = '';
-  
-  // 移除触摸事件监听
-  if (imageSlider.value) {
-    imageSlider.value.removeEventListener('touchstart', handleTouchStart);
-    imageSlider.value.removeEventListener('touchmove', handleTouchMove);
-    imageSlider.value.removeEventListener('touchend', handleTouchEnd);
-  }
-};
-
-// 切换到上一张图片
-const prevImage = () => {
-  if (currentImageIndex.value > 0) {
-    currentImageIndex.value--;
-    currentImageKeyword.value = viewerImages.value[currentImageIndex.value].keyword || '相关图片';
-  }
-};
-
-// 切换到下一张图片
-const nextImage = () => {
-  if (currentImageIndex.value < viewerImages.value.length - 1) {
-    currentImageIndex.value++;
-    currentImageKeyword.value = viewerImages.value[currentImageIndex.value].keyword || '相关图片';
-  }
-};
-
-// 触摸事件处理
-const handleTouchStart = (event) => {
-  initialTouchX.value = event.touches[0].clientX;
-  isSwiping.value = true;
-};
-
-const handleTouchMove = () => {
-  if (!isSwiping.value) return;
-  // 触摸移动时的逻辑可以添加在这里
-  // 例如添加动态效果
-};
-
-const handleTouchEnd = (event) => {
-  if (!isSwiping.value) return;
-  
-  const touchEndX = event.changedTouches[0].clientX;
-  const diffX = touchEndX - initialTouchX.value;
-  
-  if (Math.abs(diffX) > swipeThreshold) {
-    // 左滑：下一张
-    if (diffX < 0 && currentImageIndex.value < viewerImages.value.length - 1) {
-      nextImage();
-    }
-    // 右滑：上一张
-    else if (diffX > 0 && currentImageIndex.value > 0) {
-      prevImage();
-    }
-  }
-  
-  isSwiping.value = false;
-};
-
-// 处理图片点击，在全屏查看器中打开图片
 const openImageInProductWindow = (imageUrl, keyword) => {
   // 查找当前消息中的所有图片
   let currentImages = [];
   let imageIndex = 0;
-  
-  // 遍历消息寻找当前点击图片所在的消息
   for (const message of messages.value) {
     if (message.relatedImages && message.relatedImages.length > 0) {
-      // 检查这个图片是否在当前消息的relatedImages中
       const index = message.relatedImages.findIndex(img => img.url === imageUrl);
       if (index !== -1) {
-        // 找到了图片所在的消息和索引
         currentImages = message.relatedImages;
         imageIndex = index;
         break;
       }
     }
   }
-  
-  // 打开全屏查看器
-  openImageInViewer(imageUrl, keyword, currentImages, imageIndex);
+  // 直接设置 viewerImages、currentImageIndex、currentImageKeyword，ImageViewer 组件通过 v-model 绑定
+  viewerImages.value = currentImages;
+  currentImageIndex.value = imageIndex;
+  currentImageKeyword.value = keyword || '相关图片';
+  showImageViewer.value = true;
 };
 
 const handleContentClick = (event) => {
