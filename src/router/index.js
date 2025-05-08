@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import ChatView from '../views/ChatView.vue'
 import MovieView from '../views/MovieView.vue'
 import BaiduView from '../views/BaiduView.vue'
+import AdvancedView from '../views/AdvancedView.vue'
+import AdvancedResultView from '../views/AdvancedResultView.vue'
 
 const routes = [
   {
@@ -23,6 +25,16 @@ const routes = [
     path: '/baidu',
     name: 'baidu',
     component: BaiduView
+  },
+  {
+    path: '/advanced',
+    name: 'advanced',
+    component: AdvancedView
+  },
+  {
+    path: '/advanced-result',
+    name: 'advanced-result',
+    component: AdvancedResultView
   },
   {
     path: '/',
