@@ -4,6 +4,8 @@ import MovieView from '../views/MovieView.vue'
 import BaiduView from '../views/BaiduView.vue'
 import AdvancedView from '../views/AdvancedView.vue'
 import AdvancedResultView from '../views/AdvancedResultView.vue'
+import MultiAgentView from '../views/MultiAgentView.vue'
+
 
 const routes = [
   {
@@ -35,6 +37,11 @@ const routes = [
     path: '/advanced-result',
     name: 'advanced-result',
     component: AdvancedResultView
+  },
+  {
+    path: '/multi-agent',
+    name: 'multi-agent',
+    component: MultiAgentView
   },
   {
     path: '/',
