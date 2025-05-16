@@ -65,9 +65,23 @@
                     </div>
                   </div>
 
+                  <!-- <div class="response-text">
+                    <span class="search-plan-title">搜索规划</span>
+                    <div v-html="renderMarkdown(message.searchPlan)"></div>
+                  </div> -->
+
+                  <div v-if="message.searchPlan" class="search-plan-container response-text">
+                    <div class="search-plan-header" @click="toggleSearchPlan">
+                      <span class="search-plan-title">搜索规划</span>
+                      <span class="toggle-icon">{{ isSearchPlanCollapsed ? '▶' : '▼' }}</span>
+                    </div>
+                    <div v-show="!isSearchPlanCollapsed" class="search-plan-content">
+                      <div v-html="renderMarkdown(message.searchPlan)"></div>
+                    </div>
+                  
+
                   <!-- 搜索结果 -->
-                  <div v-if="message.searchResults" class="search-results-container">
-                    <span class="search-plan-title">已完成搜索规划</span>
+                  <div v-if="message.searchResults" v-show="!isSearchPlanCollapsed" class="search-results-container">
                     <div v-for="(result, idx) in message.searchResults" :key="idx" class="search-item">
                       <div class="search-title">
                         <div class="search-header" @click="toggleSearchResult(result)">
@@ -82,6 +96,7 @@
                       </div>
                     </div>
                   </div>
+                </div>
                   <div class="response-text">
                     <div v-html="renderMarkdown(message.answerText)"></div>
                   </div>
@@ -161,6 +176,14 @@
     userInput.value = actionText;
     // Send the message
     sendMessage();
+  };
+
+  // 搜索规划折叠状态
+  const isSearchPlanCollapsed = ref(false);
+  
+  // 切换搜索规划折叠状态
+  const toggleSearchPlan = () => {
+    isSearchPlanCollapsed.value = !isSearchPlanCollapsed.value;
   };
 
   // Product window state
@@ -414,6 +437,7 @@
       content: userInput.value,
       searchResults: null,
       answerText: '',
+      searchPlan: '',
       roleCard: null
     };
     messages.value.push(newMessage);
@@ -422,6 +446,7 @@
       content: '',
       searchResults: null,
       answerText: '',
+      searchPlan: '',
       roleCard: null
     };
     messages.value.push(assistantMessage);
@@ -445,6 +470,7 @@
     const reader = response.body.getReader();
     let partialLine = '';
     let shouldContinue = true;
+    let answerFlag = 0;
     while (shouldContinue) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -456,9 +482,11 @@
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const eventData = JSON.parse(line.slice(6));
+          console.log('Received event:', eventData);
           
           // 处理三种响应类型
           if (eventData.event === 'node_finished' && eventData.data.title.includes('输出')) {
+            answerFlag = 0;
             const outputs = eventData.data.outputs;
             console.log('Received outputs:', outputs);
             // 查找最后一个助手消息
@@ -483,7 +511,6 @@
                 console.log('Parsed search result:', json_search_result);
                 currentMessage.searchResults.push(json_search_result);
               }
-              
               // 合并其他字段
               console.log('Updated assistant message:', currentMessage);
             } else {
@@ -500,8 +527,22 @@
 
             // 查找最后一个助手消息
             const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
-            
-            messages.value[lastAssistantIndex].answerText += eventData.answer;
+            if (answerFlag === 0  && eventData.answer.startsWith('1')) {
+              answerFlag = 1;
+              continue
+            }
+            if (answerFlag === 0  && eventData.answer.startsWith('2')) {
+              answerFlag = 2;
+              continue
+            }
+            console.log('Last answerFlag:', answerFlag);
+            if (answerFlag === 1) {
+              messages.value[lastAssistantIndex].searchPlan += eventData.answer;
+            }
+            if (answerFlag === 2) {
+              messages.value[lastAssistantIndex].answerText += eventData.answer;
+            }
+            console.log('Updated assistant message:', messages.value[lastAssistantIndex]);
           }
         }
       }
@@ -710,6 +751,36 @@
     text-shadow: 0 1px rgba(0, 0, 0, 0.3);
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     line-height: 1.5;
+  }
+
+  .search-plan-container {
+    background-color: #f5f5f5; /* 浅灰色背景 */
+    border-radius: 4px;
+    padding: 12px;
+    margin: 8px 0;
+  }
+  .search-plan-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+  .search-plan-title {
+    font-weight: 500;
+    color: #333;
+  }
+  .search-result-title {
+    font-weight: 500;
+    color: #333;
+  }
+  .toggle-icon {
+    font-size: 0.9em;
+    color: #666;
+  }
+  .search-plan-content {
+    margin-top: 8px;
+    color: #666; /* 内容文字灰色 */
   }
 
   .role-card {
