@@ -52,36 +52,36 @@
     
             <!-- Bot message -->
             <template v-else-if="message.role === 'assistant'">
-              <!-- 角色卡片 -->
-              
-
-              <!-- 主响应 -->
               <div class="message-container bot-message">
                 <div class="mi-logo">
                   <div class="mi-logo-text">MI</div>
                 </div>
-                <div class="message-bubble main-response">
-                  <div v-if=message.roleCard>
-                <span>已分配专家: {{ message.roleCard }}</span>
-              </div>
-
-              <!-- 搜索结果 -->
-              <div v-if="message.searchResults" class="search-results-container">
-                <span>已完成搜索规划</span>
-                <div v-for="(result, idx) in message.searchResults" :key="idx" class="search-item">
-                  <div class="search-title">
-                    <div class="search-header" @click="toggleSearchResult(result)">
-                      <span class="toggle-icon">{{ result.show ? '▼' : '▶' }}</span>
-                      <span class="search-query">{{ result.search_item }}</span>
+                <div class="message-bubble main-response multi-agent-response">
+                  <div v-if="message.roleCard" class="role-card">
+                    <i class="expert-icon">💡</i>
+                    <div class="role-info">
+                      <span class="role-title">已分配专家</span>
+                      <span class="role-name">{{ message.roleCard }}</span>
                     </div>
-                    <div v-show="result.show" class="search-content">
-                      <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
-                        <a class="result-link" :href="item.url">{{ item.title }}</a>
+                  </div>
+
+                  <!-- 搜索结果 -->
+                  <div v-if="message.searchResults" class="search-results-container">
+                    <span class="search-plan-title">已完成搜索规划</span>
+                    <div v-for="(result, idx) in message.searchResults" :key="idx" class="search-item">
+                      <div class="search-title">
+                        <div class="search-header" @click="toggleSearchResult(result)">
+                          <span class="toggle-icon">{{ result.show ? '▼' : '▶' }}</span>
+                          <span class="search-query">{{ result.search_item }}</span>
+                        </div>
+                        <div v-show="result.show" class="search-content">
+                          <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
+                            <a class="result-link" :href="item.url">{{ item.title }}</a>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
                   <div class="response-text">
                     <div v-html="renderMarkdown(message.answerText)"></div>
                   </div>
@@ -479,7 +479,7 @@
                 console.log('Received search result:', outputs.output_search_result);
                 currentMessage.searchResults = currentMessage.searchResults || [];
                 let json_search_result = JSON.parse(outputs.output_search_result.message.content);
-                json_search_result.show = true;  // 添加show状态
+                json_search_result.show = false;  // 添加show状态
                 console.log('Parsed search result:', json_search_result);
                 currentMessage.searchResults.push(json_search_result);
               }
@@ -712,6 +712,44 @@
     line-height: 1.5;
   }
 
+  .role-card {
+  display: flex;
+  align-items: center;
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border: 1px solid #e4e7ed;
+}
+
+.expert-icon {
+  font-size: 20px;
+  margin-right: 10px;
+  font-style: normal;
+}
+
+.role-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.role-title {
+  font-size: 12px;
+  color: #909399;
+}
+
+.role-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
+}
+
+/* 确保消息气泡宽度适应新卡片 */
+.message-bubble {
+  max-width: 85%;
+  overflow: visible;
+}
+
   /* Add keyword highlighting */
   .thinking-container pre code .keyword {
     color: #f92672;
@@ -894,6 +932,10 @@
     word-break: break-word;
     line-height: 1.4;
     overflow-wrap: break-word;
+  }
+
+  .multi-agent-response {
+    min-width: 70%;  /* 初始固定最小宽度（可根据实际需求调整数值） */
   }
   
   .user-message .message-bubble {
@@ -1210,6 +1252,19 @@
     margin-right: 4px;
     font-size: 14px;
   }
+
+  .search-plan-title {
+    display: inline-block;
+    margin-bottom: 12px;
+    padding: 6px 12px;
+    background: #f0f8ff;
+    border-radius: 6px;
+    color: #1976d2;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid #bbdefb;
+  }
+
   .search-results-container {
   margin: 12px 0;
   border-radius: 12px;
