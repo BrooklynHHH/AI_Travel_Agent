@@ -78,7 +78,7 @@
       </div>
       
       <!-- Messages -->
-      <div v-for="(message, index) in messages" :key="index">
+      <div v-for="(message, index) in messages" :key="index" class="message-wrapper" style="width: 100%;">
         <!-- User message -->
         <div v-if="message.role === 'user'" class="message-container user-message">
           <div class="message-bubble">
@@ -663,12 +663,14 @@ const sendMessage = async () => {
   
   const userMessage = userInput.value;
   console.log('Message sent:', userMessage);
+  console.log('userInput.value:', userInput.value);
   
   // Add user message to messages array
   messages.value.push({
     role: 'user',
     content: userMessage
   });
+  console.log('messages.value:', JSON.stringify(messages.value));
   
   // If this is the first message, update the page title
   if (isFirstMessage.value) {
@@ -1441,12 +1443,23 @@ setInterval(() => {
   flex-shrink: 0;
 }
 
+/* 确保用户消息容器正确对齐 */
+.message-container.user-message {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
 .user-message {
   justify-content: flex-end;
+  width: 100%;
+  display: flex;
 }
 
 .bot-message {
   justify-content: flex-start;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .message-bubble {
@@ -1463,6 +1476,8 @@ setInterval(() => {
   background-color: #d8e8ff;
   color: #333;
   border-top-right-radius: 4px;
+  max-width: 80%;
+  margin-left: auto;
 }
 
 .bot-message .message-bubble {
@@ -1475,6 +1490,7 @@ setInterval(() => {
 .mi-logo, .spacer-logo {
   width: 32px;
   height: 32px;
+  margin-left: 0;
   margin-right: 8px;
   border-radius: 4px;
   overflow: hidden;
