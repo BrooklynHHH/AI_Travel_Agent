@@ -1,7 +1,8 @@
 module.exports = {
   transpileDependencies: [],
   devServer: {
-    port: 80,
+    port: 1024,
+    historyApiFallback: true,
     proxy: {
       '/baidu-proxy': {
         target: 'https://www.baidu.com',
