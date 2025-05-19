@@ -5,6 +5,7 @@ import BaiduView from '../views/BaiduView.vue'
 import AdvancedView from '../views/AdvancedView.vue'
 import AdvancedResultView from '../views/AdvancedResultView.vue'
 import MultiAgentView from '../views/MultiAgentView.vue'
+import OcrView from '../views/OcrView.vue'
 
 
 const routes = [
@@ -17,6 +18,11 @@ const routes = [
     path: '/mi',
     name: 'mi',
     component: ChatView
+  },
+  {
+    path: '/ocr',
+    name: 'ocr',
+    component: OcrView
   },
   {
     path: '/movie',
