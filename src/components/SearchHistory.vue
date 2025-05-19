@@ -289,6 +289,7 @@ defineExpose({
   justify-content: space-between;
   gap: 10px;
   margin-top: 10px;
+  width: 100%;
 }
 .btn-group-left {
   display: flex;
