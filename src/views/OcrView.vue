@@ -115,7 +115,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onMounted } from 'vue';
 import { handleStreamingResponse } from '../utils/streamUtils';
 import ImageViewer from '../components/modals/ImageViewer.vue';
 import ProductWindow from '../components/modals/ProductWindow.vue';
@@ -123,8 +123,8 @@ import SettingsModal from '../components/modals/SettingsModal.vue';
 import VideoPlayer from '../components/modals/VideoPlayer.vue';
 import MarkdownIt from 'markdown-it';
 import markdownItKatex from 'markdown-it-katex';
-import 'katex/dist/katex.min.css';
-import Tesseract from 'tesseract.js';
+// 已在main.js全局导入，此处移除: import 'katex/dist/katex.min.css';
+import { createWorker, createScheduler } from 'tesseract.js';
 import FabricCanvas from '../components/FabricCanvas.vue';
 
 const userInput = ref('');
@@ -132,6 +132,14 @@ const messages = ref([]);
 const imageUrl = ref('');
 const showCropper = ref(false);
 const cropTempUrl = ref('');
+const conversationId = ref('');
+
+// 在组件加载时生成会话ID
+onMounted(() => {
+  const timestamp = new Date().getTime();
+  conversationId.value = `ocr_${timestamp}`;
+  console.log('生成会话ID:', conversationId.value);
+});
 
 // 上传图片到服务器
 const uploadImageToServer = async (file) => {
@@ -140,10 +148,10 @@ const uploadImageToServer = async (file) => {
     formData.append('file', file);
     formData.append('user', 'taoliang1');
     
-    const response = await fetch('https://mify-be.pt.xiaomi.com/api/v1/files/upload', {
+    const response = await fetch('http://10.18.4.170/v1/files/upload', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer app-RlDb2B6JOcFbdkzzTIyJcMmi'
+        'Authorization': 'Bearer app-KKnaWRUs5gw15CUBHGZkqWd2'
       },
       body: formData
     });
@@ -206,17 +214,19 @@ const processImageWithAPI = async (fileId) => {
           transfer_method: "local_file",
           upload_file_id: fileId,
           type: "image"
-        }
+        },
+        query: userInput.value || "",
+        con_id: conversationId.value
       },
       response_mode: "streaming",
       user: "taoliang1"
     };
     
     // 调用API
-    const response = await fetch('https://mify-be.pt.xiaomi.com/api/v1/workflows/run', {
+    const response = await fetch('http://10.18.4.170/v1/workflows/run', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer app-RlDb2B6JOcFbdkzzTIyJcMmi',
+        'Authorization': 'Bearer app-KKnaWRUs5gw15CUBHGZkqWd2',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestData)
@@ -432,6 +442,26 @@ const processImageWithAPI = async (fileId) => {
         
         // 设置流式输出状态为false
         isStreaming.value = false;
+        
+        // 在流式输出完成后，重新渲染内容以正确显示LaTeX公式
+        nextTick(() => {
+          // 获取当前消息的内容
+          const currentContent = messages.value[lastIndex].content;
+          // 先清空内容，然后重新设置，触发重新渲染
+          messages.value[lastIndex].content = '';
+          setTimeout(() => {
+            // 重新应用内容并强制刷新
+            messages.value[lastIndex].content = currentContent;
+            // 强制重新渲染KaTeX公式
+            nextTick(() => {
+              // 查找所有包含KaTeX公式的元素并应用额外样式
+              const katexElements = document.querySelectorAll('.response-text .katex');
+              katexElements.forEach(el => {
+                el.classList.add('katex-refreshed');
+              });
+            });
+          }, 10);
+        });
       },
       onError: (error) => {
         console.error('流式响应错误:', error);
@@ -549,12 +579,23 @@ const ocrCanvas = ref(null);
 const onFileChange = (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    cropTempUrl.value = ev.target.result;
-    showCropper.value = true;
-  };
-  reader.readAsDataURL(file);
+  
+  // 先重置状态，确保每次上传都能正确显示裁剪界面
+  cropTempUrl.value = '';
+  showCropper.value = false;
+  
+  // 使用nextTick确保DOM已更新
+  nextTick(() => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      cropTempUrl.value = ev.target.result;
+      showCropper.value = true;
+    };
+    reader.readAsDataURL(file);
+  });
+  
+  // 重置input，确保可以上传相同的文件
+  e.target.value = '';
 };
 
 // 获取图片实际宽高
@@ -570,27 +611,51 @@ const doOcr = async () => {
   boxes.value = [];
   if (!imageUrl.value) return;
   console.log('开始识别...');
-  // 识别
-  const { data } = await Tesseract.recognize(imageUrl.value, 'chi_sim+eng');
-  console.log('识别原始结果', data);
-  // 只简单筛选含有“=”或“解”或“题”等关键词的行，作为“题目”
-  const questionWords = ['=', '解', '题', '求', '设', '已知', '计算', '证明'];
-  const resultBoxes = [];
-  if (Array.isArray(data.words)) {
-    data.words.forEach(word => {
-      if (questionWords.some(q => word.text && word.text.includes(q))) {
-        resultBoxes.push({
-          x: word.bbox.x0,
-          y: word.bbox.y0,
-          w: word.bbox.x1 - word.bbox.x0,
-          h: word.bbox.y1 - word.bbox.y0
-        });
-      }
+  
+  try {
+    // 创建worker和scheduler
+    const worker = await createWorker('chi_sim+eng', { 
+      logger: false, // 移除函数日志记录器，改为false禁用日志
+      workerPath: false,  // 使用浏览器内部Worker
+      corePath: false,    // 使用默认core
+      langPath: false     // 使用默认语言包路径
     });
+    
+    const scheduler = createScheduler();
+    scheduler.addWorker(worker);
+    
+    // 使用scheduler进行识别
+    const { data } = await scheduler.addJob('recognize', imageUrl.value);
+    
+    console.log('识别原始结果', data);
+    
+    // 只简单筛选含有"="或"解"或"题"等关键词的行，作为"题目"
+    const questionWords = ['=', '解', '题', '求', '设', '已知', '计算', '证明'];
+    const resultBoxes = [];
+    
+    if (Array.isArray(data.words)) {
+      data.words.forEach(word => {
+        if (questionWords.some(q => word.text && word.text.includes(q))) {
+          resultBoxes.push({
+            x: word.bbox.x0,
+            y: word.bbox.y0,
+            w: word.bbox.x1 - word.bbox.x0,
+            h: word.bbox.y1 - word.bbox.y0
+          });
+        }
+      });
+    }
+    
+    console.log('题目框选结果', resultBoxes);
+    boxes.value = resultBoxes;
+    drawBoxes();
+    
+    // 释放资源
+    await scheduler.terminate();
+    
+  } catch (error) {
+    console.error('OCR识别错误:', error);
   }
-  console.log('题目框选结果', resultBoxes);
-  boxes.value = resultBoxes;
-  drawBoxes();
 };
 
 // 在canvas上画框
@@ -616,12 +681,15 @@ const md = new MarkdownIt({
 md.use(markdownItKatex, {
   throwOnError: false,
   errorColor: '#cc0000',
+  macros: {
+    // 添加常用宏命令支持
+    "\\boldsymbol": "\\mathbf"
+  },
   delimiters: [
     {left: '$$', right: '$$', display: true},
     {left: '$', right: '$', display: false},
     {left: '\\(', right: '\\)', display: false},
-    {left: '\\[', right: '\\]', display: true},
-    {left: '[', right: ']', display: true} // 添加 [...] 作为公式分隔符
+    {left: '\\[', right: '\\]', display: true}
   ]
 });
 
@@ -652,8 +720,17 @@ const renderMarkdown = (content) => {
   // 先处理<think>标签，提取思考内容
   const { content: processedContent } = processThinkTags(content);
   
+  // 处理LaTeX分隔符 \( \) 转换为 $ $ 以确保正确渲染
+  let latexProcessedContent = processedContent
+    .replace(/\\\(/g, '$')
+    .replace(/\\\)/g, '$');
+  
+  // 使用正则表达式检测非分隔符内的\boldsymbol并转换为\mathbf
+  // 这是因为有些KaTeX版本不支持\boldsymbol，但支持\mathbf
+  latexProcessedContent = latexProcessedContent.replace(/(\$.*?)\\boldsymbol(\{.*?\})(.*?\$)/g, "$1\\mathbf$2$3");
+  
   // 然后渲染Markdown
-  return md.render(processedContent);
+  return md.render(latexProcessedContent);
 };
 
 // iframe加载事件处理
@@ -729,17 +806,18 @@ const sendMessage = async () => {
     // 准备请求数据
     const requestData = {
       inputs: {
-        q: userMessage
+        query: userMessage || "",
+        con_id: conversationId.value
       },
       response_mode: "streaming",
       user: "taoliang1"
     };
     
     // 调用API
-    const response = await fetch('https://mify-be.pt.xiaomi.com/api/v1/chat-messages', {
+    const response = await fetch('http://10.18.4.170/v1/workflows/run', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer app-RlDb2B6JOcFbdkzzTIyJcMmi',
+        'Authorization': 'Bearer app-KKnaWRUs5gw15CUBHGZkqWd2',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestData)
@@ -947,6 +1025,26 @@ const sendMessage = async () => {
         
         // 设置流式输出状态为false
         isStreaming.value = false;
+        
+        // 在流式输出完成后，重新渲染内容以正确显示LaTeX公式
+        nextTick(() => {
+          // 获取当前消息的内容
+          const currentContent = messages.value[lastIndex].content;
+          // 先清空内容，然后重新设置，触发重新渲染
+          messages.value[lastIndex].content = '';
+          setTimeout(() => {
+            // 重新应用内容并强制刷新
+            messages.value[lastIndex].content = currentContent;
+            // 强制重新渲染KaTeX公式
+            nextTick(() => {
+              // 查找所有包含KaTeX公式的元素并应用额外样式
+              const katexElements = document.querySelectorAll('.response-text .katex');
+              katexElements.forEach(el => {
+                el.classList.add('katex-refreshed');
+              });
+            });
+          }, 10);
+        });
       },
       onError: (error) => {
         console.error('流式响应错误:', error);
@@ -979,8 +1077,9 @@ const sendMessage = async () => {
 <style>
 /* 全局KaTeX样式，确保公式正确渲染 */
 .katex {
-  font-size: 1.1em !important;
+  font-size: 1.2em !important;
   max-width: 100% !important;
+  display: inline-block !important;
 }
 
 .katex-display {
@@ -989,6 +1088,7 @@ const sendMessage = async () => {
   overflow-y: hidden !important;
   padding: 5px 0 !important;
   text-align: center !important;
+  width: 100% !important;
 }
 
 .katex-html {
@@ -997,6 +1097,27 @@ const sendMessage = async () => {
 
 .katex-error {
   color: #cc0000 !important;
+}
+
+/* 确保粗体符号正确显示 */
+.katex .mathbf {
+  font-weight: bold !important;
+}
+
+.katex-refreshed {
+  animation: katex-refresh 0.1s;
+}
+
+@keyframes katex-refresh {
+  0% { opacity: 0.99; }
+  100% { opacity: 1; }
+}
+
+/* 确保LaTeX公式可视 */
+.message-bubble .response-text p {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
 }
 
 /* 确保公式在移动设备上也能正确显示 */

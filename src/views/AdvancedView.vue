@@ -249,13 +249,22 @@ const handleHistorySelect = (item) => {
 // 处理功能点击事件
 const handleFeature = (feature) => {
   console.log('选择了功能:', feature);
-  router.push({
-    name: 'advanced-result', // 跳转到AdvancedResultView界面
-    query: { 
-      query: feature, // 将被点中项的内容设置给query
-      isdeep: false // isdeep为false
-    }
-  });
+  
+  // 拍照搜题功能跳转到OCR页面
+  if (feature === '拍照搜题') {
+    router.push({
+      name: 'ocr'
+    });
+  } else {
+    // 其他功能正常跳转到结果页
+    router.push({
+      name: 'advanced-result', // 跳转到AdvancedResultView界面
+      query: { 
+        query: feature, // 将被点中项的内容设置给query
+        isdeep: false // isdeep为false
+      }
+    });
+  }
 };
 
 // 处理更多工具点击事件
