@@ -3,6 +3,7 @@ import App from './App.vue'
 import './index.css' // Import Tailwind CSS
 import appConfig from './config/app.config'
 import router from './router'
+import 'katex/dist/katex.min.css'
 
 // Set the initial document title from config
 document.title = appConfig.defaultPageTitle
