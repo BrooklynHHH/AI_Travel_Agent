@@ -1,5 +1,9 @@
 <template>
   <div class="chat-container">
+    <!-- 返回按钮 -->
+    <div class="back-button" @click="goBack">
+      <i class="back-icon">&lt;</i>
+    </div>
     <!-- 浮层组件 -->
     <ImageViewer
       v-model:show="showImageViewer"
@@ -116,6 +120,7 @@
 
 <script setup>
 import { ref, nextTick, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { handleStreamingResponse } from '../utils/streamUtils';
 import ImageViewer from '../components/modals/ImageViewer.vue';
 import ProductWindow from '../components/modals/ProductWindow.vue';
@@ -127,12 +132,18 @@ import markdownItKatex from 'markdown-it-katex';
 import { createWorker, createScheduler } from 'tesseract.js';
 import FabricCanvas from '../components/FabricCanvas.vue';
 
+const router = useRouter();
 const userInput = ref('');
 const messages = ref([]);
 const imageUrl = ref('');
 const showCropper = ref(false);
 const cropTempUrl = ref('');
 const conversationId = ref('');
+
+// 返回按钮功能
+const goBack = () => {
+  router.push('/advanced');
+};
 
 // 在组件加载时生成会话ID
 onMounted(() => {
@@ -1129,6 +1140,31 @@ const sendMessage = async () => {
 </style>
 
 <style scoped>
+/* 返回按钮样式 */
+.back-button {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  opacity: 0.8;
+}
+
+.back-icon {
+  font-size: 16px;
+  font-weight: bold;
+  color: #666;
+}
+
 .upload-btn {
   cursor: pointer;
   display: flex;
