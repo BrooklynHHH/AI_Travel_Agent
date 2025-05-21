@@ -6,6 +6,7 @@ import AdvancedView from '../views/AdvancedView.vue'
 import AdvancedResultView from '../views/AdvancedResultView.vue'
 import MultiAgentView from '../views/MultiAgentView.vue'
 import OcrView from '../views/OcrView.vue'
+import TravelView from '../views/TravelView.vue'
 
 
 const routes = [
@@ -13,6 +14,11 @@ const routes = [
     path: '/search',
     name: 'Search',
     component: () => import('../views/SearchView.vue')
+  },
+  {
+    path: '/travel',
+    name: 'travel',
+    component: TravelView
   },
   {
     path: '/mi',
