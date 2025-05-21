@@ -154,7 +154,7 @@ import MarkdownIt from 'markdown-it';
 
 // Quick action buttons - loaded from config
 const quickActions = ref([
-  '桑葚树可以养蚕吗？'
+  '斑马鱼和宝莲灯可以一起养吗？'
 ]);
 
 // Handler for quick action buttons
@@ -434,7 +434,7 @@ try {
   const response = await fetch('http://10.18.4.170/v1/chat-messages', {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer app-Nn4deB6LnIQz5ohIq4RpgZVm',
+      'Authorization': 'Bearer app-SMpjs4vGlUQIpJ2yL7bhHDuQ',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
