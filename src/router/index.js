@@ -6,9 +6,15 @@ import AdvancedView from '../views/AdvancedView.vue'
 import AdvancedResultView from '../views/AdvancedResultView.vue'
 import MultiAgentView from '../views/MultiAgentView.vue'
 import OcrView from '../views/OcrView.vue'
+import RouteLinksView from '../views/RouteLinksView.vue'
 
 
-const routes = [
+export const routes = [ // Add export here
+  {
+    path: '/route-links',
+    name: 'RouteLinks',
+    component: RouteLinksView
+  },
   {
     path: '/search',
     name: 'Search',
@@ -51,7 +57,7 @@ const routes = [
   },
   {
     path: '/',
-    redirect: '/mi'
+    redirect: '/route-links' // Change redirect to the new page
   }
 ]
 
