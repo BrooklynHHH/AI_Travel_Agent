@@ -1,6 +1,6 @@
 <template>
   <div class="travel-container">
-    <!-- 浮层组件 -->
+    <!-- 浮层组件11111222222 -->
     <ImageViewer
       v-model:show="showImageViewer"
       :images="viewerImages"
@@ -57,14 +57,114 @@
     <!-- Travel content -->
     <div class="travel-content" ref="travelContent">
 
-      <!-- Loading state -->
-      <div v-if="isLoading" class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>正在为您生成行程规划...</p>
+      <!-- Generation Phases (always shown when available) -->
+      <div v-if="generationPhases.length > 0 || isLoading" class="generation-phases-container">
+        <div class="generation-phases">
+          <!-- Loading spinner (integrated with thinking container) -->
+          <div v-if="isLoading" class="thinking-container loading-active">
+            <div class="thinking-header">
+              <div class="thinking-icon">🧠</div>
+              <div class="thinking-title">正在为您生成行程规划...</div>
+              <div class="loading-spinner-small"></div>
+            </div>
+          </div>
+          
+          <!-- Regular thinking container when not loading -->
+          <div v-else class="thinking-container" @click="toggleThinkingExpanded">
+            <div class="thinking-header">
+              <div class="thinking-icon">🧠</div>
+              <div class="thinking-title">思考中...</div>
+              <div class="thinking-expand-icon">{{ isThinkingExpanded ? '▼' : '▶' }}</div>
+            </div>
+          </div>
+          
+          <!-- 展开的思考内容 -->
+          <div v-if="isThinkingExpanded" class="thinking-content">
+            <!-- 只显示检索相关节点 -->
+            <div 
+              v-for="(phase, index) in filteredPhases" 
+              :key="index" 
+              class="phase-container" 
+              :class="{ 'important-phase': phase.isImportant, 'active-phase': currentPhase === phase.phase }"
+              v-show="phase.phase === 'json_search' || phase.phase === 'title_summary'"
+            >
+              <div class="phase-header" @click="togglePhaseExpanded(phase.phase)">
+                <div class="phase-title">{{ getPhaseDisplayName(phase.phase) }}</div>
+                <div class="phase-status-indicator" v-if="currentPhase === phase.phase">
+                  <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+                <div class="phase-expand-icon">{{ expandedPhases.includes(phase.phase) ? '▼' : '▶' }}</div>
+              </div>
+              <div v-if="expandedPhases.includes(phase.phase)" class="phase-content">
+                <div v-if="phase.phase === 'json_search'" class="search-terms-container">
+                  <div v-for="(term, termIndex) in formatSearchTerms(phase.content)" :key="termIndex" class="search-term-item">
+                    {{ term }}
+                  </div>
+                </div>
+                <div v-else-if="phase.phase === 'title_summary'" class="search-results-container">
+                  <div v-for="(result, resultIndex) in formatSearchResults(phase.content)" :key="resultIndex" class="search-result-item">
+                    <a :href="result.url" target="_blank" class="search-result-link">{{ result.title }}</a>
+                  </div>
+                </div>
+                <pre v-else>{{ phase.content }}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
-      <!-- Results area (only shown when we have results) -->
-      <div v-if="dayPlan && !isLoading" class="results-container">
+      <!-- Site details section (shown when site details are available) -->
+      <div v-if="siteDetails.length > 0" class="site-details-section">
+        <h2>为您选择了以下景点</h2>
+        <div class="site-cards-grid">
+          <div 
+            v-for="(site, index) in siteDetails" 
+            :key="index"
+            class="site-card"
+          >
+            <div class="site-header">
+              <div class="site-name">{{ site.name }}</div>
+            </div>
+            <div class="site-photos" v-if="getSitePhotos(site.name).length > 0">
+              <div class="site-photos-grid">
+                <div 
+                  v-for="(photo, photoIndex) in getSitePhotos(site.name)" 
+                  :key="photoIndex"
+                  class="site-photo"
+                  @click="openImageViewer(getSitePhotos(site.name), photoIndex, site.name)"
+                >
+                  <img :src="photo" alt="景点照片" />
+                </div>
+              </div>
+            </div>
+            <div class="site-details-content">
+              <div class="site-address">
+                <span class="detail-label">地址：</span>{{ site.address }}
+              </div>
+              <div class="site-description scrollable-content">
+                <span class="detail-label">描述：</span>{{ site.description }}
+              </div>
+              <div class="site-tags">
+                <span 
+                  v-for="(tag, tagIndex) in site.source_keywords" 
+                  :key="tagIndex"
+                  class="site-tag"
+                >
+                  {{ tag }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Results area (shown when day plan is available) -->
+      <div v-if="dayPlan" class="results-container">
+        <h2>为您制定了以下旅游规划</h2>
         <!-- Day plan tabs -->
         <div class="day-tabs">
           <button 
@@ -125,60 +225,15 @@
       </div>
 
       <!-- Empty state (when no search has been performed) -->
-      <div v-if="!dayPlan && !isLoading" class="empty-state">
+      <div v-if="!dayPlan && !siteDetails.length && !isLoading" class="empty-state">
         <div class="empty-state-icon">🧭</div>
-        <h3>开始您的旅行规划</h3>
-        <p>输入您的旅游需求，我们将为您生成个性化的旅行计划</p>
+        <h3>开启您的专属旅程</h3>
+        <p>告诉我您的旅行偏好,我将为您量身定制完美行程。</p>
         <div class="suggestion-chips">
-          <button class="suggestion-chip" @click="useSearchSuggestion('南京三日游')">南京三日游</button>
+          <button class="suggestion-chip" @click="useSearchSuggestion('南京三日游之特种兵版')">南京三日游之特种兵版</button>
           <button class="suggestion-chip" @click="useSearchSuggestion('杭州亲子游')">杭州亲子游</button>
           <button class="suggestion-chip" @click="useSearchSuggestion('北京五日游')">北京五日游</button>
           <button class="suggestion-chip" @click="useSearchSuggestion('云南七日游')">云南七日游</button>
-        </div>
-      </div>
-      
-      <!-- Site details section (only shown when we have results) -->
-      <div v-if="dayPlan && !isLoading && siteDetails.length > 0" class="site-details-section">
-        <h2>景点详情</h2>
-        <div class="site-cards-grid">
-          <div 
-            v-for="(site, index) in siteDetails" 
-            :key="index"
-            class="site-card"
-          >
-            <div class="site-header">
-              <div class="site-name">{{ site.name }}</div>
-            </div>
-            <div class="site-photos" v-if="getSitePhotos(site.name).length > 0">
-              <div class="site-photos-grid">
-                <div 
-                  v-for="(photo, photoIndex) in getSitePhotos(site.name)" 
-                  :key="photoIndex"
-                  class="site-photo"
-                  @click="openImageViewer(getSitePhotos(site.name), photoIndex, site.name)"
-                >
-                  <img :src="photo" alt="景点照片" />
-                </div>
-              </div>
-            </div>
-            <div class="site-details-content">
-              <div class="site-address">
-                <span class="detail-label">地址：</span>{{ site.address }}
-              </div>
-              <div class="site-description scrollable-content">
-                <span class="detail-label">描述：</span>{{ site.description }}
-              </div>
-              <div class="site-tags">
-                <span 
-                  v-for="(tag, tagIndex) in site.source_keywords" 
-                  :key="tagIndex"
-                  class="site-tag"
-                >
-                  {{ tag }}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       
@@ -194,15 +249,15 @@
           <div class="overview-summary">
             <div class="overview-item">
               <div class="overview-icon">📅</div>
-              <div class="overview-text">总天数: {{ dayPlanKeys.length }}天</div>
+              <div class="overview-text">总天数: <span>{{ dayPlanKeys.length }}</span>天</div>
             </div>
             <div class="overview-item">
               <div class="overview-icon">🕒</div>
-              <div class="overview-text">总游览时间: {{ formatMinutes(totalTripTime) }}</div>
+              <div class="overview-text">总游览时间: <span>{{ formatMinutes(totalTripTime) }}</span></div>
             </div>
             <div class="overview-item">
               <div class="overview-icon">🏞️</div>
-              <div class="overview-text">景点数量: {{ totalAttractions }}个</div>
+              <div class="overview-text">景点数量: <span>{{ totalAttractions }}</span>个</div>
             </div>
           </div>
           
@@ -305,6 +360,272 @@ class DifyWorkflowClient {
       throw error;
     }
   }
+  
+  async runWorkflowStreaming(inputs, user, onUpdate) {
+    const endpoint = "/workflows/run";
+    const payload = {
+      inputs,
+      response_mode: "streaming",
+      user
+    };
+
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: "POST",
+        headers: this.headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API error: ${response.status} - ${errorText}`);
+      }
+
+      // 手动处理流
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let result = { data: { outputs: {} } };
+      
+      // 用于跟踪当前正在生成的阶段
+      let currentPhase = null;
+      let phaseContent = {};
+      
+      // 关注的特定节点类型
+      const importantNodeTypes = [
+        "json_search", 
+        "title_summary",
+        "site_name_address_description",
+        "get_photos", 
+        "day_plan"
+      ];
+
+      let isReading = true;
+      while (isReading) {
+        const { done, value } = await reader.read();
+        if (done) {
+          isReading = false;
+          break;
+        }
+        
+        buffer += decoder.decode(value, { stream: true });
+        
+        // 处理完整的 JSON 对象
+        let boundary = 0;
+        while (boundary !== -1) {
+          // 查找 "data: " 前缀
+          const dataPrefix = "data: ";
+          const dataStart = buffer.indexOf(dataPrefix, boundary);
+          if (dataStart === -1) break;
+          
+          // 查找消息结束的双换行符
+          const messageEnd = buffer.indexOf("\n\n", dataStart);
+          if (messageEnd === -1) break;
+          
+          // 提取 JSON 数据
+          const jsonStart = dataStart + dataPrefix.length;
+          const jsonData = buffer.substring(jsonStart, messageEnd).trim();
+          
+          // 更新 buffer
+          buffer = buffer.substring(messageEnd + 2);
+          boundary = 0;
+          
+          if (!jsonData) continue;
+          if (jsonData === "event: ping") continue; // 忽略心跳事件
+          
+          try {
+            const data = JSON.parse(jsonData);
+            console.log('Stream Event:', data);
+            
+            // 处理不同类型的事件
+            if (data.event === 'workflow_started') {
+              // 工作流开始
+              if (onUpdate) {
+                onUpdate({
+                  event: 'workflow_started',
+                  data: { 
+                    outputs: { 
+                      current_step: '初始化工作流' 
+                    } 
+                  }
+                });
+              }
+            } else if (data.event === 'node_started') {
+              // 节点开始执行
+              const nodeTitle = data.data?.title || '执行节点';
+              currentPhase = nodeTitle;
+              
+              // 初始化当前阶段的内容
+              if (!phaseContent[currentPhase]) {
+                phaseContent[currentPhase] = '';
+              }
+              
+              if (onUpdate) {
+                onUpdate({
+                  event: 'node_started',
+                  data: { 
+                    outputs: { 
+                      current_step: currentPhase,
+                      generation_phases: Object.entries(phaseContent).map(([phase, content]) => ({
+                        phase,
+                        content,
+                        isImportant: importantNodeTypes.includes(phase)
+                      }))
+                    } 
+                  }
+                });
+              }
+            } else if (data.event === 'text_chunk') {
+              // 文本块事件，包含生成的内容
+              if (currentPhase && data.data && data.data.text) {
+                // 将文本块添加到当前阶段的内容中
+                phaseContent[currentPhase] += data.data.text;
+                
+                // 特殊处理day_plan节点，尝试提取JSON内容
+                if (currentPhase === "day_plan") {
+                  // 尝试检测是否已经接收到完整的JSON
+                  const jsonMatch = phaseContent[currentPhase].match(/```json\n([\s\S]*?)\n```/);
+                  if (jsonMatch && jsonMatch[1]) {
+                    try {
+                      // 尝试解析JSON以验证完整性
+                      JSON.parse(jsonMatch[1]); // 只验证JSON是否有效，不需要存储结果
+                      // 如果解析成功，可以提前更新dayplan
+                      if (onUpdate) {
+                        onUpdate({
+                          event: 'text_chunk',
+                          data: { 
+                            outputs: { 
+                              current_step: currentPhase,
+                              generation_phases: Object.entries(phaseContent).map(([phase, content]) => ({
+                                phase,
+                                content,
+                                isImportant: importantNodeTypes.includes(phase)
+                              })),
+                              dayplan: phaseContent[currentPhase]
+                            } 
+                          }
+                        });
+                      }
+                      continue;
+                    } catch (e) {
+                      // JSON不完整，继续接收
+                    }
+                  }
+                }
+                
+                if (onUpdate) {
+                  onUpdate({
+                    event: 'text_chunk',
+                    data: { 
+                      outputs: { 
+                        current_step: currentPhase,
+                        generation_phases: Object.entries(phaseContent).map(([phase, content]) => ({
+                          phase,
+                          content,
+                          isImportant: importantNodeTypes.includes(phase)
+                        }))
+                      } 
+                    }
+                  });
+                }
+              }
+            } else if (data.event === 'node_finished') {
+              // 节点执行完成
+              const nodeTitle = data.data?.title || currentPhase;
+              
+              // 检查是否是重要节点
+              const isImportantNode = importantNodeTypes.includes(nodeTitle);
+              
+              if (data.data && data.data.outputs) {
+                // 合并节点输出到结果中
+                result.data.outputs = { ...result.data.outputs, ...data.data.outputs };
+                
+                // 如果是重要节点，保存其输出内容
+                if (isImportantNode && data.data.outputs) {
+              // 处理特定节点的输出
+              if (nodeTitle === "site_name_address_description" && data.data.outputs.site_detail) {
+                // 景点详情节点，保存景点信息
+                phaseContent[nodeTitle] = JSON.stringify(data.data.outputs.site_detail, null, 2);
+              } else if (nodeTitle === "day_plan" && data.data.outputs.dayplan) {
+                // 行程规划节点，保存行程信息
+                phaseContent[nodeTitle] = data.data.outputs.dayplan;
+              } else if (nodeTitle === "title_summary" && data.data.outputs.show_content) {
+                // 检索结果列表，累积所有迭代的结果
+                if (!phaseContent[nodeTitle]) {
+                  phaseContent[nodeTitle] = JSON.stringify(data.data.outputs.show_content, null, 2);
+                } else {
+                  // 尝试合并当前结果与之前的结果
+                  try {
+                    const existingResults = JSON.parse(phaseContent[nodeTitle]);
+                    const newResults = data.data.outputs.show_content;
+                    // 合并结果并去重
+                    const mergedResults = [...existingResults, ...newResults].filter((item, index, self) => 
+                      index === self.findIndex(t => t.title === item.title && t.url === item.url)
+                    );
+                    phaseContent[nodeTitle] = JSON.stringify(mergedResults, null, 2);
+                  } catch (e) {
+                    // 如果解析失败，直接追加
+                    phaseContent[nodeTitle] += "\n" + JSON.stringify(data.data.outputs.show_content, null, 2);
+                  }
+                }
+              } else {
+                // 其他节点，将输出转换为字符串
+                const outputContent = JSON.stringify(data.data.outputs, null, 2);
+                if (!phaseContent[nodeTitle]) {
+                  phaseContent[nodeTitle] = outputContent;
+                } else {
+                  phaseContent[nodeTitle] += "\n" + outputContent;
+                }
+              }
+                }
+                
+                // 添加生成阶段信息
+                result.data.outputs.generation_phases = Object.entries(phaseContent).map(([phase, content]) => ({
+                  phase,
+                  content,
+                  isImportant: importantNodeTypes.includes(phase)
+                }));
+                
+                if (onUpdate) {
+                  onUpdate({
+                    event: 'node_finished',
+                    data: { outputs: result.data.outputs }
+                  });
+                }
+              }
+              
+              // 重置当前阶段，但保留内容
+              if (currentPhase === nodeTitle) {
+                currentPhase = null;
+              }
+            } else if (data.event === 'workflow_finished') {
+              // 工作流完成
+              if (data.data && data.data.outputs) {
+                result.data.outputs = { ...result.data.outputs, ...data.data.outputs };
+                
+                // 添加生成阶段信息
+                result.data.outputs.generation_phases = Object.entries(phaseContent).map(([phase, content]) => ({
+                  phase,
+                  content,
+                  isImportant: importantNodeTypes.includes(phase)
+                }));
+              }
+              isReading = false;
+            } else if (data.event === 'ping') {
+              // 心跳事件，忽略
+            }
+          } catch (e) {
+            console.error('Error parsing streaming chunk:', e, jsonData);
+          }
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Workflow streaming failed:", error);
+      throw error;
+    }
+  }
 }
 
 // User input for search
@@ -398,6 +719,27 @@ const currentTime = ref('');
 const travelContent = ref(null);
 const expandedSites = ref([]);
 const showTripDetails = ref(false);
+const streamingSteps = ref([]);
+const generationPhases = ref([]);
+const currentPhase = ref('');
+const isThinkingExpanded = ref(true); // 默认展开思考内容
+const expandedPhases = ref([]); // 跟踪哪些阶段是展开的
+
+// 切换思考容器的展开/折叠状态
+const toggleThinkingExpanded = () => {
+  isThinkingExpanded.value = !isThinkingExpanded.value;
+};
+
+// 切换单个阶段的展开/折叠状态
+const togglePhaseExpanded = (phaseName) => {
+  if (expandedPhases.value.includes(phaseName)) {
+    // 如果已经展开，则折叠
+    expandedPhases.value = expandedPhases.value.filter(p => p !== phaseName);
+  } else {
+    // 如果已经折叠，则展开
+    expandedPhases.value.push(phaseName);
+  }
+};
 
 // Parse dayplan data from API response
 const parseDayPlan = (data) => {
@@ -410,6 +752,13 @@ const parseDayPlan = (data) => {
       const jsonMatch = dayplanStr.match(/```json\n([\s\S]*?)\n```/);
       if (jsonMatch && jsonMatch[1]) {
         return JSON.parse(jsonMatch[1]);
+      } else {
+        // 尝试直接解析，可能是纯JSON字符串
+        try {
+          return JSON.parse(dayplanStr);
+        } catch (e) {
+          console.error('Failed to parse dayplan as direct JSON:', e);
+        }
       }
     }
     return null;
@@ -441,60 +790,127 @@ const generateTravelPlan = async () => {
   dayPlan.value = null;
   siteDetails.value = [];
   sitePhotos.value = [];
+  streamingSteps.value = [];
   
   // Set loading state
   isLoading.value = true;
   headerTitle.value = userInput.value;
   
+  // 添加初始加载消息
+  streamingSteps.value.push('正在开始生成行程规划...');
+  
   try {
-    // Get API key from cookie or use default__MIFY_API_KEY
-    const savedApiKey = 'app-8oBdrBQ32V1h9fTZAzI6Zfu9';
+    // Get API key from cookie or use default
+    const savedApiKey = getCookie('api_key') || 'app-8oBdrBQ32V1h9fTZAzI6Zfu9';
     
     // Create client
     const client = new DifyWorkflowClient(savedApiKey);
     
-    // Call API
-    const response = await client.runWorkflow(
+    // Generate a unique user ID for this session
+    const userId = "user-" + Math.random().toString(36).substring(2, 10);
+    
+    // Call API with streaming mode
+    await client.runWorkflowStreaming(
       { user_question: userInput.value },
-      "user-" + Math.random().toString(36).substring(2, 10)
-    );
+      userId,
+      (partialResponse) => {
+        // Process partial response
+        if (partialResponse && partialResponse.data && partialResponse.data.outputs) {
+          const outputs = partialResponse.data.outputs;
+          console.log('Partial response:', outputs);
+          
+          // 添加流式步骤消息
+          if (outputs.current_step && outputs.current_step !== currentPhase.value) {
+            streamingSteps.value.push(`正在${outputs.current_step}...`);
+          }
+          
+          // Update current phase
+          if (outputs.current_step) {
+            currentPhase.value = outputs.current_step;
+          }
+          
+// Process generation phases if available
+if (outputs.generation_phases && Array.isArray(outputs.generation_phases)) {
+  generationPhases.value = outputs.generation_phases;
+  console.log('Generation phases:', generationPhases.value);
+  
+  // 不再自动展开阶段，让用户手动点击展开
+  // 只有当阶段不是json_search或title_summary时才自动展开
+  const importantPhases = outputs.generation_phases.filter(phase => 
+    phase.isImportant && 
+    phase.phase !== 'json_search' && 
+    phase.phase !== 'title_summary'
+  );
+  
+  if (importantPhases.length > 0 && !expandedPhases.value.includes(importantPhases[0].phase)) {
+    expandedPhases.value.push(importantPhases[0].phase);
+  }
+}
+          
+// Parse dayplan data if available
+if (outputs.dayplan) {
+  const parsedDayPlan = parseDayPlan(outputs);
+  if (parsedDayPlan) {
+    dayPlan.value = parsedDayPlan;
+    console.log('Parsed day plan (partial):', dayPlan.value);
     
-    console.log('API Response:', response);
-    
-    // Process response
-    if (response && response.data && response.data.outputs) {
-      console.log('Raw API response:', response.data.outputs);
-      
-      // Parse dayplan data
-      const parsedDayPlan = parseDayPlan(response.data.outputs);
-      if (parsedDayPlan) {
-        dayPlan.value = parsedDayPlan;
-        console.log('Parsed day plan:', dayPlan.value);
-      } else {
-        console.error('Failed to parse dayplan data');
-      }
-      
-      // Process site details
-      if (response.data.outputs.site_detail && Array.isArray(response.data.outputs.site_detail)) {
-        siteDetails.value = response.data.outputs.site_detail;
-        console.log('Site details:', siteDetails.value);
-      } else {
-        console.error('No site details found or invalid format');
-      }
-      
-      // Process site photos
-      if (response.data.outputs.site_photos && Array.isArray(response.data.outputs.site_photos)) {
-        sitePhotos.value = response.data.outputs.site_photos;
-        console.log('Site photos:', sitePhotos.value);
-      } else {
-        console.error('No site photos found or invalid format');
+    // 设置默认选中的天数
+    if (dayPlan.value.daily_itinerary && Object.keys(dayPlan.value.daily_itinerary).length > 0) {
+      selectedDay.value = Object.keys(dayPlan.value.daily_itinerary)[0];
+    }
+  }
+}
+          
+// Process site details if available
+if (outputs.site_detail && Array.isArray(outputs.site_detail)) {
+  siteDetails.value = outputs.site_detail;
+  console.log('Site details (partial):', siteDetails.value);
+}
+          
+// Process site photos if available
+if (outputs.site_photos) {
+  if (Array.isArray(outputs.site_photos)) {
+    sitePhotos.value = outputs.site_photos;
+    console.log('Site photos (array):', sitePhotos.value);
+  } else if (typeof outputs.site_photos === 'object') {
+    // 如果是对象格式，转换为数组格式
+    const photosArray = [];
+    for (const [name, photos] of Object.entries(outputs.site_photos)) {
+      if (Array.isArray(photos)) {
+        photosArray.push({ name, photos });
       }
     }
+    if (photosArray.length > 0) {
+      sitePhotos.value = photosArray;
+      console.log('Site photos (converted from object):', sitePhotos.value);
+    }
+  }
+}
+        }
+      }
+    );
+    
+    // Add completion message to streaming steps
+    streamingSteps.value.push('行程规划已完成！');
+    console.log('Streaming completed');
+    
+    // 确保在数据处理完成后再关闭加载状态
+    if (dayPlan.value) {
+      console.log('Day plan loaded successfully:', dayPlan.value);
+    } else {
+      console.warn('No day plan data received');
+      streamingSteps.value.push('未能获取到行程数据，请重试');
+    }
+    
   } catch (error) {
     console.error('Error generating travel plan:', error);
+    streamingSteps.value.push('生成行程时出错，请稍后再试');
     alert('生成旅行计划时出错，请稍后再试');
   } finally {
-    isLoading.value = false;
+    // 延迟关闭加载状态，确保用户能看到最终消息
+    setTimeout(() => {
+      isLoading.value = false;
+    }, 1000);
   }
 };
 
@@ -502,6 +918,133 @@ const generateTravelPlan = async () => {
 const useSearchSuggestion = (suggestion) => {
   userInput.value = suggestion;
   generateTravelPlan();
+};
+
+// Computed properties for generation phases
+const filteredPhases = computed(() => {
+  return generationPhases.value.filter(phase => phase.isImportant);
+});
+
+// Helper methods for generation phases
+const getPhaseDisplayName = (phaseName) => {
+  const displayNames = {
+    "json_search": "生成检索句",
+    "title_summary": "检索结果列表",
+    "site_name_address_description": "景点总结",
+    "get_photos": "景点图片获取",
+    "day_plan": "行程规划生成"
+  };
+  return displayNames[phaseName] || phaseName;
+};
+
+// eslint-disable-next-line no-unused-vars
+const isValidJson = (str) => {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+// eslint-disable-next-line no-unused-vars
+const formatJsonContent = (content) => {
+  try {
+    const jsonObj = JSON.parse(content);
+    // 格式化景点信息
+    if (Array.isArray(jsonObj)) {
+      let formattedContent = `🏞️ 【景点信息汇总】\n\n`;
+      
+      jsonObj.forEach((site, index) => {
+        formattedContent += `📍 ${index + 1}. 【${site.name}】\n`;
+        formattedContent += `   📌 地址: ${site.address}\n`;
+        formattedContent += `   📝 描述: ${site.description}\n`;
+        formattedContent += `   🏷️ 标签: ${site.source_keywords.join('、')}\n`;
+        
+        if (index < jsonObj.length - 1) {
+          formattedContent += `\n${'-'.repeat(40)}\n\n`;
+        }
+      });
+      
+      return formattedContent;
+    }
+    
+    // 移除usage信息
+    if (jsonObj.text && jsonObj.usage) {
+      return `${jsonObj.text}`;
+    }
+    
+    // 如果不是数组，尝试格式化其他类型的JSON
+    const formattedContent = Object.entries(jsonObj)
+      .filter(([key]) => key !== 'usage') // 过滤掉usage字段
+      .map(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          return `${key}: ${JSON.stringify(value, null, 2).replace(/\n/g, '\n  ')}`;
+        }
+        return `${key}: ${value}`;
+      })
+      .join('\n\n');
+    
+    return formattedContent;
+  } catch (e) {
+    return content;
+  }
+};
+
+// eslint-disable-next-line no-unused-vars
+const formatDayPlanContent = (content) => {
+  try {
+    // 提取JSON部分
+    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
+    if (jsonMatch && jsonMatch[1]) {
+      const jsonObj = JSON.parse(jsonMatch[1]);
+      
+      // 格式化行程规划
+      let formattedContent = `🗺️ 【${jsonObj.summary.total_planned_days}日旅游行程规划】\n\n`;
+      
+      // 添加行程概览
+      formattedContent += `📋 【行程概览】\n`;
+      formattedContent += `${'-'.repeat(40)}\n`;
+      formattedContent += `📅 总天数: ${jsonObj.summary.total_planned_days}天\n`;
+      formattedContent += `⏱️ 行程节奏: ${jsonObj.summary.overall_pace === 'moderate' ? '适中' : 
+                            jsonObj.summary.overall_pace === 'relaxed' ? '轻松' : 
+                            jsonObj.summary.overall_pace === 'packed' ? '紧凑' : 
+                            jsonObj.summary.overall_pace}\n`;
+      if (jsonObj.summary.notes_or_unassigned) {
+        formattedContent += `📝 备注: ${jsonObj.summary.notes_or_unassigned}\n`;
+      }
+      formattedContent += `${'-'.repeat(40)}\n\n`;
+      
+      // 添加每日行程
+      Object.entries(jsonObj.daily_itinerary).forEach(([day, details]) => {
+        formattedContent += `🔶 【${day.replace('Day_', '第')}天 - ${details.theme_or_area}】\n`;
+        formattedContent += `${'-'.repeat(40)}\n`;
+        formattedContent += `⏰ 时间安排:\n`;
+        formattedContent += `  • 景点游览: ${formatMinutes(details.estimated_attraction_time_minutes)}\n`;
+        formattedContent += `  • 交通时间: ${formatMinutes(details.estimated_travel_time_minutes)}\n`;
+        formattedContent += `  • 总时长: ${formatMinutes(details.estimated_attraction_time_minutes + details.estimated_travel_time_minutes)}\n\n`;
+        
+        formattedContent += `🏛️ 景点行程:\n`;
+        
+        details.attractions.forEach((attraction, index) => {
+          const siteName = attraction.site_name.replace(/北京市\s+/, '');
+          formattedContent += `  ${index + 1}. ${siteName} (${formatMinutes(attraction.estimated_visit_duration_minutes)})\n`;
+          
+          if (attraction.travel_to_next_minutes) {
+            formattedContent += `     ↓ ${formatMinutes(attraction.travel_to_next_minutes)} ↓\n`;
+          }
+        });
+        
+        formattedContent += `\n💡 安排理由:\n  ${details.day_reasoning}\n\n`;
+      });
+      
+      return formattedContent;
+    }
+    return content;
+  } catch (e) {
+    console.error('Error formatting day plan:', e);
+    return content;
+  }
 };
 
 // Computed properties
@@ -623,11 +1166,84 @@ const toggleTripDetails = () => {
 const getSitePhotos = (siteName) => {
   if (!sitePhotos.value || !sitePhotos.value.length) return [];
   
-  const sitePhoto = sitePhotos.value.find(photo => 
-    photo.name.includes(siteName) || siteName.includes(photo.name)
-  );
+  // 尝试找到完全匹配的景点
+  let sitePhoto = sitePhotos.value.find(photo => photo.name === siteName);
+  
+  // 如果没有完全匹配，尝试部分匹配
+  if (!sitePhoto) {
+    sitePhoto = sitePhotos.value.find(photo => 
+      photo.name.includes(siteName) || siteName.includes(photo.name)
+    );
+  }
   
   return sitePhoto ? sitePhoto.photos : [];
+};
+
+// 格式化检索句
+const formatSearchTerms = (content) => {
+  try {
+    // 尝试解析JSON
+    let terms = [];
+    if (content.includes('show_content')) {
+      // 如果包含show_content字段，尝试提取
+      const jsonObj = JSON.parse(content);
+      if (jsonObj.show_content && Array.isArray(jsonObj.show_content)) {
+        terms = jsonObj.show_content;
+      }
+    } else if (isValidJson(content)) {
+      // 直接尝试解析为数组
+      const jsonObj = JSON.parse(content);
+      if (Array.isArray(jsonObj)) {
+        terms = jsonObj;
+      } else if (jsonObj.search_sentence && Array.isArray(jsonObj.search_sentence)) {
+        terms = jsonObj.search_sentence;
+      }
+    } else {
+      // 尝试从文本中提取
+      const matches = content.match(/\[(.*?)\]/g);
+      if (matches) {
+        terms = matches.map(m => m.replace(/[[\]"']/g, '').trim());
+      }
+    }
+    
+    // 过滤空字符串
+    return terms.filter(term => term && term.trim() !== '');
+  } catch (e) {
+    console.error('Error formatting search terms:', e);
+    return [];
+  }
+};
+
+// 格式化检索结果
+const formatSearchResults = (content) => {
+  try {
+    // 尝试解析JSON
+    let results = [];
+    if (content.includes('show_content')) {
+      // 如果包含show_content字段，尝试提取
+      const jsonObj = JSON.parse(content);
+      if (jsonObj.show_content && Array.isArray(jsonObj.show_content)) {
+        results = jsonObj.show_content.map(item => ({
+          title: item.title || '未知标题',
+          url: item.url || '#'
+        }));
+      }
+    } else if (isValidJson(content)) {
+      // 直接尝试解析
+      const jsonObj = JSON.parse(content);
+      if (Array.isArray(jsonObj)) {
+        results = jsonObj.map(item => ({
+          title: item.title || item.name || '未知标题',
+          url: item.url || '#'
+        }));
+      }
+    }
+    
+    return results;
+  } catch (e) {
+    console.error('Error formatting search results:', e);
+    return [];
+  }
 };
 
 // Open image viewer
@@ -749,7 +1365,7 @@ onMounted(() => {
 .day-tab-button {
   background-color: #f0f0f0;
   border: 1px solid #ddd;
-  border-radius: 20px;
+  border-radius: 12px;
   padding: 8px 16px;
   font-size: 14px;
   color: #333;
@@ -802,6 +1418,12 @@ onMounted(() => {
 .activity-item:hover {
   background-color: #f0f0f0;
   transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.activity-item:active {
+  background-color: #e8e8e8;
+  transform: translateY(0);
 }
 
 .activity-number {
@@ -857,10 +1479,16 @@ onMounted(() => {
 
 /* 景点详情区域样式 */
 .site-details-section {
-  margin-bottom: 20px;
+  margin: 20px auto;
+  max-width: 1200px;
+  width: 100%;
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.site-details-section h2 {
+.site-details-section h2, .results-container h2, .trip-overview-section h2 {
   font-size: 18px;
   font-weight: 600;
   color: #333;
@@ -984,10 +1612,11 @@ onMounted(() => {
 
 .site-tag {
   background-color: #f0f0f0;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 4px 12px;
-  font-size: 12px;
-  color: #666;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
 }
 
 /* 底部导航栏样式 */
@@ -1118,6 +1747,291 @@ onMounted(() => {
   font-size: 16px;
 }
 
+.loading-container .streaming-status {
+  margin-top: 16px;
+  max-width: 600px;
+  text-align: center;
+}
+
+.loading-message {
+  color: #666;
+  font-size: 14px;
+  margin-top: 12px;
+  padding: 8px 16px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 生成阶段样式 */
+.generation-phases-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 20px auto;
+  max-width: 1200px;
+}
+
+.generation-phases {
+  width: 100%;
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 思考容器样式 */
+.thinking-container {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 16px;
+}
+
+.thinking-container:hover {
+  background-color: #f0f0f0;
+}
+
+.thinking-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.thinking-icon {
+  font-size: 18px;
+  margin-right: 10px;
+}
+
+.thinking-title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.thinking-expand-icon {
+  font-size: 12px;
+  color: #666;
+}
+
+.thinking-content {
+  padding: 8px;
+  background-color: #fafafa;
+  border-radius: 8px;
+  margin-top: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 阶段容器样式 */
+.phase-container {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  background-color: #f9f9f9;
+}
+
+.phase-container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.important-phase {
+  background-color: #fffaf5;
+  box-shadow: 0 2px 6px rgba(255, 103, 0, 0.08);
+}
+
+.active-phase {
+  border: 2px solid #ff6700;
+  box-shadow: 0 4px 12px rgba(255, 103, 0, 0.15);
+}
+
+.important-phase .phase-header {
+  background-color: #fff0e6;
+  border-bottom: 1px solid #ffcca8;
+}
+
+.active-phase .phase-header {
+  background-color: #ffe4d1;
+  border-bottom: 2px solid #ff6700;
+}
+
+.phase-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f8f8f8;
+  cursor: pointer;
+}
+
+.phase-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.active-phase .phase-title {
+  color: #ff6700;
+}
+
+.phase-status-indicator {
+  margin-right: 10px;
+}
+
+.phase-expand-icon {
+  font-size: 12px;
+  color: #666;
+}
+
+/* 打字指示器样式 */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.typing-indicator span {
+  height: 6px;
+  width: 6px;
+  margin: 0 2px;
+  background-color: #ff6700;
+  border-radius: 50%;
+  display: inline-block;
+  opacity: 0.7;
+}
+
+.typing-indicator span:nth-child(1) {
+  animation: typing 1.5s infinite 0s;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation: typing 1.5s infinite 0.3s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation: typing 1.5s infinite 0.6s;
+}
+
+@keyframes typing {
+  0% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.5); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.7; }
+}
+
+.phase-content {
+  padding: 16px;
+  background-color: #fafafa;
+  max-height: 500px;
+  overflow-y: auto;
+  border-radius: 0 0 8px 8px;
+  animation: slideDown 0.3s ease;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+}
+
+@keyframes slideDown {
+  from { max-height: 0; opacity: 0; }
+  to { max-height: 500px; opacity: 1; }
+}
+
+.phase-content pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* 特殊样式用于景点总结内容 */
+.phase-container[class*="景点总结"] .phase-content pre {
+  background-color: #f0f8ff;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #4a90e2;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #333;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* 特殊样式用于景点图片获取内容 */
+.phase-container[class*="景点图片"] .phase-content pre {
+  background-color: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #9e9e9e;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #333;
+}
+
+/* 特别为LLM 3节点添加样式 */
+.llm3-phase .phase-content pre {
+  background-color: #fff8f0;
+  padding: 20px;
+  border-radius: 10px;
+  border-left: 4px solid #ff6700;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #333;
+  box-shadow: 0 2px 6px rgba(255,103,0,0.1);
+}
+
+/* 添加特殊样式用于格式化的内容 */
+.phase-content pre em {
+  font-style: italic;
+  color: #555;
+}
+
+.phase-content pre strong {
+  font-weight: bold;
+  color: #000;
+}
+
+/* 为格式化的内容添加特殊样式 */
+.phase-content pre {
+  position: relative;
+}
+
+/* 为emoji添加特殊样式 */
+.phase-content pre span.emoji {
+  font-size: 1.2em;
+  margin-right: 0.2em;
+  vertical-align: middle;
+}
+
+/* 为分隔线添加特殊样式 */
+.phase-content pre hr {
+  border: none;
+  border-top: 1px dashed #ddd;
+  margin: 12px 0;
+}
+
+/* 为LLM 3节点添加特殊标记 */
+.llm3-phase .phase-header .phase-title {
+  color: #ff6700;
+  font-weight: 700;
+}
+
+.llm3-phase .phase-header .phase-title::before {
+  content: "🗺️ ";
+}
+
 /* 空状态样式 */
 .empty-state {
   display: flex;
@@ -1156,7 +2070,7 @@ onMounted(() => {
 .suggestion-chip {
   background-color: #f0f0f0;
   border: 1px solid #ddd;
-  border-radius: 20px;
+  border-radius: 12px;
   padding: 8px 16px;
   font-size: 14px;
   color: #333;
@@ -1171,7 +2085,13 @@ onMounted(() => {
 
 /* 结果区域样式 */
 .results-container {
-  margin-top: 16px;
+  margin: 20px auto;
+  max-width: 1200px;
+  width: 100%;
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* 日期选项卡样式 */
@@ -1429,7 +2349,13 @@ onMounted(() => {
 
 /* 行程规划概览区域样式 */
 .trip-overview-section {
-  margin-bottom: 20px;
+  margin: 20px auto;
+  max-width: 1200px;
+  width: 100%;
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .trip-overview-section h2 {
@@ -1487,6 +2413,12 @@ onMounted(() => {
 .overview-text {
   font-size: 14px;
   color: #333;
+}
+
+.overview-text span {
+  font-weight: 700;
+  color: #ff6700;
+  font-size: 18px;
 }
 
 .trip-details {
@@ -1667,5 +2599,93 @@ onMounted(() => {
 
 .fixed-search-container .search-icon {
   font-size: 20px;
+}
+
+/* 加载旋转器样式 */
+.loading-spinner-small {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 103, 0, 0.1);
+  border-top-color: #ff6700;
+  animation: spin 1s linear infinite;
+  margin-left: 10px;
+}
+
+/* 加载状态下的思考容器样式 */
+.loading-active {
+  background-color: #fff0e6;
+  border: 1px solid #ffcca8;
+  cursor: default;
+}
+
+.loading-active:hover {
+  background-color: #fff0e6;
+  transform: none;
+}
+
+/* 检索词容器样式 */
+.search-terms-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.search-term-item {
+  background-color: #f0f8ff;
+  border-radius: 12px;
+  padding: 6px 20px;
+  font-size: 13px;
+  color: #4a6fa5;
+  display: flex;
+  align-items: center;
+}
+
+.search-term-item::before {
+  content: "🔍";
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+/* 检索结果容器样式 */
+.search-results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.search-result-item {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 2px;
+  border: 1px solid #eaeaea;
+}
+
+.search-result-item:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-item:active {
+  background-color: #e8e8e8;
+  transform: translateY(0);
+}
+
+.search-result-link {
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  display: block;
+  line-height: 1.4;
+}
+
+.search-result-link:hover {
+  color: #ff6700;
+  text-decoration: underline;
 }
 </style>
