@@ -1,0 +1,1248 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: travel_V2
+  use_icon_as_answer_icon: false
+kind: app
+version: 0.1.5
+workflow:
+  conversation_variables: []
+  environment_variables:
+  - description: ''
+    id: 2f026540-87fc-42ba-99ec-a851331cd28a
+    name: amap_api_key
+    selector:
+    - env
+    - amap_api_key
+    value: cc4f161a65645cb8009739ee9fdda460
+    value_type: string
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        feishu_file_count_limit: 20
+        feishu_url_count_limit: 20
+        file_size_limit: 100
+        image_file_size_limit: 30
+        video_file_size_limit: 800
+        workflow_file_upload_limit: 20
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: code
+      id: 1747633569008-source-1747633668001-target
+      selected: false
+      source: '1747633569008'
+      sourceHandle: source
+      target: '1747633668001'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: code
+        targetType: iteration
+      id: 1747633668001-source-1747633726639-target
+      selected: false
+      source: '1747633668001'
+      sourceHandle: source
+      target: '1747633726639'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        iteration_id: '1747633726639'
+        sourceType: iteration-start
+        targetType: tool
+      id: 1747633726639start-source-1747633747825-target
+      selected: false
+      source: 1747633726639start
+      sourceHandle: source
+      target: '1747633747825'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: true
+        iteration_id: '1747633726639'
+        sourceType: tool
+        targetType: code
+      id: 1747633747825-source-1747634089669-target
+      selected: false
+      source: '1747633747825'
+      sourceHandle: source
+      target: '1747634089669'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        sourceType: iteration
+        targetType: llm
+      id: 1747633726639-source-1747635197198-target
+      selected: false
+      source: '1747633726639'
+      sourceHandle: source
+      target: '1747635197198'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        iteration_id: '1747640722195'
+        sourceType: iteration-start
+        targetType: http-request
+      id: 1747640722195start-source-1747640745236-target
+      selected: false
+      source: 1747640722195start
+      sourceHandle: source
+      target: '1747640745236'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: true
+        iteration_id: '1747640722195'
+        sourceType: http-request
+        targetType: code
+      id: 1747640745236-source-1747641383993-target
+      selected: false
+      source: '1747640745236'
+      sourceHandle: source
+      target: '1747641383993'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: llm
+      id: 1747570466777-source-1747633569008-target
+      selected: false
+      source: '1747570466777'
+      sourceHandle: source
+      target: '1747633569008'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: parameter-extractor
+        targetType: iteration
+      id: 1747647104128-source-1747640722195-target
+      source: '1747647104128'
+      sourceHandle: source
+      target: '1747640722195'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: parameter-extractor
+      id: 1747635197198-source-1747647104128-target
+      source: '1747635197198'
+      sourceHandle: source
+      target: '1747647104128'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: iteration
+        targetType: code
+      id: 1747640722195-source-1747798565441-target
+      source: '1747640722195'
+      sourceHandle: source
+      target: '1747798565441'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: code
+        targetType: llm
+      id: 1747798565441-source-1747649063853-target
+      source: '1747798565441'
+      sourceHandle: source
+      target: '1747649063853'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: end
+      id: 1747649063853-source-1747641487745-target
+      source: '1747649063853'
+      sourceHandle: source
+      target: '1747641487745'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: parameter-extractor
+        targetType: iteration
+      id: 1747647104128-source-17478197165120-target
+      source: '1747647104128'
+      sourceHandle: source
+      target: '17478197165120'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        iteration_id: '17478197165120'
+        sourceType: iteration-start
+        targetType: http-request
+      id: 1747819716512start-source-1747819716512017478197165120-target
+      source: 1747819716512start
+      sourceHandle: source
+      target: '1747819716512017478197165120'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: true
+        iteration_id: '17478197165120'
+        sourceType: http-request
+        targetType: code
+      id: 1747819716512017478197165120-source-1747819716512017478197165131-target
+      selected: false
+      source: '1747819716512017478197165120'
+      sourceHandle: source
+      target: '1747819716512017478197165131'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        sourceType: iteration
+        targetType: end
+      id: 17478197165120-source-1747641487745-target
+      selected: false
+      source: '17478197165120'
+      sourceHandle: source
+      target: '1747641487745'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: start
+        type: start
+        variables:
+        - label: user_question
+          max_length: 48
+          options: []
+          required: true
+          type: text-input
+          variable: user_question
+      height: 90
+      id: '1747570466777'
+      position:
+        x: 747.4192348134723
+        y: 329.5
+      positionAbsolute:
+        x: 747.4192348134723
+        y: 329.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params: {}
+          mode: chat
+          name: gpt-4o_mi_sys
+          provider: azure_openai
+        prompt_template:
+        - id: c91c9bf7-f6e6-4ea3-81da-66f6330c4509
+          role: system
+          text: '你是一个检索词生成专家，你需要根据用户的问题，识别出问题中的旅行时间、旅行目的地，以及用户的需求是什么，用户个性化需求有哪些？
+
+            你会围绕这些实体构建检索式，返回格式如下：
+
+
+            {''search_sentence'':[''sentence_1'',''sentence_2'',...]}
+
+
+            Ensure the response can be parsed by Python json.loads'
+        - id: f98177ac-4bb0-42b8-9c22-277f4abb32da
+          role: user
+          text: 用户问题：{{#1747570466777.user_question#}}
+        selected: false
+        title: intend2search
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: '1747633569008'
+      position:
+        x: 1060
+        y: 329.5
+      positionAbsolute:
+        x: 1060
+        y: 329.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "def main(arg1: str) -> dict:\n    import json\n    # 1. 将单引号替换为双引号\n\
+          \    if \"```json\" in arg1:\n        arg1 = arg1.replace('```json', '').replace('```',\
+          \ '').strip()\n    cleaned_text = arg1.replace(\"'\", '\"')\n    # 2. 解析JSON\n\
+          \    a = json.loads(cleaned_text)\n    # 3. 返回正确的字典格式\n    # return {'result':\
+          \ a}  # 或者用 \n    return {\n        'result':a['search_sentence'],\n   \
+          \     \"show_content\":a[\"search_sentence\"]\n    } # 如果只需要列表"
+        code_language: python3
+        desc: ''
+        outputs:
+          result:
+            children: null
+            type: array[string]
+          show_content:
+            children: null
+            type: array[string]
+        selected: false
+        title: json_search
+        type: code
+        variables:
+        - value_selector:
+          - '1747633569008'
+          - text
+          variable: arg1
+      height: 54
+      id: '1747633668001'
+      position:
+        x: 1364
+        y: 329.5
+      positionAbsolute:
+        x: 1364
+        y: 329.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        error_handle_mode: terminated
+        height: 259
+        is_parallel: true
+        iterator_selector:
+        - '1747633668001'
+        - result
+        output_selector:
+        - '1747634089669'
+        - contents
+        output_type: array[string]
+        parallel_nums: 10
+        selected: true
+        start_node_id: 1747633726639start
+        title: search_summary
+        type: iteration
+        width: 692
+      height: 259
+      id: '1747633726639'
+      position:
+        x: 1668
+        y: 329.5
+      positionAbsolute:
+        x: 1668
+        y: 329.5
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 692
+      zIndex: 1
+    - data:
+        desc: ''
+        isInIteration: true
+        selected: false
+        title: ''
+        type: iteration-start
+      draggable: false
+      height: 48
+      id: 1747633726639start
+      parentId: '1747633726639'
+      position:
+        x: 24
+        y: 68
+      positionAbsolute:
+        x: 1692
+        y: 397.5
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-iteration-start
+      width: 44
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: true
+        iteration_id: '1747633726639'
+        provider_id: bocha
+        provider_name: bocha
+        provider_type: builtin
+        selected: false
+        title: bocha_ai_search
+        tool_configurations:
+          answer: 0
+          count: 10
+          freshness: noLimit
+        tool_label: 博查 AI Search
+        tool_name: bocha_ai_search
+        tool_parameters:
+          query:
+            type: mixed
+            value: '{{#1747633726639.item#}}'
+        type: tool
+      height: 142
+      id: '1747633747825'
+      parentId: '1747633726639'
+      position:
+        x: 128
+        y: 68
+      positionAbsolute:
+        x: 1796
+        y: 397.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        code: "\ndef main(arg1: str) -> dict:\n    content = arg1[0][\"messages\"\
+          ][0][\"content\"]\n    json_content = json.loads(content)\n    values =\
+          \ json_content[\"value\"]\n    # 先只取网页summary\n    url_contents = [f\"\"\
+          \"title:{v[\"name\"]}\\n\\\\ncontent:{v[\"summary\"]}\"\"\" for v in values]\n\
+          \    show_contents = [\n        {\n        \"title\":v[\"name\"],\n    \
+          \    \"url\":v[\"url\"]} for v in values]\n    return {\n        \"contents\"\
+          : url_contents,\n        \"show_content\":show_content\n    }\n"
+        code_language: python3
+        desc: ''
+        isInIteration: true
+        iteration_id: '1747633726639'
+        outputs:
+          contents:
+            children: null
+            type: array[string]
+          show_content:
+            children: null
+            type: array[object]
+        selected: false
+        title: title_summary
+        type: code
+        variables:
+        - value_selector:
+          - '1747633747825'
+          - json
+          variable: arg1
+      height: 54
+      id: '1747634089669'
+      parentId: '1747633726639'
+      position:
+        x: 421.5399294792385
+        y: 68.13802115622843
+      positionAbsolute:
+        x: 2089.5399294792387
+        y: 397.63802115622843
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params: {}
+          mode: chat
+          name: gpt-4o_mi_sys
+          provider: azure_openai
+        prompt_template:
+        - id: eb3184cd-0c40-4f1b-9687-47ed8fc494f7
+          role: system
+          text: "1. 你是一位经验丰富、知识渊博且极具亲和力的虚拟导游。你对世界各地的风土人情、名胜古迹、文化背景都有深入了解，并且乐于分享你的见闻与实用建议。\n\
+            2. 在回答中，结合从网页检索到的相关文本信息，以确保回答的准确性和丰富性。\n3. 确保你的回答清晰、简洁，并且易于理解，避免使用复杂的术语。\n\
+            4. 在回答中，尽量提供实用的信息，例如旅游建议、景点介绍、当地文化等，你的回答应该保证信息量充足，多维度覆盖用户可能关心的问题。条理清晰，逻辑分明。可适当使用分点、列表、小标题等形式，使内容结构一目了然，便于用户快速获取关键信息。\n\
+            5. 去除重复的景点，确保每个景点只出现一次；根据重复的次数、景点的景点程度、用户偏好程度进行筛选\n6. 避免无根据的推测,所有景点信息应基于检索到的内容。如果信息不足，应如实说明。\n\
+            7.  **格式化输出**\n    请以一下格式进行输出\n        [{\n          \"name\": \"景点标准名称\"\
+            ,\n          \"address\":\"景点地址所在城市名称\"\n          \"description\": \"\
+            （经过提炼的1-3句话的景点介绍，突出特色和吸引力）\",\n          \"source_keywords\": [\"主要景点\"\
+            , \"历史古迹\"] // (可选，用于追踪景点是如何被发现的，如“主要景点”或用户偏好关键词)\n        },\n//在这里添加更多\n\
+            ]\nEnsure the response can be parsed by Python json.loads\n    *   **数量限制:**\
+            \ 通常输出5-10个最相关和最优质的景点。如果用户问题中有明确数量或范围暗示，则遵从用户意图。"
+        - id: 2e7de957-6890-4ae9-8fc3-89837e059f8d
+          role: user
+          text: '网页检索到的信息：{{#1747633726639.output#}}
+
+            用户问题：{{#1747570466777.user_question#}}'
+        selected: false
+        title: site_name_address_description
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: '1747635197198'
+      position:
+        x: 2420.9464900073126
+        y: 329.5
+      positionAbsolute:
+        x: 2420.9464900073126
+        y: 329.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        error_handle_mode: terminated
+        height: 288
+        is_parallel: false
+        iterator_selector:
+        - '1747647104128'
+        - site_names
+        output_selector:
+        - '1747641383993'
+        - results
+        output_type: array[object]
+        parallel_nums: 1
+        selected: false
+        start_node_id: 1747640722195start
+        title: for_lat_lot
+        type: iteration
+        width: 970
+      height: 288
+      id: '1747640722195'
+      position:
+        x: 3296.4671080346416
+        y: 329.5
+      positionAbsolute:
+        x: 3296.4671080346416
+        y: 329.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 970
+      zIndex: 1
+    - data:
+        desc: ''
+        isInIteration: true
+        selected: false
+        title: ''
+        type: iteration-start
+      draggable: false
+      height: 48
+      id: 1747640722195start
+      parentId: '1747640722195'
+      position:
+        x: 24
+        y: 68
+      positionAbsolute:
+        x: 3320.4671080346416
+        y: 397.5
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-iteration-start
+      width: 44
+      zIndex: 1002
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        desc: ''
+        headers: ''
+        isInIteration: true
+        iteration_id: '1747640722195'
+        method: get
+        params: 'key:{{#env.amap_api_key#}}
+
+          address:{{#1747640722195.item#}}
+
+          output:JSON'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 高德api请求景点规范地址+经纬度
+        type: http-request
+        url: https://restapi.amap.com/v3/geocode/geo
+        variables: []
+      height: 136
+      id: '1747640745236'
+      parentId: '1747640722195'
+      position:
+        x: 224.63770411110818
+        y: 65
+      positionAbsolute:
+        x: 3521.1048121457497
+        y: 394.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        code: "import time\ndef main(arg1: str,item: str) -> dict:\n    json_data\
+          \ = json.loads(arg1)[\"geocodes\"][0]\n    time.sleep(0.3)\n    return {\n\
+          \"results\":{\n    \"formatted_address\": json_data[\"formatted_address\"\
+          ],\n    \"location\":json_data[\"location\"],\n    \"site_name\":item\n\
+          \    }\n    }\n"
+        code_language: python3
+        desc: ''
+        isInIteration: true
+        iteration_id: '1747640722195'
+        outputs:
+          results:
+            children: null
+            type: object
+        selected: false
+        title: 获取规范化后的地址+经纬度
+        type: code
+        variables:
+        - value_selector:
+          - '1747640745236'
+          - body
+          variable: arg1
+        - value_selector:
+          - '1747640722195'
+          - item
+          variable: item
+      height: 54
+      id: '1747641383993'
+      parentId: '1747640722195'
+      position:
+        x: 602.6239358625689
+        y: 65
+      positionAbsolute:
+        x: 3899.0910438972105
+        y: 394.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1747649063853'
+          - text
+          variable: dayplan
+        - value_selector:
+          - '1747647104128'
+          - site_detail
+          variable: site_detail
+        - value_selector:
+          - '17478197165120'
+          - output
+          variable: site_photos
+        selected: false
+        title: end_result
+        type: end
+      height: 142
+      id: '1747641487745'
+      position:
+        x: 5175.0670426058105
+        y: 532.9953515722068
+      positionAbsolute:
+        x: 5175.0670426058105
+        y: 532.9953515722068
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        author: 李子由
+        desc: ''
+        height: 225
+        selected: false
+        showAuthor: true
+        text: '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"font-size:
+          16px;","text":"周边搜索有以下选项","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"font-size:
+          16px;","text":" - 周边搜索——圆径","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"font-size:
+          16px;","text":" - 多边形区域搜索——多边形区域内搜索","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"font-size:
+          16px;","text":" - 注意在搜索的过程中对照着高德的POI分类","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
+        theme: blue
+        title: ''
+        type: ''
+        width: 409
+      height: 225
+      id: '1747643384376'
+      position:
+        x: 1654.6362106819088
+        y: 1562.737355435858
+      positionAbsolute:
+        x: 1654.6362106819088
+        y: 1562.737355435858
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-note
+      width: 409
+    - data:
+        author: 李子由
+        desc: ''
+        height: 233
+        selected: false
+        showAuthor: true
+        text: '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"font-size:
+          16px;","text":"注意：","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"font-size:
+          16px;","text":"- address，需要是较为具体的地址，才能使用（景点1｜景点2｜景点3）","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"font-size:
+          16px;","text":"- 此外，address搜索的时候，应该是省市县乡，这样的从大到小","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
+        theme: blue
+        title: ''
+        type: ''
+        width: 497
+      height: 233
+      id: '1747643443082'
+      position:
+        x: 1654.6362106819088
+        y: 1241.8575299246238
+      positionAbsolute:
+        x: 1654.6362106819088
+        y: 1241.8575299246238
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-note
+      width: 497
+    - data:
+        author: 李子由
+        desc: ''
+        height: 198
+        selected: false
+        showAuthor: true
+        text: '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"-
+          这一部分存在以下问题，","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"-
+          高德API——key的并发限制，时间限制，应该在https://console.amap.com/dev/flow/manage  该地址中调整api的权限","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"-
+          目前：暂时使用不并发，请求一个，sleep。0.3s的做法","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"{","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"formatted_address\":
+          \"江苏省南京市江宁区牛首山文化旅游区\",","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"location\":
+          \"118.756168,31.909512\",","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"site_name\":
+          \"南京市江宁区牛首山文化旅游区\"","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    },","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
+        theme: blue
+        title: ''
+        type: ''
+        width: 445
+      height: 198
+      id: '1747646063732'
+      position:
+        x: 1654.6362106819088
+        y: 1825.7885096252362
+      positionAbsolute:
+        x: 1654.6362106819088
+        y: 1825.7885096252362
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-note
+      width: 445
+    - data:
+        desc: ''
+        instruction: '请从内容中提取JSON格式的景点数据，并返回两部分信息：
+
+          1. 原始的完整景点数据列表(site_detail)
+
+          2. 包含所有"城市+景点"组合的字符串数组
+
+          '
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gpt-4o_mi_sys
+          provider: azure_openai
+        parameters:
+        - description: "- site_detail: 原始完整的景点数据数组\n \"site_detail\": [\n    {\n \
+            \     \"name\": \"中山陵\",\n      \"address\": \"南京市玄武区\",\n      \"description\"\
+            : \"...\",\n      \"source_keywords\": [\"主要景点\", \"历史古迹\"]\n    },\n\
+            \    ...更多景点...\n  ]"
+          name: site_detail
+          required: true
+          type: array[object]
+        - description: "- site: 包含所有\"城市+景点\"组合的字符串数组\n\"site\": [\n    \"南京市中山陵\"\
+            ,\n    \"南京市夫子庙秦淮风光带\",\n    ...更多组合...\n  ]"
+          name: site_names
+          required: true
+          type: array[string]
+        query:
+        - '1747635197198'
+        - text
+        reasoning_mode: prompt
+        selected: false
+        title: site_detail_site_name
+        type: parameter-extractor
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: '1747647104128'
+      position:
+        x: 2808.239215277084
+        y: 329.5
+      positionAbsolute:
+        x: 2808.239215277084
+        y: 329.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params: {}
+          mode: chat
+          name: gpt-4o_mi_sys
+          provider: azure_openai
+        prompt_template:
+        - id: 7f38dff9-5440-43f3-8fb9-4bd4cf8e5f3e
+          role: system
+          text: "**角色：智能行程规划专家**\n\n**核心任务：**\n基于用户提供的景点间的预估驾车时间数据，并结合用户可能的偏好（如总天数、每日游玩强度），智能规划出一个逻辑连贯、交通高效、体验舒适的多日游览行程。\n\
+            \n**规划核心原则与优化目标：**\n\n1.  **交通效率优先（基于预计算的驾车时间）：**\n    *   **核心**：直接利用输入中提供的景点间`开车需要`的分钟数作为衡量邻近性的主要依据。\n\
+            \    *   目标：将驾车时间相近的景点组合在同一天，最大程度减少每日在途交通耗时。\n2.  **行程饱满度与节奏控制：**\n  \
+            \  *   参考用户设定的`pace`（游玩强度）或`total_days`来合理分配每日的景点数量和总活动时间（包括游玩和交通）。\n\
+            \    *   **默认值**：若未提供`pace`，默认为 \"moderate\"（适中）。若未提供`total_days`，请根据景点数量和适中强度自行推荐最优天数。\n\
+            \    *   **时间估算**：为更好地控制节奏，请为每个景点假设一个平均游玩时间（例如：主要景点2-3小时，次要或特色点1-1.5小时，除非未来提供更具体信息）。每日总活动时间（景点游玩\
+            \ + 景点间交通）不宜超过8-10小时（可根据`pace`调整）。\n3.  **每日游览逻辑与顺序：**\n    *   每日内部的景点序列应形成一条**单向或闭环的顺畅游览路线**，避免在已访问区域间来回折返。\n\
+            \    *   利用景点间的驾车时间数据，优化从一个景点到下一个景点的顺序。\n4.  **完整性与覆盖度：**\n    *   确保所有在`distance`数据中提及的独立景点都被纳入行程规划中（除非因天数或强度限制确实无法安排，此时应有所说明）。\n\
+            \n**输入数据结构：**\n\n1.  **`attraction_distances` (核心数据源):**\n    *   一个包含多个描述性字符串的列表，每个字符串记录了两个景点之间的**物理距离（米）**和**预估驾车时间（分钟）**。\n\
+            \    *   格式示例:\n        ```json\n        {\n          \"distance\": [\n\
+            \            \"【南京市 南京博物院】距离【南京市 钟山风景名胜区】有4471米，开车需要：23.933333333333334分钟\"\
+            ,\n            \"【南京市 南京博物院】距离【南京市 夫子庙秦淮风光带】有7035米，开车需要：31.516666666666666分钟\"\
+            ,\n            // ... 更多距离信息\n          ]\n        }\n        ```\n  \
+            \  *   **处理要求**：\n        *   你需要从这些字符串中准确提取出唯一的景点名称。\n        *   构建一个景点间的驾车时间矩阵或邻接表作为规划基础。\n\
+            \n2.  **`preferences` (可选的行程偏好):**\n    *   一个JSON对象，可能包含：\n        *\
+            \   `total_days` (int, optional): 用户期望的总游玩天数。\n        *   `pace` (str,\
+            \ optional): 每日游玩强度。可选值：\"relaxed\" (轻松，每日2-3个景点，总活动时间少), \"moderate\"\
+            \ (适中，每日3-4个景点), \"packed\" (紧凑，每日4-5+个景点，总活动时间多)。\n\n**输出格式要求（JSON）：**\n\
+            \n返回一个JSON对象，结构如下：\n\n```json\n{\n  \"summary\": {\n    \"total_planned_days\"\
+            : 2, // AI决定的或用户指定的总天数\n    \"overall_pace\": \"moderate\", // AI采用的或用户指定的节奏\n\
+            \    \"notes_or_unassigned\": \"所有景点已成功安排。\" // 或 \"由于时间限制，景点X未能安排。\"\n\
+            \  },\n  \"daily_itinerary\": {\n    \"Day_1\": {\n      \"theme_or_area\"\
+            : \"历史文化探索 (城中南片区)\", // 当日主题或主要区域（可选，AI可尝试总结）\n      \"estimated_attraction_time_minutes\"\
+            : 360, // 当日所有景点预估游玩总时长\n      \"estimated_travel_time_minutes\": 60,\
+            \   // 当日景点间预估交通总时长\n      \"attractions\": [\n        {\n          \"\
+            site_name\": \"南京市 总统府\",\n          \"estimated_visit_duration_minutes\"\
+            : 120,\n          \"travel_to_next_minutes\": 15 // 到下一个景点的预估驾车时间，本日最后一个景点此项为null或省略\n\
+            \        },\n        {\n          \"site_name\": \"南京市 鸡鸣寺\",\n      \
+            \    \"estimated_visit_duration_minutes\": 90,\n          \"travel_to_next_minutes\"\
+            : 20\n        },\n        {\n          \"site_name\": \"南京市 玄武湖公园\",\n\
+            \          \"estimated_visit_duration_minutes\": 150,\n          \"travel_to_next_minutes\"\
+            : null\n        }\n      ],\n      \"day_reasoning\": \"此日安排的景点在地理上相对集中于市中心区域，从总统府出发，依次游览鸡鸣寺和玄武湖，形成较为顺畅的北向游览路线，交通耗时较少。\"\
+            \n    },\n    \"Day_2\": {\n      \"theme_or_area\": \"历史印记与市井风情 (城南及周边)\"\
+            ,\n      \"estimated_attraction_time_minutes\": 420,\n      \"estimated_travel_time_minutes\"\
+            : 75,\n      \"attractions\": [\n        // ... 当日景点安排，格式同上\n      ],\n\
+            \      \"day_reasoning\": \"本日首先游览夫子庙与老门东，体验秦淮风情，下午前往南京博物院深入了解历史，最后参观钟山风景名胜区（部分）。景点间有一定距离，但已优化为连续区域。\"\
+            \n    }\n    // ... 更多天数\n  }\n}\n```\n\n**规划步骤建议**\n\n1.  **数据预处理：**\n\
+            \    *   从`distance`列表中提取所有唯一的景点名称。\n    *   解析所有距离和驾车时间信息，构建一个完整的、对称的“景点A\
+            \ <-> 景点B = 驾车时间”的查找结构（如字典的字典）。\n2.  **确定总天数和每日强度：**\n    *   如果用户指定`total_days`，则以此为准。否则，根据景点总数和`pace`（默认为\"\
+            moderate\"）估算总天数。\n    *   根据`pace`设定每日大致的景点数量上限和/或总活动时间（游玩+交通）上限。\n3.\
+            \  **行程生成核心逻辑（聚类与排序）：**\n    *   采用一种聚类或贪心算法，迭代地为每一天选择景点组合。\n    *   **日内聚类**：对于新的一天，选择一个未游览的“起始”景点。然后，优先选择与“当前最后一个景点”驾车时间最短的、且未被安排的景点加入当日行程，直到达到当日景点数量上限、时间上限，或没有合适的邻近景点了。\n\
+            \    *   **日内排序**：在一天内的景点被选定后，根据它们之间的驾车时间，通过类似旅行商问题（TSP）的启发式算法（如最近邻法、或对少量景点尝试所有排列）来确定最佳游览顺序，以最小化当日内部的总交通时间。\n\
+            4.  **输出构建：**\n    *   按照指定的JSON格式组织输出。\n    *   为每日行程提供`day_reasoning`，解释为何如此安排。\n\
+            \    *   计算并填充`estimated_attraction_time_minutes`和`estimated_travel_time_minutes`。\n\
+            \    *   在`summary`中提供总体说明。\n\n**请开始规划！**\n"
+        - id: 72e9d094-9469-40ae-a4eb-83f78de73691
+          role: user
+          text: '用户旅游问题：{{#1747570466777.user_question#}}
+
+            两个景点之间的**物理距离（米）**和**预估驾车时间（分钟）：
+
+            {{#1747798565441.distance#}}
+
+            请基于所给的景点以及景点之间的距离进行规划，
+
+            - 不要添加没有列出的景点。
+
+            - 景点间距离应该以及开车所需时间必须依据所给数据
+
+            仅返回json文本，不要进行解释'
+        selected: false
+        title: day_plan
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: '1747649063853'
+      position:
+        x: 4679.563289577062
+        y: 329.5
+      positionAbsolute:
+        x: 4679.563289577062
+        y: 329.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        author: 李子由
+        desc: ''
+        height: 639
+        selected: false
+        showAuthor: true
+        text: '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"{","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"  \"Day_1\":
+          {","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    \"行程安排\":
+          [","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"南京市玄武区钟山风景名胜区\",","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"南京市玄武区南京博物院\"","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    ],","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    \"理由\":
+          \"钟山风景区与南京博物院都位于紫金山一带，彼此相距较近，适合放在同一天游览。\"","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"  },","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"  \"Day_2\":
+          {","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    \"行程安排\":
+          [","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"南京市玄武区红山森林动物园\",","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"南京市鼓楼区阅江楼景区\",","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"南京市浦口区珍珠泉风景区\"","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    ],","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    \"理由\":
+          \"这三个景点均位于南京城北及长江以北区域，可由东往西逐步游览，行车距离相对合理。\"","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"  },","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"  \"Day_3\":
+          {","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    \"行程安排\":
+          [","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"南京市江宁区牛首山文化旅游区\",","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"南京市建邺区莫愁湖景区\"","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    ],","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    \"理由\":
+          \"牛首山位于江宁区南部，莫愁湖在市区南部，两地相距不算太远，一天内可先南后中，丰富行程。\"","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"  },","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"  \"Day_4\":
+          {","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    \"行程安排\":
+          [","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"南京市秦淮区愚园\",","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"南京市秦淮区老门东\",","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"      \"南京市秦淮区夫子庙秦淮风光带\"","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    ],","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"    \"理由\":
+          \"三处均在秦淮区附近，步行或短途车程即可串联；傍晚和夜间在夫子庙体验秦淮河风光尤为热闹。\"","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"  }","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"}","type":"text","version":1}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+        theme: blue
+        title: ''
+        type: ''
+        width: 958
+      height: 639
+      id: '1747650380315'
+      position:
+        x: 2261.0113492946225
+        y: 1222.3397891298664
+      positionAbsolute:
+        x: 2261.0113492946225
+        y: 1222.3397891298664
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-note
+      width: 958
+    - data:
+        code: "import requests\nimport time\nfrom requests.adapters import HTTPAdapter\n\
+          from requests.packages.urllib3.util.retry import Retry\n\ndef main(locations,map_api):\n\
+          \    def get_driving_distance(origin, destination, api_key, max_retries=3,\
+          \ retry_delay=1):\n        \"\"\"\n        使用高德地图 API 获取两个点之间的驾车距离\n   \
+          \     :param origin: 起点的坐标 (经度, 纬度)\n        :param destination: 目的地的坐标\
+          \ (经度, 纬度)\n        :param api_key: 高德地图 API 访问密钥\n        :param max_retries:\
+          \ 最大重试次数\n        :param retry_delay: 重试间隔时间(秒)\n        :return: 距离（米）\n\
+          \        \"\"\"\n        url = \"https://restapi.amap.com/v3/distance\"\n\
+          \        \n        # 构建请求参数\n        params = {\n            'key': api_key,\n\
+          \            'origins': origin,\n            'destination': destination,\n\
+          \            'type': 1,  # 驾车距离\n            'output': 'JSON'\n        }\n\
+          \n        # 配置重试策略\n        session = requests.Session()\n        retry_strategy\
+          \ = Retry(\n            total=max_retries,\n            backoff_factor=retry_delay,\n\
+          \            status_forcelist=[500, 502, 503, 504]\n        )\n        adapter\
+          \ = HTTPAdapter(max_retries=retry_strategy)\n        session.mount(\"http://\"\
+          , adapter)\n        session.mount(\"https://\", adapter)\n\n        for\
+          \ attempt in range(max_retries):\n            try:\n                response\
+          \ = session.get(url, params=params)\n                result = response.json()\n\
+          \                \n                if result[\"status\"] == \"1\":\n   \
+          \                 return [(int(r[\"distance\"]),int(r[\"duration\"])) for\
+          \ r in result[\"results\"]]\n                else:\n                   \
+          \ print(f\"API请求错误(尝试 {attempt + 1}/{max_retries})：\", result)\n       \
+          \             if attempt < max_retries - 1:\n                        time.sleep(retry_delay)\n\
+          \                    \n            except Exception as e:\n            \
+          \    print(f\"请求异常(尝试 {attempt + 1}/{max_retries})：\", str(e))\n       \
+          \         if attempt < max_retries - 1:\n                    time.sleep(retry_delay)\n\
+          \                \n        return None\n\n    # 配置您的 API Key\n    api_key\
+          \ = map_api\n    DISTANCE = []\n    # 计算每个景点之间的驾车距离\n    for i in range(len(locations)):\n\
+          \        destination = locations[i][\"location\"]\n        destination_name\
+          \ = locations[i][\"site_name\"]\n        origins =locations[i+1:]\n    \
+          \    origins_locations = [o[\"location\"] for o in origins]\n        oringins_name\
+          \ = [o[\"site_name\"] for o in origins]\n        if len(origins_locations)\
+          \ >0:\n                begin = \"|\".join(origins_locations)\n         \
+          \       distance = get_driving_distance(begin, destination, api_key)\n \
+          \               DISTANCE += [f\"【{destination_name}】距离【{oo}】有{bb[0]}米，开车需要：{bb[1]//60}分钟{bb[1]%60}秒\"\
+          \ for bb,oo in zip(distance,oringins_name)]\n        time.sleep(0.5)  #\
+          \ 添加请求间隔，避免频繁请求\n    return {\n        \"distance\":DISTANCE\n    }"
+        code_language: python3
+        desc: ''
+        outputs:
+          distance:
+            children: null
+            type: array[string]
+        selected: false
+        title: measure_distance
+        type: code
+        variables:
+        - value_selector:
+          - '1747640722195'
+          - output
+          variable: locations
+        - value_selector:
+          - env
+          - amap_api_key
+          variable: map_api
+      height: 54
+      id: '1747798565441'
+      position:
+        x: 4356.95831190207
+        y: 329.5
+      positionAbsolute:
+        x: 4356.95831190207
+        y: 329.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        error_handle_mode: terminated
+        height: 288
+        is_parallel: false
+        iterator_selector:
+        - '1747647104128'
+        - site_names
+        output_selector:
+        - '1747819716512017478197165131'
+        - results
+        output_type: array[object]
+        parallel_nums: 1
+        selected: false
+        start_node_id: 1747819716512start
+        title: for_photos
+        type: iteration
+        width: 970
+      height: 288
+      id: '17478197165120'
+      position:
+        x: 3296.4671080346416
+        y: 686.9919768101466
+      positionAbsolute:
+        x: 3296.4671080346416
+        y: 686.9919768101466
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 970
+      zIndex: 1
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - id: key-value-1
+            key: ''
+            type: text
+            value: ''
+          type: raw-text
+        desc: ''
+        headers: ''
+        isInIteration: true
+        iteration_id: '17478197165120'
+        method: get
+        params: 'key:{{#env.amap_api_key#}}
+
+          output:JSON
+
+          keywords:{{#17478197165120.item#}}
+
+          types:110200|110201|110202|110203
+
+          show_fields:photos'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: '1000'
+        selected: false
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 高德API关键词搜索
+        type: http-request
+        url: https://restapi.amap.com/v5/place/text
+        variables: []
+      height: 136
+      id: '1747819716512017478197165120'
+      parentId: '17478197165120'
+      position:
+        x: 224.63770411110818
+        y: 66.21439112658288
+      positionAbsolute:
+        x: 3521.1048121457497
+        y: 753.2063679367295
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        code: "import json\nimport time \ndef main(arg1,item):\n    time.sleep(0.1)\n\
+          \    json_data = json.loads(arg1)\n    pois = json_data[\"pois\"]\n    if\
+          \ \"photos\" in pois[0]:\n        return {\n            \"results\":{\n\
+          \            \"name\":item,\n            \"photos\": [f[\"url\"] for f in\
+          \ pois[0][\"photos\"]]},\n            \"show_content\":{\n            \"\
+          name\":item,\n            \"photos\": [f[\"url\"] for f in pois[0][\"photos\"\
+          ]]\n            }\n            \n            }\n    else:\n        return\
+          \ {\"results\":\n                    {\"name\":item,\n                 \
+          \   \"photos\": []},\n                \"show_content\":\n              \
+          \  {\n                \"name\":item,\n                \"photos\": [] \n\
+          \                }\n                    \n                    }"
+        code_language: python3
+        desc: ''
+        isInIteration: true
+        iteration_id: '17478197165120'
+        outputs:
+          results:
+            children: null
+            type: object
+          show_content:
+            children: null
+            type: object
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: get_photos
+        type: code
+        variables:
+        - value_selector:
+          - '1747819716512017478197165120'
+          - body
+          variable: arg1
+        - value_selector:
+          - '17478197165120'
+          - item
+          variable: item
+      height: 80
+      id: '1747819716512017478197165131'
+      parentId: '17478197165120'
+      position:
+        x: 604.315043806093
+        y: 65
+      positionAbsolute:
+        x: 3900.7821518407345
+        y: 751.9919768101466
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: true
+        selected: false
+        title: ''
+        type: iteration-start
+      draggable: false
+      height: 48
+      id: 1747819716512start
+      parentId: '17478197165120'
+      position:
+        x: 24
+        y: 68
+      positionAbsolute:
+        x: 3320.4671080346416
+        y: 754.9919768101466
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-iteration-start
+      width: 44
+      zIndex: 1002
+    - data:
+        author: 李子由
+        desc: ''
+        height: 275
+        selected: false
+        showAuthor: true
+        text: '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"优化建议：","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"1、每个景点游览的时间，也可以从网页中进行总结(给用户提供一个大致的时间参考)","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"2、现有的prompt要求，对于景点的数量定太死了，这一点后面要进行改正。（可以挑选一些景点，然后根据用户的时间进行推荐，或者把有一些景点作为替代方案，当作可选的一个景点参考）","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"3、每日行程可以再利用高德mcp添加一些每日行程的小地图","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
+        theme: pink
+        title: ''
+        type: ''
+        width: 475
+      height: 275
+      id: '1747820940082'
+      position:
+        x: 1654.6362106819088
+        y: 925.6010407022959
+      positionAbsolute:
+        x: 1654.6362106819088
+        y: 925.6010407022959
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-note
+      width: 475
+    viewport:
+      x: -729.5911155984663
+      y: -96.9761364833488
+      zoom: 1.042431361132927

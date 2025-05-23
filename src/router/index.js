@@ -23,7 +23,7 @@ export const routes = [ // Add export here
   },
   {
     path: '/travel',
-    name: 'travel',
+    name: '旅游',
     component: TravelView
   },
   {
