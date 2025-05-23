@@ -2178,6 +2178,7 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
+
 .activity-item {
   display: flex;
   align-items: flex-start;
