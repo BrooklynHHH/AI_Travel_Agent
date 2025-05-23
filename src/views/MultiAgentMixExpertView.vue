@@ -64,7 +64,21 @@
                 <div v-if="message.analysisText" class="analysis-block">
                   <span class="analysis-content">{{ message.analysisText }}</span>
                 </div>
-                <!-- 多专家卡片横向滑动分页 -->
+                <!-- 所有专家卡片，放在滑动区前面 -->
+                <div v-if="message.roleCards && message.roleCards.length" class="expert-card all-experts-card" style="margin-bottom: 18px;">
+                  <div class="expert-header">
+                    <i class="expert-icon">👥</i>
+                    <span class="expert-title">所有专家</span>
+                  </div>
+                  <div class="all-experts-list" style="padding: 20px 24px 24px 24px;">
+                    <ul style="margin:0; padding:0; list-style:none;">
+                      <li v-for="(roleObj, idx) in message.roleCards" :key="idx" style="margin-bottom: 10px; font-size: 15px; color: #1976d2; font-weight: 500;">
+                        <i class="expert-icon" style="font-size:16px; margin-right:6px;">💡</i>{{ roleObj.role }}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <!-- 滑动区 -->
                 <div v-if="message.roleCards && message.roleCards.length" class="expert-swiper-container">
                   <div class="expert-swiper" ref="expertSwiper">
                     <div
@@ -74,7 +88,7 @@
                     >
                       <!-- 专家身份区 -->
                       <div class="expert-header">
-                  <i class="expert-icon">💡</i>
+                        <i class="expert-icon">💡</i>
                         <span class="expert-title">{{ roleObj.role }}</span>
                       </div>
                       <!-- 搜索结果区 -->
@@ -98,15 +112,6 @@
                         <div class="answer-content" v-html="renderMarkdown(roleObj.expert_answer.text)"></div>
                       </div>
                     </div>
-                  </div>
-                  <!-- 分页指示器 -->
-                  <div class="expert-pagination">
-                    <span
-                      v-for="(roleObj, idx) in message.roleCards"
-                      :key="idx"
-                      :class="['dot', idx === expertPage ? 'active' : '']"
-                      @click="scrollToExpert(idx)"
-                    ></span>
                   </div>
                 </div>
                 <!-- 搜索结果 -->
@@ -807,22 +812,13 @@ function debounce(fn, delay = 50) {
 }
 
 const onExpertScroll = debounce(() => {
-  if (!expertSwiper.value) return;
-  const scrollLeft = expertSwiper.value.scrollLeft;
-  const width = expertSwiper.value.offsetWidth;
+  const swiperEl = expertSwiper.value;
+  if (!swiperEl || !(swiperEl instanceof HTMLElement)) return;
+  const scrollLeft = swiperEl.scrollLeft;
+  const width = swiperEl.offsetWidth;
   const page = Math.round(scrollLeft / width);
   expertPage.value = page;
 }, 50);
-
-const scrollToExpert = (idx) => {
-  if (!expertSwiper.value) return;
-  const width = expertSwiper.value.offsetWidth;
-  expertSwiper.value.scrollTo({
-    left: idx * width,
-    behavior: 'smooth'
-  });
-  expertPage.value = idx;
-};
 
 onMounted(() => {
   nextTick(() => {
@@ -833,7 +829,6 @@ onMounted(() => {
   });
 });
 
-// 组件更新后（如专家卡片数量变化），重新绑定 scroll 事件
 onUpdated(() => {
   const swiperEl = expertSwiper.value;
   if (swiperEl && swiperEl instanceof HTMLElement && typeof swiperEl.removeEventListener === 'function') {
@@ -1182,6 +1177,7 @@ overflow: visible;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
+  width: 100%;
 }
 .expert-swiper::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
