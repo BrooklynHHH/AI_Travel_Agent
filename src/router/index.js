@@ -6,6 +6,7 @@ import AdvancedView from '../views/AdvancedView.vue'
 import AdvancedResultView from '../views/AdvancedResultView.vue'
 import MultiAgentView from '../views/MultiAgentView.vue'
 import OcrView from '../views/OcrView.vue'
+import MultiAgentMixExpertView from '../views/MultiAgentMixExpertView.vue'
 
 
 const routes = [
@@ -52,7 +53,12 @@ const routes = [
   {
     path: '/',
     redirect: '/mi'
-  }
+  },
+  {
+    path: '/multi-agent-experts',
+    name: 'multi-agent-experts',
+    component: MultiAgentMixExpertView
+  },
 ]
 
 const router = createRouter({
