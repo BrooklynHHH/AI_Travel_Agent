@@ -98,12 +98,12 @@
                             <span class="toggle-icon">{{ result.show ? '▼' : '▶' }}</span>
                             <span class="search-query">{{ result.search_item }}</span>
                           </div>
-                          <div v-if="result.search_summary" class="search-summary" v-html="renderMarkdown(result.search_summary)"></div>
                           <div v-show="result.show" class="search-content">
                             <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
                               <a class="result-link" :href="item.url">{{ item.title }}</a>
                             </div>
                           </div>
+                          <div v-if="result.search_summary" class="search-summary" v-html="renderMarkdown(result.search_summary)"></div>
                         </div>
                       </div>
                       <!-- 专家回答区 -->
@@ -122,12 +122,12 @@
                         <span class="toggle-icon">{{ result.show ? '▼' : '▶' }}</span>
                         <span class="search-query">{{ result.search_item }}</span>
                       </div>
-                      <div v-if="result.search_summary" class="summary" v-html="renderMarkdown(result.search_summary)"></div>
                       <div v-show="result.show" class="search-content">
                         <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
                           <a class="result-link" :href="item.url">{{ item.title }}</a>
                         </div>
                       </div>
+                      <div v-if="result.search_summary" class="summary" v-html="renderMarkdown(result.search_summary)"></div>
                     </div>
                   </div>
                 </div>
@@ -673,10 +673,11 @@ try {
     }
 
     // === 新增：调用第三个API进行总结 ===
-    // 1. 收集所有专家回答
+    // 1. 收集所有专家名和回答
     const expertIdeas = expertNames.map((name, idx) => {
       const card = messages.value[lastAssistantIndex].roleCards[idx];
-      return card && card.expert_answer && card.expert_answer.text ? card.expert_answer.text : '';
+      const answer = card && card.expert_answer && card.expert_answer.text ? card.expert_answer.text : '';
+      return answer ? `${name}：${answer}` : '';
     }).filter(Boolean).join('\n\n');
 
     console.log('[sendMessage] 开始调用第三个API进行总结，expert_idea:', expertIdeas);
