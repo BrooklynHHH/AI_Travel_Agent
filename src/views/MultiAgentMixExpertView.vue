@@ -109,7 +109,7 @@
                       <!-- 专家回答区 -->
                       <div v-if="roleObj.expert_answer && roleObj.expert_answer.text" class="expert-answer-block">
                         <div class="answer-title">专家回答</div>
-                        <div class="answer-content" v-html="renderMarkdown(roleObj.expert_answer.text)"></div>
+                        <div class="answer-content expert-markdown" v-html="renderMarkdown(roleObj.expert_answer.text)"></div>
                       </div>
                     </div>
                   </div>
@@ -151,7 +151,7 @@
                 <!-- 专家卡片下方渲染总结 -->
                 <div v-if="message.summaryText" class="summary-block">
                   <span class="summary-label">总结：</span>
-                  <span class="summary-content" v-html="renderMarkdown(message.summaryText)"></span>
+                  <div class="summary-content" v-html="renderMarkdown(message.summaryText)"></div>
                 </div>
               </div>
             </div>
@@ -206,6 +206,7 @@ import MarkdownIt from 'markdown-it';
 
 // Quick action buttons - loaded from config
 const quickActions = ref([
+  '斑马鱼和宝莲灯可以一起养吗',
   '无人机可怕的死亡尖啸，为何大多数士兵听到就有心理阴影？'
 ]);
 
@@ -582,7 +583,6 @@ try {
         const reader2 = res2.body.getReader();
         let partial2 = '';
         let expertSummary = '';
-        let collectingSummary = false;
         let shouldContinue2 = true;
         let lastAssistantIndex2 = messages.value.findLastIndex(m => m.role === 'assistant');
         while (shouldContinue2) {
@@ -596,42 +596,22 @@ try {
               const eventData2 = JSON.parse(line2.slice(6));
               // 收集专家总结（以2开头）并流式渲染
               if (eventData2.event === 'message' && typeof eventData2.answer === 'string') {
-                if (eventData2.answer.startsWith('2')) {
-                  collectingSummary = true;
-                  expertSummary += eventData2.answer.substring(1);
-                  if (lastAssistantIndex2 >= 0 && messages.value[lastAssistantIndex2].roleCards && messages.value[lastAssistantIndex2].roleCards[idx]) {
-                    const oldCard = messages.value[lastAssistantIndex2].roleCards[idx];
-                    messages.value[lastAssistantIndex2].roleCards[idx] = {
-                      ...oldCard,
-                      expert_answer: {
-                        ...oldCard.expert_answer,
-                        text: expertSummary
-                      }
-                    };
-                    messages.value[lastAssistantIndex2].roleCards = [
-                      ...messages.value[lastAssistantIndex2].roleCards
-                    ];
-                    messages.value = [...messages.value];
-                  }
-                  console.log(`[sendMessage] 收到专家 ${expert} 总结片段(首段):`, eventData2.answer.substring(1));
-                } else if (collectingSummary) {
-                  expertSummary += eventData2.answer;
-                  if (lastAssistantIndex2 >= 0 && messages.value[lastAssistantIndex2].roleCards && messages.value[lastAssistantIndex2].roleCards[idx]) {
-                    const oldCard = messages.value[lastAssistantIndex2].roleCards[idx];
-                    messages.value[lastAssistantIndex2].roleCards[idx] = {
-                      ...oldCard,
-                      expert_answer: {
-                        ...oldCard.expert_answer,
-                        text: expertSummary
-                      }
-                    };
-                    messages.value[lastAssistantIndex2].roleCards = [
-                      ...messages.value[lastAssistantIndex2].roleCards
-                    ];
-                    messages.value = [...messages.value];
-                  }
-                  console.log(`[sendMessage] 收到专家 ${expert} 总结片段:`, eventData2.answer);
+                expertSummary += eventData2.answer;
+                if (lastAssistantIndex2 >= 0 && messages.value[lastAssistantIndex2].roleCards && messages.value[lastAssistantIndex2].roleCards[idx]) {
+                  const oldCard = messages.value[lastAssistantIndex2].roleCards[idx];
+                  messages.value[lastAssistantIndex2].roleCards[idx] = {
+                    ...oldCard,
+                    expert_answer: {
+                      ...oldCard.expert_answer,
+                      text: expertSummary
+                    }
+                  };
+                  messages.value[lastAssistantIndex2].roleCards = [
+                    ...messages.value[lastAssistantIndex2].roleCards
+                  ];
+                  messages.value = [...messages.value];
                 }
+                console.log(`[sendMessage] 收到专家 ${expert} 总结片段:`, eventData2.answer);
               }
               // 收集专家搜索结果
               if (
@@ -720,22 +700,12 @@ try {
         if (line.startsWith('data: ')) {
           const eventData = JSON.parse(line.slice(6));
           if (eventData.event === 'message' && typeof eventData.answer === 'string') {
-            if (eventData.answer.startsWith('3')) {
-              collectingSummary = true;
-              summaryText += eventData.answer.substring(1);
-              if (lastAssistantIndex >= 0) {
-                messages.value[lastAssistantIndex].summaryText = summaryText;
-                messages.value = [...messages.value];
-              }
-              console.log('[sendMessage] 总结流式片段(message):', eventData.answer.substring(1));
-            } else if (collectingSummary) {
-              summaryText += eventData.answer;
-              if (lastAssistantIndex >= 0) {
-                messages.value[lastAssistantIndex].summaryText = summaryText;
-                messages.value = [...messages.value];
-              }
-              console.log('[sendMessage] 总结流式片段(message):', eventData.answer);
+            summaryText += eventData.answer;
+            if (lastAssistantIndex >= 0) {
+              messages.value[lastAssistantIndex].summaryText = summaryText;
+              messages.value = [...messages.value];
             }
+            console.log('[sendMessage] 总结流式片段(message):', eventData.answer);
           }
           if (eventData.event === 'text_chunk' && eventData.data && typeof eventData.data.text === 'string') {
             // 兼容旧的 text_chunk 事件
@@ -1163,6 +1133,26 @@ overflow: visible;
   line-height: 1.7;
   word-break: break-word;
 }
+.summary-content ul,
+.summary-content ol {
+  padding-left: 2em !important;
+  margin-left: 0 !important;
+  list-style-position: outside !important;
+}
+.summary-content li {
+  margin-left: 0 !important;
+  list-style-position: outside !important;
+}
+.expert-markdown ul,
+.expert-markdown ol {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  list-style-position: inside !important;
+}
+.expert-markdown li {
+  margin-left: 0 !important;
+  list-style-position: inside !important;
+}
 
 .expert-swiper-container {
   width: 100%;
@@ -1297,6 +1287,16 @@ overflow: visible;
   color: #222;
   font-size: 15px;
   line-height: 1.7;
+}
+
+.expert-markdown {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  line-height: 1.9;
+  border-radius: 4px;
+  margin-top: 6px;
+  font-size: 15px;
+  color: #222;
 }
 </style>
 
@@ -2309,5 +2309,20 @@ padding: 0.8rem;
 background: #f8f9fa;
 border-radius: 4px;
 line-height: 1.6;
+}
+
+/* 统一列表缩进，保证小圆点和正文内容左对齐且美观 */
+.summary-content ul,
+.summary-content ol,
+.expert-markdown ul,
+.expert-markdown ol {
+  padding-left: 2em !important;
+  margin-left: 0 !important;
+  list-style-position: outside !important;
+}
+.summary-content li,
+.expert-markdown li {
+  margin-left: 0 !important;
+  list-style-position: outside !important;
 }
 </style>
