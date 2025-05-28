@@ -155,7 +155,6 @@
                 </div>
                 <!-- 专家卡片下方渲染总结 -->
                 <div v-if="message.summaryText" class="summary-block">
-                  <span class="summary-label">总结：</span>
                   <div class="summary-content" v-html="renderMarkdown(message.summaryText)"></div>
                 </div>
               </div>
