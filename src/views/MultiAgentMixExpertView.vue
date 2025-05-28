@@ -86,24 +86,20 @@
                       v-for="(roleObj, idx) in message.roleCards"
                       :key="idx"
                     >
-                      <!-- 专家身份区 -->
-                      <div class="expert-header">
+                      <!-- 专家身份区，增加折叠按钮 -->
+                      <div class="expert-header" @click="roleObj.showSearch = !roleObj.showSearch">
                         <i class="expert-icon">💡</i>
                         <span class="expert-title">{{ roleObj.role }}</span>
+                        <span class="toggle-icon" style="margin-left:8px;cursor:pointer;">{{ roleObj.showSearch ? '▼' : '▶' }}</span>
                       </div>
-                      <!-- 搜索结果区 -->
-                      <div v-if="roleObj.searchResults && roleObj.searchResults.length" class="expert-search-block">
-                        <div v-for="(result, idx) in roleObj.searchResults" :key="idx" class="search-item">
-                          <div class="search-header" @click="toggleSearchResult(result)">
-                            <span class="toggle-icon">{{ result.show ? '▼' : '▶' }}</span>
-                            <span class="search-query">{{ result.search_item }}</span>
-                          </div>
-                          <div v-show="result.show" class="search-content">
+                      <!-- 折叠内容：专家搜索结果 -->
+                      <div v-show="roleObj.showSearch" class="expert-search-block">
+                        <div v-for="(result, idx2) in roleObj.searchResults" :key="idx2" class="search-item">
+                          <div class="search-content">
                             <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
                               <a class="result-link" :href="item.url">{{ item.title }}</a>
                             </div>
                           </div>
-                          <div v-if="result.search_summary" class="search-summary" v-html="renderMarkdown(result.search_summary)"></div>
                         </div>
                       </div>
                       <!-- 专家回答区 -->
@@ -137,7 +133,6 @@
                           <a class="result-link" :href="item.url">{{ item.title }}</a>
                         </div>
                       </div>
-                      <div v-if="result.search_summary" class="summary" v-html="renderMarkdown(result.search_summary)"></div>
                     </div>
                   </div>
                 </div>
@@ -665,7 +660,6 @@ try {
                 eventData2.data.outputs.output_search_result
               ) {
                 let searchResultData = JSON.parse(eventData2.data.outputs.output_search_result.message.content);
-                // 找到最后一个 search_item 但 search_result 为空的项，补充内容
                 if (
                   lastAssistantIndex2 >= 0 &&
                   messages.value[lastAssistantIndex2].roleCards &&
@@ -674,16 +668,20 @@ try {
                   const oldCard = messages.value[lastAssistantIndex2].roleCards[idx];
                   const searchResults = [...(oldCard.searchResults || [])];
                   // 找到最后一个 search_result 为空的项
-                  let targetIdx = searchResults.length - 1;
+                  let targetIdx = -1;
                   for (let i = searchResults.length - 1; i >= 0; i--) {
                     if (Array.isArray(searchResults[i].search_result) && searchResults[i].search_result.length === 0) {
                       targetIdx = i;
                       break;
                     }
                   }
-                  if (searchResults[targetIdx]) {
+                  if (targetIdx !== -1 && searchResults[targetIdx]) {
                     searchResults[targetIdx].search_result = searchResultData.search_result || [];
-                    searchResults[targetIdx].search_summary = searchResultData.search_summary || '';
+                  } else {
+                    // 没有空的项，直接 push 一个新的
+                    searchResults.push({
+                      search_result: searchResultData.search_result || []
+                    });
                   }
                   messages.value[lastAssistantIndex2].roleCards[idx] = {
                     ...oldCard,
