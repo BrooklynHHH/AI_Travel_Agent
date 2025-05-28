@@ -80,7 +80,7 @@
                 </div>
                 <!-- 滑动区 -->
                 <div v-if="message.roleCards && message.roleCards.length" class="expert-swiper-container">
-                  <div class="expert-swiper" ref="expertSwiper">
+                  <div class="expert-swiper" :ref="el => setExpertSwiper(el, index)">
                     <div
                       class="expert-card expert-slide"
                       v-for="(roleObj, idx) in message.roleCards"
@@ -112,6 +112,16 @@
                         <div class="answer-content expert-markdown" v-html="renderMarkdown(roleObj.expert_answer.text)"></div>
                       </div>
                     </div>
+                  </div>
+                  <!-- 分页小圆点 -->
+                  <div v-if="message.roleCards.length > 1" class="expert-pagination">
+                    <span
+                      v-for="(roleObj, idx2) in message.roleCards"
+                      :key="'dot-' + idx2"
+                      class="dot"
+                      :class="{ active: (expertPageMap[index] || 0) === idx2 }"
+                      @click="() => handleExpertDotClick(index, idx2)"
+                    ></span>
                   </div>
                 </div>
                 <!-- 搜索结果 -->
@@ -594,7 +604,7 @@ try {
           for (const line2 of lines2) {
             if (line2.startsWith('data: ')) {
               const eventData2 = JSON.parse(line2.slice(6));
-              // 收集专家总结（以2开头）并流式渲染
+              // 收集专家总结并流式渲染
               if (eventData2.event === 'message' && typeof eventData2.answer === 'string') {
                 expertSummary += eventData2.answer;
                 if (lastAssistantIndex2 >= 0 && messages.value[lastAssistantIndex2].roleCards && messages.value[lastAssistantIndex2].roleCards[idx]) {
@@ -613,15 +623,16 @@ try {
                 }
                 console.log(`[sendMessage] 收到专家 ${expert} 总结片段:`, eventData2.answer);
               }
-              // 收集专家搜索结果
+              // 新增：先处理 output_search_item
               if (
                 eventData2.event === 'node_finished' &&
                 eventData2.data &&
                 eventData2.data.outputs &&
-                eventData2.data.outputs.output_search_result
+                eventData2.data.outputs.output_search_item
               ) {
-                let searchResult = JSON.parse(eventData2.data.outputs.output_search_result.message.content);
-                searchResult.show = false;
+                let searchItemObj = JSON.parse(eventData2.data.outputs.output_search_item.message.content);
+                let searchItem = searchItemObj.search_item || '';
+                // 先渲染 search_item
                 if (
                   lastAssistantIndex2 >= 0 &&
                   messages.value[lastAssistantIndex2].roleCards &&
@@ -632,8 +643,51 @@ try {
                     ...oldCard,
                     searchResults: [
                       ...(oldCard.searchResults || []),
-                      searchResult
+                      {
+                        search_item: searchItem, // 只渲染字符串
+                        search_result: [],
+                        search_summary: '',
+                        show: false
+                      }
                     ]
+                  };
+                  messages.value[lastAssistantIndex2].roleCards = [
+                    ...messages.value[lastAssistantIndex2].roleCards
+                  ];
+                  messages.value = [...messages.value];
+                }
+              }
+              // 收集专家搜索结果（补充 search_result 和 search_summary）
+              if (
+                eventData2.event === 'node_finished' &&
+                eventData2.data &&
+                eventData2.data.outputs &&
+                eventData2.data.outputs.output_search_result
+              ) {
+                let searchResultData = JSON.parse(eventData2.data.outputs.output_search_result.message.content);
+                // 找到最后一个 search_item 但 search_result 为空的项，补充内容
+                if (
+                  lastAssistantIndex2 >= 0 &&
+                  messages.value[lastAssistantIndex2].roleCards &&
+                  messages.value[lastAssistantIndex2].roleCards[idx]
+                ) {
+                  const oldCard = messages.value[lastAssistantIndex2].roleCards[idx];
+                  const searchResults = [...(oldCard.searchResults || [])];
+                  // 找到最后一个 search_result 为空的项
+                  let targetIdx = searchResults.length - 1;
+                  for (let i = searchResults.length - 1; i >= 0; i--) {
+                    if (Array.isArray(searchResults[i].search_result) && searchResults[i].search_result.length === 0) {
+                      targetIdx = i;
+                      break;
+                    }
+                  }
+                  if (searchResults[targetIdx]) {
+                    searchResults[targetIdx].search_result = searchResultData.search_result || [];
+                    searchResults[targetIdx].search_summary = searchResultData.search_summary || '';
+                  }
+                  messages.value[lastAssistantIndex2].roleCards[idx] = {
+                    ...oldCard,
+                    searchResults
                   };
                   messages.value[lastAssistantIndex2].roleCards = [
                     ...messages.value[lastAssistantIndex2].roleCards
@@ -664,10 +718,10 @@ try {
     // 2. 调用新版第三个API
     let summaryText = '';
     let collectingSummary = false;
-    const summaryRes = await fetch('http://10.18.4.170/v1/chat-messages', {
+    const summaryRes = await fetch('https://mify-be.pt.xiaomi.com/api/v1/chat-messages', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer app-505MMHSgjFbz4oP5glm8EJB5',
+        'Authorization': 'Bearer app-c5JcuZpGMaDGHThJ98QatQ7m',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -677,14 +731,7 @@ try {
         query: userInput.value,
         response_mode: 'streaming',
         conversation_id: '',
-        user: 'abc-123',
-        files: [
-          {
-            type: 'image',
-            transfer_method: 'remote_url',
-            url: 'https://cloud.dify.ai/logo/logo-site.png'
-          }
-        ]
+        user: 'abc-123'
       })
     });
     const summaryReader = summaryRes.body.getReader();
@@ -768,46 +815,65 @@ setInterval(() => {
   });
 }, 500);
 
-const expertPage = ref(0);
-const expertSwiper = ref(null);
+// === 新增：每条消息独立的专家 swiper 和分页 ===
+const expertSwipers = ref({}); // { [msgIdx]: swiperEl }
+const expertPageMap = ref({}); // { [msgIdx]: 当前页 }
 
-// 防抖函数
-function debounce(fn, delay = 50) {
-  let timer = null;
-  return function (...args) {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => {
-      fn.apply(this, args);
-    }, delay);
-  };
+// 绑定 swiper ref
+function setExpertSwiper(el, msgIdx) {
+  if (el) expertSwipers.value[msgIdx] = el;
 }
 
-const onExpertScroll = debounce(() => {
-  const swiperEl = expertSwiper.value;
-  if (!swiperEl || !(swiperEl instanceof HTMLElement)) return;
-  const scrollLeft = swiperEl.scrollLeft;
-  const width = swiperEl.offsetWidth;
-  const page = Math.round(scrollLeft / width);
-  expertPage.value = page;
-}, 50);
+// 小圆点点击，平滑滚动到对应卡片
+function handleExpertDotClick(msgIdx, cardIdx) {
+  const swiperEl = expertSwipers.value[msgIdx];
+  if (!swiperEl) return;
+  const cards = swiperEl.querySelectorAll('.expert-card');
+  const card = cards[cardIdx];
+  if (card) {
+    const left = card.offsetLeft - swiperEl.offsetLeft;
+    swiperEl.scrollTo({ left, behavior: 'smooth' });
+  }
+}
 
+// 滚动时动态高亮
+function onExpertScroll(msgIdx) {
+  const swiperEl = expertSwipers.value[msgIdx];
+  if (!swiperEl) return;
+  const cards = swiperEl.querySelectorAll('.expert-card');
+  let minDiff = Infinity;
+  let page = 0;
+  for (let i = 0; i < cards.length; i++) {
+    const diff = Math.abs((cards[i].offsetLeft - swiperEl.offsetLeft) - swiperEl.scrollLeft);
+    if (diff < minDiff) {
+      minDiff = diff;
+      page = i;
+    }
+  }
+  expertPageMap.value[msgIdx] = page;
+}
+
+// 监听每个 swiper 的 scroll 事件
 onMounted(() => {
   nextTick(() => {
-    const swiperEl = expertSwiper.value;
-    if (swiperEl && swiperEl instanceof HTMLElement && typeof swiperEl.addEventListener === 'function') {
-      swiperEl.addEventListener('scroll', onExpertScroll);
-    }
+    messages.value.forEach((msg, msgIdx) => {
+      const swiperEl = expertSwipers.value[msgIdx];
+      if (swiperEl && typeof swiperEl.addEventListener === 'function') {
+        swiperEl.addEventListener('scroll', () => onExpertScroll(msgIdx));
+      }
+    });
   });
 });
-
 onUpdated(() => {
-  const swiperEl = expertSwiper.value;
-  if (swiperEl && swiperEl instanceof HTMLElement && typeof swiperEl.removeEventListener === 'function') {
-    swiperEl.removeEventListener('scroll', onExpertScroll);
-  }
-  if (swiperEl && swiperEl instanceof HTMLElement && typeof swiperEl.addEventListener === 'function') {
-    swiperEl.addEventListener('scroll', onExpertScroll);
-  }
+  messages.value.forEach((msg, msgIdx) => {
+    const swiperEl = expertSwipers.value[msgIdx];
+    if (swiperEl && typeof swiperEl.removeEventListener === 'function') {
+      swiperEl.removeEventListener('scroll', () => onExpertScroll(msgIdx));
+    }
+    if (swiperEl && typeof swiperEl.addEventListener === 'function') {
+      swiperEl.addEventListener('scroll', () => onExpertScroll(msgIdx));
+    }
+  });
 });
 
 </script>
@@ -1147,11 +1213,11 @@ overflow: visible;
 .expert-markdown ol {
   padding-left: 0 !important;
   margin-left: 0 !important;
-  list-style-position: inside !important;
+  list-style-position: outside !important;
 }
 .expert-markdown li {
   margin-left: 0 !important;
-  list-style-position: inside !important;
+  list-style-position: outside !important;
 }
 
 .expert-swiper-container {
