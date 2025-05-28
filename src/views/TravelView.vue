@@ -1,6 +1,6 @@
 <template>
   <div class="travel-container">
-    <!-- 浮层组件11111222222 -->
+    <!-- 浮层组件11111222222333333333444444-->
     <ImageViewer
       v-model:show="showImageViewer"
       :images="viewerImages"
@@ -109,9 +109,34 @@
                     <a :href="result.url" target="_blank" class="search-result-link">{{ result.title }}</a>
                   </div>
                 </div>
-                <div v-else-if="phase.phase === 'explain_site'" class="explain-site-container">
-                  <div class="explain-site-content">
-                    {{ extractExplainSiteText(phase.content) }}
+                <div v-else-if="phase.phase === 'site_name_address_description'" class="tour-guide-container site-summary-container">
+                  <div class="tour-guide-header">
+                    <div class="tour-guide-icon">🏞️</div>
+                    <div class="tour-guide-title">景点总结</div>
+                  </div>
+                  <div class="tour-guide-content">
+                    <div class="tour-guide-messages">
+                      <div v-for="(message, msgIndex) in tourGuideMessages" :key="msgIndex" class="message-wrapper">
+                        <!-- User message -->
+                        <div v-if="message.role === 'user'" class="message-container user-message">
+                          <div class="message-bubble">
+                            {{ message.content }}
+                          </div>
+                        </div>
+                        <!-- Bot message -->
+                        <div v-else-if="message.role === 'assistant'" class="message-container bot-message">
+                          <div class="mi-logo">
+                            <div class="mi-logo-text">MI</div>
+                          </div>
+                          <div class="message-bubble main-response">
+                            <div v-if="message.streaming" class="response-text">
+                              <div v-html="renderMarkdown(message.content)"></div><span class="cursor">|</span>
+                            </div>
+                            <div v-else class="response-text" v-html="renderMarkdown(message.content)"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <pre v-else>{{ phase.content }}</pre>
@@ -323,6 +348,22 @@ import { ref, onMounted, nextTick, computed, watch } from 'vue';
 import ImageViewer from '../components/modals/ImageViewer.vue';
 import ProductWindow from '../components/modals/ProductWindow.vue';
 import SettingsModal from '../components/modals/SettingsModal.vue';
+import { handleStreamingResponse } from '../utils/streamUtils';
+import MarkdownIt from 'markdown-it';
+
+// Initialize markdown-it renderer
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true,
+  breaks: true
+});
+
+// Markdown renderer function
+const renderMarkdown = (content) => {
+  if (!content) return '';
+  return md.render(content);
+};
 
 // Dify Workflow Client class
 class DifyWorkflowClient {
@@ -413,8 +454,7 @@ class DifyWorkflowClient {
         "title_summary",
         "site_name_address_description",
         "get_photos", 
-        "day_plan",
-        "explain_site"
+        "day_plan"
       ];
 
       let isReading = true;
@@ -566,10 +606,6 @@ class DifyWorkflowClient {
               } else if (nodeTitle === "day_plan" && data.data.outputs.dayplan) {
                 // 行程规划节点，保存行程信息
                 phaseContent[nodeTitle] = data.data.outputs.dayplan;
-              } else if (nodeTitle === "explain_site") {
-                // 景点讲解节点，保存讲解内容
-                console.log("处理explain_site节点:", data.data.outputs);
-                phaseContent[nodeTitle] = JSON.stringify(data.data.outputs, null, 2);
               } else if (nodeTitle === "title_summary" && data.data.outputs.show_content) {
                 // 检索结果列表，累积所有迭代的结果
                 if (!phaseContent[nodeTitle]) {
@@ -746,6 +782,132 @@ const currentPhase = ref('');
 const isThinkingExpanded = ref(true); // 默认展开思考内容
 const expandedPhases = ref([]); // 跟踪哪些阶段是展开的
 
+// Tour guide messages
+const tourGuideMessages = ref([]);
+const tourGuideLoading = ref(false);
+const tourGuideStreaming = ref(false);
+const tourGuideStreamingMessage = ref('');
+const tourGuideGenerated = ref(false); // 添加标志变量，确保景点总结只生成一次
+
+// 滚动到消息底部
+const scrollToBottom = () => {
+  const tourGuideMessagesEl = document.querySelector('.tour-guide-messages');
+  if (tourGuideMessagesEl) {
+    tourGuideMessagesEl.scrollTop = tourGuideMessagesEl.scrollHeight;
+  }
+};
+
+// Generate tour guide content
+const generateTourGuide = async (siteContent) => {
+  // 如果已经生成过或正在加载中，则不再重复生成
+  if (tourGuideLoading.value || tourGuideGenerated.value) return;
+  
+  try {
+    // Set loading state
+    tourGuideLoading.value = true;
+    tourGuideStreamingMessage.value = '';
+    
+    // Create placeholder for assistant response
+    const lastIndex = tourGuideMessages.value.push({
+      role: 'assistant',
+      content: '',
+      streaming: true
+    }) - 1;
+    
+    // Set streaming state to true
+    tourGuideStreaming.value = true;
+    
+    // Call Xiaomi API
+    const url = 'https://mify-be.pt.xiaomi.com/api/v1/chat-messages';
+    
+    const headers = {
+      'Authorization': 'Bearer app-fgOwYlqI5vQGTiMgEYH8CRkX',
+      'Content-Type': 'application/json'
+    };
+    
+    const body = {
+      inputs: {},
+      query: siteContent, // 直接使用siteDetails的JSON字符串
+      response_mode: "streaming",
+      user: "test-user"
+    };
+    
+    // Use fetch with streaming
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(body)
+    });
+    
+    // Use streamUtils to handle the streaming response
+    await handleStreamingResponse(response, {
+      debug: true,
+      onStart: () => {
+        console.log('Tour guide streaming response started');
+      },
+      onData: (data) => {
+        // Handle message event (contains answer content)
+        if (data.event === "message" && data.answer) {
+          let newContent = data.answer;
+          
+          // Add the new content to the streaming message
+          tourGuideStreamingMessage.value += newContent;
+          
+          // Update the message content
+          tourGuideMessages.value[lastIndex].content = tourGuideStreamingMessage.value;
+          
+          // Scroll to bottom with new content
+          nextTick(() => {
+            scrollToBottom();
+          });
+        }
+      },
+      onComplete: () => {
+        console.log('Tour guide streaming response completed');
+        
+        // Mark streaming as complete
+        tourGuideMessages.value[lastIndex].streaming = false;
+        
+        // Set streaming state to false
+        tourGuideStreaming.value = false;
+        
+        // 标记为已生成，避免重复生成
+        tourGuideGenerated.value = true;
+      },
+      onError: (error) => {
+        console.error('Tour guide streaming error:', error);
+      },
+      // Define events that should end the stream
+      endEvents: ['workflow_finished']
+    });
+    
+  } catch (error) {
+    console.error('Error generating tour guide:', error);
+    
+    // Remove the streaming message placeholder
+    if (tourGuideMessages.value.length > 0 && tourGuideMessages.value[tourGuideMessages.value.length - 1].streaming) {
+      tourGuideMessages.value.pop();
+    }
+    
+    // Add error message
+    tourGuideMessages.value.push({
+      role: 'assistant',
+      content: '抱歉，我遇到了一些问题，无法生成景点讲解。',
+      error: true
+    });
+    
+  } finally {
+    // Reset loading and streaming states
+    tourGuideLoading.value = false;
+    tourGuideStreaming.value = false;
+    
+    // Scroll to bottom
+    nextTick(() => {
+      scrollToBottom();
+    });
+  }
+};
+
 // 切换思考容器的展开/折叠状态
 const toggleThinkingExpanded = () => {
   isThinkingExpanded.value = !isThinkingExpanded.value;
@@ -812,6 +974,8 @@ const generateTravelPlan = async () => {
   siteDetails.value = [];
   sitePhotos.value = [];
   streamingSteps.value = [];
+  tourGuideMessages.value = []; // 清空景点讲解消息
+  tourGuideGenerated.value = false; // 重置景点讲解生成标志
   
   // Set loading state
   isLoading.value = true;
@@ -869,13 +1033,20 @@ if (outputs.generation_phases && Array.isArray(outputs.generation_phases)) {
     expandedPhases.value.push('explain_site');
   }
   
+  // 自动展开site_name_address_description节点
+  const siteDetailPhase = outputs.generation_phases.find(phase => phase.phase === 'site_name_address_description');
+  if (siteDetailPhase && !expandedPhases.value.includes('site_name_address_description')) {
+    expandedPhases.value.push('site_name_address_description');
+  }
+  
   // 不再自动展开阶段，让用户手动点击展开
   // 只有当阶段不是json_search或title_summary时才自动展开
   const importantPhases = outputs.generation_phases.filter(phase => 
     phase.isImportant && 
     phase.phase !== 'json_search' && 
     phase.phase !== 'title_summary' &&
-    phase.phase !== 'explain_site' // 已经单独处理了explain_site
+    phase.phase !== 'explain_site' && // 已经单独处理了explain_site
+    phase.phase !== 'site_name_address_description' // 已经单独处理了site_name_address_description
   );
   
   if (importantPhases.length > 0 && !expandedPhases.value.includes(importantPhases[0].phase)) {
@@ -901,6 +1072,8 @@ if (outputs.dayplan) {
 if (outputs.site_detail && Array.isArray(outputs.site_detail)) {
   siteDetails.value = outputs.site_detail;
   console.log('Site details (partial):', siteDetails.value);
+  
+  // 不再在这里立即生成景点讲解，而是等待DOM渲染后再生成
 }
           
 // Process site photos if available
@@ -959,10 +1132,11 @@ const useSearchSuggestion = (suggestion) => {
 
 // Computed properties for generation phases
 const filteredPhases = computed(() => {
-  // 只显示json_search、title_summary和explain_site这三个阶段
+  // 显示json_search、title_summary、site_name_address_description和explain_site这四个阶段
   return generationPhases.value.filter(phase => 
     phase.phase === 'json_search' || 
     phase.phase === 'title_summary' || 
+    phase.phase === 'site_name_address_description' ||
     phase.phase === 'explain_site'
   );
 });
@@ -1289,37 +1463,30 @@ const formatSearchResults = (content) => {
   }
 };
 
-// 提取explain_site节点的text部分
-const extractExplainSiteText = (content) => {
-  try {
-    // 尝试解析JSON
-    const jsonObj = JSON.parse(content);
-    if (jsonObj && jsonObj.text) {
-      // 如果存在text字段，直接返回text内容
-      return jsonObj.text;
-    }
-    
-    // 如果没有text字段，尝试提取JSON部分
-    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
-    if (jsonMatch && jsonMatch[1]) {
-      return jsonMatch[1];
-    }
-    
-    // 如果都没有，返回原始内容
-    return content;
-  } catch (e) {
-    // 如果解析失败，返回原始内容
-    return content;
-  }
-};
 
 // Open image viewer
 const openImageViewer = (images, index, siteName) => {
-  viewerImages.value = images;
+  // 将字符串数组转换为对象数组
+  const formattedImages = images.map(image => ({
+    url: image,
+    keyword: siteName
+  }));
+  viewerImages.value = formattedImages;
   currentImageIndex.value = index;
   currentImageKeyword.value = siteName;
   showImageViewer.value = true;
 };
+
+// 监听siteDetails变化，当它有值时，等待DOM渲染后再生成景点总结
+watch(siteDetails, (newVal) => {
+  if (newVal.length > 0 && !tourGuideGenerated.value && !tourGuideLoading.value) {
+    // 使用nextTick确保DOM已经更新
+    nextTick(() => {
+      // 生成景点总结
+      generateTourGuide(JSON.stringify(newVal));
+    });
+  }
+});
 
 // Lifecycle hooks
 onMounted(() => {
@@ -1659,11 +1826,46 @@ onMounted(() => {
   margin-top: 8px;
 }
 
-.site-address, .site-description {
+.site-address {
   margin-bottom: 12px;
   font-size: 14px;
   color: #666;
-  line-height: 1.5;
+  line-height: 1.6;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
+}
+
+.site-description {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.site-description::-webkit-scrollbar {
+  width: 6px;
+}
+
+.site-description::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.site-description::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 3px;
+}
+
+.site-description::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
 }
 
 .detail-label {
@@ -2081,6 +2283,177 @@ onMounted(() => {
 
 .explain-site-phase .phase-title::before {
   content: "🎙️ ";
+}
+
+/* Tour Guide Container Styles */
+.tour-guide-container {
+  display: flex;
+  flex-direction: column;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+}
+
+.tour-guide-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.tour-guide-icon {
+  font-size: 24px;
+  margin-right: 10px;
+  color: #ff6700;
+}
+
+.tour-guide-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.tour-guide-content {
+  flex: 1;
+}
+
+.tour-guide-empty {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.tour-guide-button {
+  background-color: #ff6700;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tour-guide-button:hover {
+  background-color: #ff8533;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(255, 103, 0, 0.2);
+}
+
+.tour-guide-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 350px;
+  overflow-y: auto;
+  padding: 12px;
+  border-radius: 10px;
+  background-color: #f5f5f5;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eaeaea;
+}
+
+.message-wrapper {
+  width: 100%;
+}
+
+.message-container {
+  display: flex;
+  margin-bottom: 12px;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.message-container.user-message {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.user-message {
+  justify-content: flex-end;
+  width: 100%;
+  display: flex;
+}
+
+.bot-message {
+  justify-content: flex-start;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.message-bubble {
+  max-width: 90%;
+  min-width: 0;
+  padding: 14px 18px;
+  border-radius: 18px;
+  word-break: break-word;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  transition: transform 0.2s ease;
+}
+
+.user-message .message-bubble {
+  background-color: #e6f0ff;
+  color: #333;
+  border-top-right-radius: 4px;
+  max-width: 80%;
+  margin-left: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid #d0e1f9;
+}
+
+.bot-message .message-bubble {
+  background-color: white;
+  color: #333;
+  border-top-left-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eaeaea;
+}
+
+.message-bubble:hover {
+  transform: translateY(-2px);
+}
+
+.mi-logo {
+  width: 32px;
+  height: 32px;
+  margin-left: 0;
+  margin-right: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ff6700;
+}
+
+.mi-logo-text {
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: -1px;
+}
+
+.main-response {
+  padding: 16px;
+  font-size: 15px;
+}
+
+.response-text {
+  line-height: 1.5;
+}
+
+.cursor {
+  display: inline-block;
+  font-weight: bold;
+  transition: opacity 0.3s;
 }
 
 
