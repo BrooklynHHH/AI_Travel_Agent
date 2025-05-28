@@ -80,13 +80,12 @@
           
           <!-- 展开的思考内容 -->
           <div v-if="isThinkingExpanded" class="thinking-content">
-            <!-- 只显示检索相关节点 -->
+            <!-- 景点讲解内容 -->
             <div 
               v-for="(phase, index) in filteredPhases" 
               :key="index" 
               class="phase-container" 
-              :class="{ 'important-phase': phase.isImportant, 'active-phase': currentPhase === phase.phase }"
-              v-show="phase.phase === 'json_search' || phase.phase === 'title_summary'"
+              :class="{ 'important-phase': phase.isImportant, 'active-phase': currentPhase === phase.phase, 'explain-site-phase': phase.phase === 'explain_site' }"
             >
               <div class="phase-header" @click="togglePhaseExpanded(phase.phase)">
                 <div class="phase-title">{{ getPhaseDisplayName(phase.phase) }}</div>
@@ -108,6 +107,11 @@
                 <div v-else-if="phase.phase === 'title_summary'" class="search-results-container">
                   <div v-for="(result, resultIndex) in formatSearchResults(phase.content)" :key="resultIndex" class="search-result-item">
                     <a :href="result.url" target="_blank" class="search-result-link">{{ result.title }}</a>
+                  </div>
+                </div>
+                <div v-else-if="phase.phase === 'explain_site'" class="explain-site-container">
+                  <div class="explain-site-content">
+                    {{ extractExplainSiteText(phase.content) }}
                   </div>
                 </div>
                 <pre v-else>{{ phase.content }}</pre>
@@ -326,6 +330,7 @@ class DifyWorkflowClient {
     if (!apiKey) {
       throw new Error("API Key 不能为空");
     }
+    console.log(`创建DifyWorkflowClient，API密钥: ${apiKey.substring(0, 8)}...，baseUrl: ${baseUrl}`);
     this.apiKey = apiKey;
     this.baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     this.headers = {
@@ -342,6 +347,8 @@ class DifyWorkflowClient {
       user
     };
 
+    console.log(`准备调用工作流，endpoint: ${this.baseUrl}${endpoint}，payload:`, JSON.stringify(payload).substring(0, 100) + "...");
+
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: "POST",
@@ -349,14 +356,17 @@ class DifyWorkflowClient {
         body: JSON.stringify(payload)
       });
 
+      console.log(`收到响应，状态码: ${response.status}`);
+
       if (!response.ok) {
         const errorText = await response.text();
+        console.error(`API错误: ${response.status} - ${errorText}`);
         throw new Error(`API error: ${response.status} - ${errorText}`);
       }
 
       return await response.json();
     } catch (error) {
-      console.error("Workflow run failed:", error);
+      console.error("工作流调用失败:", error);
       throw error;
     }
   }
@@ -369,15 +379,21 @@ class DifyWorkflowClient {
       user
     };
 
+    console.log(`准备调用流式工作流，endpoint: ${this.baseUrl}${endpoint}，payload:`, JSON.stringify(payload).substring(0, 100) + "...");
+
     try {
+      console.log("发送请求...");
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: "POST",
         headers: this.headers,
         body: JSON.stringify(payload)
       });
 
+      console.log(`收到响应，状态码: ${response.status}`);
+
       if (!response.ok) {
         const errorText = await response.text();
+        console.error(`API错误: ${response.status} - ${errorText}`);
         throw new Error(`API error: ${response.status} - ${errorText}`);
       }
 
@@ -389,7 +405,7 @@ class DifyWorkflowClient {
       
       // 用于跟踪当前正在生成的阶段
       let currentPhase = null;
-      let phaseContent = {};
+      const phaseContent = {};
       
       // 关注的特定节点类型
       const importantNodeTypes = [
@@ -397,7 +413,8 @@ class DifyWorkflowClient {
         "title_summary",
         "site_name_address_description",
         "get_photos", 
-        "day_plan"
+        "day_plan",
+        "explain_site"
       ];
 
       let isReading = true;
@@ -549,6 +566,10 @@ class DifyWorkflowClient {
               } else if (nodeTitle === "day_plan" && data.data.outputs.dayplan) {
                 // 行程规划节点，保存行程信息
                 phaseContent[nodeTitle] = data.data.outputs.dayplan;
+              } else if (nodeTitle === "explain_site") {
+                // 景点讲解节点，保存讲解内容
+                console.log("处理explain_site节点:", data.data.outputs);
+                phaseContent[nodeTitle] = JSON.stringify(data.data.outputs, null, 2);
               } else if (nodeTitle === "title_summary" && data.data.outputs.show_content) {
                 // 检索结果列表，累积所有迭代的结果
                 if (!phaseContent[nodeTitle]) {
@@ -670,7 +691,7 @@ const openSettingsModal = () => {
     apiKeyInput.value = savedApiKey;
   } else {
     // Set default API key if none is saved
-    apiKeyInput.value = 'app-8oBdrBQ32V1h9fTZAzI6Zfu9';
+    apiKeyInput.value = 'app-6dBwf3lXyFG7jNLFJpSA7deK';          
   }
   showSettingsModal.value = true;
 };
@@ -800,20 +821,28 @@ const generateTravelPlan = async () => {
   streamingSteps.value.push('正在开始生成行程规划...');
   
   try {
+    console.log('开始生成旅行计划，用户输入:', userInput.value);
+    
     // Get API key from cookie or use default
-    const savedApiKey = getCookie('api_key') || 'app-8oBdrBQ32V1h9fTZAzI6Zfu9';
+    const savedApiKey = getCookie('api_key') || 'app-6dBwf3lXyFG7jNLFJpSA7deK';
+    console.log('使用API密钥:', savedApiKey);
     
     // Create client
     const client = new DifyWorkflowClient(savedApiKey);
     
     // Generate a unique user ID for this session
     const userId = "user-" + Math.random().toString(36).substring(2, 10);
+    console.log('生成用户ID:', userId);
+    
+    
+    console.log('开始调用travel_V2工作流...');
     
     // Call API with streaming mode
     await client.runWorkflowStreaming(
       { user_question: userInput.value },
       userId,
       (partialResponse) => {
+        console.log('收到部分响应:', partialResponse.event);
         // Process partial response
         if (partialResponse && partialResponse.data && partialResponse.data.outputs) {
           const outputs = partialResponse.data.outputs;
@@ -834,12 +863,19 @@ if (outputs.generation_phases && Array.isArray(outputs.generation_phases)) {
   generationPhases.value = outputs.generation_phases;
   console.log('Generation phases:', generationPhases.value);
   
+  // 自动展开explain_site节点
+  const explainSitePhase = outputs.generation_phases.find(phase => phase.phase === 'explain_site');
+  if (explainSitePhase && !expandedPhases.value.includes('explain_site')) {
+    expandedPhases.value.push('explain_site');
+  }
+  
   // 不再自动展开阶段，让用户手动点击展开
   // 只有当阶段不是json_search或title_summary时才自动展开
   const importantPhases = outputs.generation_phases.filter(phase => 
     phase.isImportant && 
     phase.phase !== 'json_search' && 
-    phase.phase !== 'title_summary'
+    phase.phase !== 'title_summary' &&
+    phase.phase !== 'explain_site' // 已经单独处理了explain_site
   );
   
   if (importantPhases.length > 0 && !expandedPhases.value.includes(importantPhases[0].phase)) {
@@ -914,6 +950,7 @@ if (outputs.site_photos) {
   }
 };
 
+
 // Use search suggestion
 const useSearchSuggestion = (suggestion) => {
   userInput.value = suggestion;
@@ -922,7 +959,12 @@ const useSearchSuggestion = (suggestion) => {
 
 // Computed properties for generation phases
 const filteredPhases = computed(() => {
-  return generationPhases.value.filter(phase => phase.isImportant);
+  // 只显示json_search、title_summary和explain_site这三个阶段
+  return generationPhases.value.filter(phase => 
+    phase.phase === 'json_search' || 
+    phase.phase === 'title_summary' || 
+    phase.phase === 'explain_site'
+  );
 });
 
 // Helper methods for generation phases
@@ -932,7 +974,8 @@ const getPhaseDisplayName = (phaseName) => {
     "title_summary": "检索结果列表",
     "site_name_address_description": "景点总结",
     "get_photos": "景点图片获取",
-    "day_plan": "行程规划生成"
+    "day_plan": "行程规划生成",
+    "explain_site": "景点讲解"
   };
   return displayNames[phaseName] || phaseName;
 };
@@ -1243,6 +1286,30 @@ const formatSearchResults = (content) => {
   } catch (e) {
     console.error('Error formatting search results:', e);
     return [];
+  }
+};
+
+// 提取explain_site节点的text部分
+const extractExplainSiteText = (content) => {
+  try {
+    // 尝试解析JSON
+    const jsonObj = JSON.parse(content);
+    if (jsonObj && jsonObj.text) {
+      // 如果存在text字段，直接返回text内容
+      return jsonObj.text;
+    }
+    
+    // 如果没有text字段，尝试提取JSON部分
+    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
+    if (jsonMatch && jsonMatch[1]) {
+      return jsonMatch[1];
+    }
+    
+    // 如果都没有，返回原始内容
+    return content;
+  } catch (e) {
+    // 如果解析失败，返回原始内容
+    return content;
   }
 };
 
@@ -1980,6 +2047,43 @@ onMounted(() => {
   color: #333;
 }
 
+/* 景点讲解容器样式 */
+.explain-site-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.explain-site-content {
+  background-color: #f0f8ff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #4a6fa5;
+  line-height: 1.6;
+  border: 1px solid #d0e1f9;
+  transition: all 0.2s ease;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.explain-site-content:hover {
+  background-color: #e6f2ff;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(74, 111, 165, 0.15);
+}
+
+.explain-site-phase .phase-header {
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.explain-site-phase .phase-title::before {
+  content: "🎙️ ";
+}
+
+
 /* 特别为LLM 3节点添加样式 */
 .llm3-phase .phase-content pre {
   background-color: #fff8f0;
@@ -2177,6 +2281,7 @@ onMounted(() => {
   gap: 12px;
   margin-bottom: 16px;
 }
+
 
 .activity-item {
   display: flex;
