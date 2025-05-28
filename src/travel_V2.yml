@@ -3,7 +3,7 @@ app:
   icon: 🤖
   icon_background: '#FFEAD5'
   mode: workflow
-  name: travel_V2
+  name: travel_V3
   use_icon_as_answer_icon: false
 kind: app
 version: 0.1.5
@@ -116,18 +116,6 @@ workflow:
       type: custom
       zIndex: 1002
     - data:
-        isInIteration: false
-        sourceType: iteration
-        targetType: llm
-      id: 1747633726639-source-1747635197198-target
-      selected: false
-      source: '1747633726639'
-      sourceHandle: source
-      target: '1747635197198'
-      targetHandle: target
-      type: custom
-      zIndex: 0
-    - data:
         isInIteration: true
         iteration_id: '1747640722195'
         sourceType: iteration-start
@@ -167,31 +155,10 @@ workflow:
       zIndex: 0
     - data:
         isInIteration: false
-        sourceType: parameter-extractor
-        targetType: iteration
-      id: 1747647104128-source-1747640722195-target
-      source: '1747647104128'
-      sourceHandle: source
-      target: '1747640722195'
-      targetHandle: target
-      type: custom
-      zIndex: 0
-    - data:
-        isInIteration: false
-        sourceType: llm
-        targetType: parameter-extractor
-      id: 1747635197198-source-1747647104128-target
-      source: '1747635197198'
-      sourceHandle: source
-      target: '1747647104128'
-      targetHandle: target
-      type: custom
-      zIndex: 0
-    - data:
-        isInIteration: false
         sourceType: iteration
         targetType: code
       id: 1747640722195-source-1747798565441-target
+      selected: false
       source: '1747640722195'
       sourceHandle: source
       target: '1747798565441'
@@ -203,6 +170,7 @@ workflow:
         sourceType: code
         targetType: llm
       id: 1747798565441-source-1747649063853-target
+      selected: false
       source: '1747798565441'
       sourceHandle: source
       target: '1747649063853'
@@ -214,20 +182,10 @@ workflow:
         sourceType: llm
         targetType: end
       id: 1747649063853-source-1747641487745-target
+      selected: false
       source: '1747649063853'
       sourceHandle: source
       target: '1747641487745'
-      targetHandle: target
-      type: custom
-      zIndex: 0
-    - data:
-        isInIteration: false
-        sourceType: parameter-extractor
-        targetType: iteration
-      id: 1747647104128-source-17478197165120-target
-      source: '1747647104128'
-      sourceHandle: source
-      target: '17478197165120'
       targetHandle: target
       type: custom
       zIndex: 0
@@ -237,6 +195,7 @@ workflow:
         sourceType: iteration-start
         targetType: http-request
       id: 1747819716512start-source-1747819716512017478197165120-target
+      selected: false
       source: 1747819716512start
       sourceHandle: source
       target: '1747819716512017478197165120'
@@ -265,6 +224,63 @@ workflow:
       source: '17478197165120'
       sourceHandle: source
       target: '1747641487745'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: iteration
+        targetType: code
+      id: 1747633726639-source-1747968189016-target
+      selected: false
+      source: '1747633726639'
+      sourceHandle: source
+      target: '1747968189016'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: code
+        targetType: llm
+      id: 1747968189016-source-1747635197198-target
+      selected: false
+      source: '1747968189016'
+      sourceHandle: source
+      target: '1747635197198'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: code
+      id: 1747635197198-source-1747991918393-target
+      source: '1747635197198'
+      sourceHandle: source
+      target: '1747991918393'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: code
+        targetType: iteration
+      id: 1747991918393-source-17478197165120-target
+      source: '1747991918393'
+      sourceHandle: source
+      target: '17478197165120'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: code
+        targetType: iteration
+      id: 1747991918393-source-1747640722195-target
+      source: '1747991918393'
+      sourceHandle: source
+      target: '1747640722195'
       targetHandle: target
       type: custom
       zIndex: 0
@@ -302,12 +318,14 @@ workflow:
         model:
           completion_params: {}
           mode: chat
-          name: gpt-4o_mi_sys
-          provider: azure_openai
+          name: Doubao-pro-32k_mi_sys
+          provider: volcengine_maas
         prompt_template:
         - id: c91c9bf7-f6e6-4ea3-81da-66f6330c4509
           role: system
           text: '你是一个检索词生成专家，你需要根据用户的问题，识别出问题中的旅行时间、旅行目的地，以及用户的需求是什么，用户个性化需求有哪些？
+
+            生成3-4个检索句。
 
             你会围绕这些实体构建检索式，返回格式如下：
 
@@ -328,10 +346,10 @@ workflow:
       height: 98
       id: '1747633569008'
       position:
-        x: 1060
+        x: 1061.518224621996
         y: 329.5
       positionAbsolute:
-        x: 1060
+        x: 1061.518224621996
         y: 329.5
       selected: false
       sourcePosition: right
@@ -377,8 +395,8 @@ workflow:
       width: 244
     - data:
         desc: ''
-        error_handle_mode: terminated
-        height: 259
+        error_handle_mode: continue-on-error
+        height: 392
         is_parallel: true
         iterator_selector:
         - '1747633668001'
@@ -388,24 +406,24 @@ workflow:
         - contents
         output_type: array[string]
         parallel_nums: 10
-        selected: true
+        selected: false
         start_node_id: 1747633726639start
         title: search_summary
         type: iteration
-        width: 692
-      height: 259
+        width: 682
+      height: 392
       id: '1747633726639'
       position:
-        x: 1668
+        x: 1634.8141839081509
         y: 329.5
       positionAbsolute:
-        x: 1668
+        x: 1634.8141839081509
         y: 329.5
-      selected: true
+      selected: false
       sourcePosition: right
       targetPosition: left
       type: custom
-      width: 692
+      width: 682
       zIndex: 1
     - data:
         desc: ''
@@ -421,7 +439,7 @@ workflow:
         x: 24
         y: 68
       positionAbsolute:
-        x: 1692
+        x: 1658.8141839081509
         y: 397.5
       selectable: false
       sourcePosition: right
@@ -440,7 +458,7 @@ workflow:
         title: bocha_ai_search
         tool_configurations:
           answer: 0
-          count: 10
+          count: 6
           freshness: noLimit
         tool_label: 博查 AI Search
         tool_name: bocha_ai_search
@@ -456,7 +474,7 @@ workflow:
         x: 128
         y: 68
       positionAbsolute:
-        x: 1796
+        x: 1762.8141839081509
         y: 397.5
       selected: false
       sourcePosition: right
@@ -465,13 +483,14 @@ workflow:
       width: 244
       zIndex: 1002
     - data:
-        code: "\ndef main(arg1: str) -> dict:\n    content = arg1[0][\"messages\"\
-          ][0][\"content\"]\n    json_content = json.loads(content)\n    values =\
-          \ json_content[\"value\"]\n    # 先只取网页summary\n    url_contents = [f\"\"\
-          \"title:{v[\"name\"]}\\n\\\\ncontent:{v[\"summary\"]}\"\"\" for v in values]\n\
-          \    show_contents = [\n        {\n        \"title\":v[\"name\"],\n    \
-          \    \"url\":v[\"url\"]} for v in values]\n    return {\n        \"contents\"\
-          : url_contents,\n        \"show_content\":show_content\n    }\n"
+        code: "\ndef main(arg1) -> dict:\n    content = arg1[0][\"messages\"][0][\"\
+          content\"]\n    json_content = json.loads(content)\n    values = json_content[\"\
+          value\"]\n    # 先只取网页summary\n    url_contents = [\n        {\n        \
+          \    \"title\":v[\"name\"],\n            \"url\":v[\"url\"],\n         \
+          \   \"content\":v[\"summary\"]\n        } for v in values]\n    show_contents\
+          \ = [\n        {\n        \"title\":v[\"name\"],\n        \"url\":v[\"url\"\
+          ]} for v in values]\n    return {\n        \"contents\": url_contents,\n\
+          \        \"show_content\":show_contents\n    }\n"
         code_language: python3
         desc: ''
         isInIteration: true
@@ -479,7 +498,7 @@ workflow:
         outputs:
           contents:
             children: null
-            type: array[string]
+            type: array[object]
           show_content:
             children: null
             type: array[object]
@@ -498,7 +517,7 @@ workflow:
         x: 421.5399294792385
         y: 68.13802115622843
       positionAbsolute:
-        x: 2089.5399294792387
+        x: 2056.3541133873896
         y: 397.63802115622843
       selected: false
       sourcePosition: right
@@ -533,7 +552,9 @@ workflow:
           role: user
           text: '网页检索到的信息：{{#1747633726639.output#}}
 
-            用户问题：{{#1747570466777.user_question#}}'
+            用户问题：{{#1747570466777.user_question#}}
+
+            严格要求：输出必须100%是标准JSON格式，任何非JSON内容都将导致处理错误。不要使用代码块，不要添加说明，只输出原始JSON。'
         selected: false
         title: site_name_address_description
         type: llm
@@ -543,10 +564,10 @@ workflow:
       height: 98
       id: '1747635197198'
       position:
-        x: 2420.9464900073126
+        x: 2802.9922428869922
         y: 329.5
       positionAbsolute:
-        x: 2420.9464900073126
+        x: 2802.9922428869922
         y: 329.5
       selected: false
       sourcePosition: right
@@ -559,7 +580,7 @@ workflow:
         height: 288
         is_parallel: false
         iterator_selector:
-        - '1747647104128'
+        - '1747991918393'
         - site_names
         output_selector:
         - '1747641383993'
@@ -574,11 +595,11 @@ workflow:
       height: 288
       id: '1747640722195'
       position:
-        x: 3296.4671080346416
-        y: 329.5
+        x: 3896.4671080346416
+        y: 349.5777358446312
       positionAbsolute:
-        x: 3296.4671080346416
-        y: 329.5
+        x: 3896.4671080346416
+        y: 349.5777358446312
       selected: false
       sourcePosition: right
       targetPosition: left
@@ -599,8 +620,8 @@ workflow:
         x: 24
         y: 68
       positionAbsolute:
-        x: 3320.4671080346416
-        y: 397.5
+        x: 3920.4671080346416
+        y: 417.5777358446312
       selectable: false
       sourcePosition: right
       targetPosition: left
@@ -644,8 +665,8 @@ workflow:
         x: 224.63770411110818
         y: 65
       positionAbsolute:
-        x: 3521.1048121457497
-        y: 394.5
+        x: 4121.10481214575
+        y: 414.5777358446312
       selected: false
       sourcePosition: right
       targetPosition: left
@@ -685,8 +706,8 @@ workflow:
         x: 602.6239358625689
         y: 65
       positionAbsolute:
-        x: 3899.0910438972105
-        y: 394.5
+        x: 4499.0910438972105
+        y: 414.5777358446312
       selected: false
       sourcePosition: right
       targetPosition: left
@@ -701,7 +722,7 @@ workflow:
           - text
           variable: dayplan
         - value_selector:
-          - '1747647104128'
+          - '1747991918393'
           - site_detail
           variable: site_detail
         - value_selector:
@@ -714,11 +735,11 @@ workflow:
       height: 142
       id: '1747641487745'
       position:
-        x: 5175.0670426058105
-        y: 532.9953515722068
+        x: 6034.967636666211
+        y: 488.9405934970023
       positionAbsolute:
-        x: 5175.0670426058105
-        y: 532.9953515722068
+        x: 6034.967636666211
+        y: 488.9405934970023
       selected: false
       sourcePosition: right
       targetPosition: left
@@ -810,51 +831,38 @@ workflow:
       type: custom-note
       width: 445
     - data:
+        code: "import json\nimport re\n\ndef main(json_str):\n    # 第1步：清理和解析JSON字符串\n\
+          \    # 移除代码块标记\n    cleaned_str = re.sub(r'^```\\w*\\n|\\n```$', '', json_str)\n\
+          \    \n    try:\n        # 解析JSON\n        parsed_data = json.loads(cleaned_str)\n\
+          \        print(f\"成功解析JSON数据，共包含{len(parsed_data)}条记录\")\n    except json.JSONDecodeError\
+          \ as e:\n        print(f\"JSON解析错误: {e}\")\n        return\n    return {\n\
+          \        \"site_names\":[p[\"name\"] for p in parsed_data],\n        \"\
+          site_detail\":parsed_data\n    }"
+        code_language: python3
         desc: ''
-        instruction: '请从内容中提取JSON格式的景点数据，并返回两部分信息：
-
-          1. 原始的完整景点数据列表(site_detail)
-
-          2. 包含所有"城市+景点"组合的字符串数组
-
-          '
-        model:
-          completion_params:
-            temperature: 0.7
-          mode: chat
-          name: gpt-4o_mi_sys
-          provider: azure_openai
-        parameters:
-        - description: "- site_detail: 原始完整的景点数据数组\n \"site_detail\": [\n    {\n \
-            \     \"name\": \"中山陵\",\n      \"address\": \"南京市玄武区\",\n      \"description\"\
-            : \"...\",\n      \"source_keywords\": [\"主要景点\", \"历史古迹\"]\n    },\n\
-            \    ...更多景点...\n  ]"
-          name: site_detail
-          required: true
-          type: array[object]
-        - description: "- site: 包含所有\"城市+景点\"组合的字符串数组\n\"site\": [\n    \"南京市中山陵\"\
-            ,\n    \"南京市夫子庙秦淮风光带\",\n    ...更多组合...\n  ]"
-          name: site_names
-          required: true
-          type: array[string]
-        query:
-        - '1747635197198'
-        - text
-        reasoning_mode: prompt
+        outputs:
+          site_detail:
+            children: null
+            type: array[object]
+          site_names:
+            children: null
+            type: array[string]
         selected: false
-        title: site_detail_site_name
-        type: parameter-extractor
-        variables: []
-        vision:
-          enabled: false
-      height: 98
-      id: '1747647104128'
+        title: str_json
+        type: code
+        variables:
+        - value_selector:
+          - '1747635197198'
+          - text
+          variable: json_str
+      height: 54
+      id: '1747991918393'
       position:
-        x: 2808.239215277084
-        y: 329.5
+        x: 3316.304319567457
+        y: 343.2373982094845
       positionAbsolute:
-        x: 2808.239215277084
-        y: 329.5
+        x: 3316.304319567457
+        y: 343.2373982094845
       selected: false
       sourcePosition: right
       targetPosition: left
@@ -868,8 +876,8 @@ workflow:
         model:
           completion_params: {}
           mode: chat
-          name: gpt-4o_mi_sys
-          provider: azure_openai
+          name: Doubao-pro-32k_mi_sys
+          provider: volcengine_maas
         prompt_template:
         - id: 7f38dff9-5440-43f3-8fb9-4bd4cf8e5f3e
           role: system
@@ -942,10 +950,10 @@ workflow:
       height: 98
       id: '1747649063853'
       position:
-        x: 4679.563289577062
+        x: 5601.621679110495
         y: 329.5
       positionAbsolute:
-        x: 4679.563289577062
+        x: 5601.621679110495
         y: 329.5
       selected: false
       sourcePosition: right
@@ -1047,10 +1055,10 @@ workflow:
       height: 54
       id: '1747798565441'
       position:
-        x: 4356.95831190207
+        x: 5256.95831190207
         y: 329.5
       positionAbsolute:
-        x: 4356.95831190207
+        x: 5256.95831190207
         y: 329.5
       selected: false
       sourcePosition: right
@@ -1063,7 +1071,7 @@ workflow:
         height: 288
         is_parallel: false
         iterator_selector:
-        - '1747647104128'
+        - '1747991918393'
         - site_names
         output_selector:
         - '1747819716512017478197165131'
@@ -1078,10 +1086,10 @@ workflow:
       height: 288
       id: '17478197165120'
       position:
-        x: 3296.4671080346416
+        x: 3896.4671080346416
         y: 686.9919768101466
       positionAbsolute:
-        x: 3296.4671080346416
+        x: 3896.4671080346416
         y: 686.9919768101466
       selected: false
       sourcePosition: right
@@ -1095,25 +1103,19 @@ workflow:
           type: no-auth
         body:
           data:
-          - id: key-value-1
+          - id: key-value-55
             key: ''
             type: text
-            value: ''
-          type: raw-text
+            value: '{"app_id":"8e6d8bef-584a-4fad-9422-b0f407b79c76","query":"{{#17478197165120.item#}}","conversation_id":"90b9202c-c5d9-4cfe-bc87-2f544e094576","stream":false}'
+          type: json
         desc: ''
-        headers: ''
+        headers: 'Content-Type:application/json
+
+          Authorization:Bearer bce-v3/ALTAK-a0uqQLFVv6InLqPryYFYS/7ef957b9fa3707e7c75281d53248f082e80b68df'
         isInIteration: true
         iteration_id: '17478197165120'
-        method: get
-        params: 'key:{{#env.amap_api_key#}}
-
-          output:JSON
-
-          keywords:{{#17478197165120.item#}}
-
-          types:110200|110201|110202|110203
-
-          show_fields:photos'
+        method: post
+        params: ''
         retry_config:
           max_retries: 3
           retry_enabled: true
@@ -1123,9 +1125,9 @@ workflow:
           max_connect_timeout: 0
           max_read_timeout: 0
           max_write_timeout: 0
-        title: 高德API关键词搜索
+        title: 百度API照片搜索
         type: http-request
-        url: https://restapi.amap.com/v5/place/text
+        url: https://qianfan.baidubce.com/v2/app/conversation/runs
         variables: []
       height: 136
       id: '1747819716512017478197165120'
@@ -1134,7 +1136,7 @@ workflow:
         x: 224.63770411110818
         y: 66.21439112658288
       positionAbsolute:
-        x: 3521.1048121457497
+        x: 4121.10481214575
         y: 753.2063679367295
       selected: false
       sourcePosition: right
@@ -1143,17 +1145,18 @@ workflow:
       width: 244
       zIndex: 1002
     - data:
-        code: "import json\nimport time \ndef main(arg1,item):\n    time.sleep(0.1)\n\
-          \    json_data = json.loads(arg1)\n    pois = json_data[\"pois\"]\n    if\
-          \ \"photos\" in pois[0]:\n        return {\n            \"results\":{\n\
-          \            \"name\":item,\n            \"photos\": [f[\"url\"] for f in\
-          \ pois[0][\"photos\"]]},\n            \"show_content\":{\n            \"\
-          name\":item,\n            \"photos\": [f[\"url\"] for f in pois[0][\"photos\"\
-          ]]\n            }\n            \n            }\n    else:\n        return\
-          \ {\"results\":\n                    {\"name\":item,\n                 \
-          \   \"photos\": []},\n                \"show_content\":\n              \
-          \  {\n                \"name\":item,\n                \"photos\": [] \n\
-          \                }\n                    \n                    }"
+        code: "import json\nimport time \n\ndef main(arg1, item):\n    json_data =\
+          \ json.loads(arg1)\n    answer = json_data.get(\"answer\") \n\n    # 检查\
+          \ pois 是否存在且不为空\n    if answer and len(answer) > 0:\n        # print(answer)\n\
+          \        # print(type(eval(answer)))\n        urls = eval(answer)\n    \
+          \    # 将str的列表转换为list\n        return {\n            \"results\": {\n  \
+          \              \"name\": item,\n                \"photos\": urls\n     \
+          \       },\n            \"show_content\": {\n                \"name\": item,\n\
+          \                \"photos\": urls\n            }\n        }\n    else:\n\
+          \        # 如果 \"pois\" 键不存在，或者 pois 列表为空\n        return {\n           \
+          \ \"results\": {\n                \"name\": item,\n                \"photos\"\
+          : []\n            },\n            \"show_content\": {\n                \"\
+          name\": item,\n                \"photos\": []\n            }\n        }"
         code_language: python3
         desc: ''
         isInIteration: true
@@ -1185,11 +1188,11 @@ workflow:
       id: '1747819716512017478197165131'
       parentId: '17478197165120'
       position:
-        x: 604.315043806093
-        y: 65
+        x: 602.3725563618536
+        y: 65.97124372211965
       positionAbsolute:
-        x: 3900.7821518407345
-        y: 751.9919768101466
+        x: 4498.839664396495
+        y: 752.9632205322663
       selected: false
       sourcePosition: right
       targetPosition: left
@@ -1210,7 +1213,7 @@ workflow:
         x: 24
         y: 68
       positionAbsolute:
-        x: 3320.4671080346416
+        x: 3920.4671080346416
         y: 754.9919768101466
       selectable: false
       sourcePosition: right
@@ -1224,7 +1227,7 @@ workflow:
         height: 275
         selected: false
         showAuthor: true
-        text: '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"优化建议：","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"1、每个景点游览的时间，也可以从网页中进行总结(给用户提供一个大致的时间参考)","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"2、现有的prompt要求，对于景点的数量定太死了，这一点后面要进行改正。（可以挑选一些景点，然后根据用户的时间进行推荐，或者把有一些景点作为替代方案，当作可选的一个景点参考）","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"3、每日行程可以再利用高德mcp添加一些每日行程的小地图","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
+        text: '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"优化建议：","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"1、每个景点游览的时间，也可以从网页中进行总结(给用户提供一个大致的时间参考)","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"2、现有的prompt要求，对于景点的数量定太死了，这一点后面要进行改正。（可以挑选一些景点，然后根据用户的时间进行推荐，或者把有一些景点作为替代方案，当作可选的一个景点参考）","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"3、每日行程可以再利用高德mcp添加一些每日行程的小地图","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":5,"mode":"normal","style":"","text":"4.景点名+url去重","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":5},{"children":[{"detail":0,"format":5,"mode":"normal","style":"","text":"5.并行添加一个`景点讲解员`的角色。","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":5}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
         theme: pink
         title: ''
         type: ''
@@ -1242,7 +1245,65 @@ workflow:
       targetPosition: left
       type: custom-note
       width: 475
+    - data:
+        author: 李子由
+        desc: ''
+        height: 226
+        selected: false
+        showAuthor: true
+        text: '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"在该步骤添加讲解员的角色，输出文字版的介绍。","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"该部分交由另一个工作流完成","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0},{"children":[],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
+        theme: blue
+        title: ''
+        type: ''
+        width: 304
+      height: 226
+      id: '1747967989708'
+      position:
+        x: 3373.831796879271
+        y: 1329.608878321568
+      positionAbsolute:
+        x: 3373.831796879271
+        y: 1329.608878321568
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-note
+      width: 304
+    - data:
+        code: "def main(data: list) -> dict:\n    unique_urls = set()\n    result\
+          \ = []\n    \n    for item in data:\n        url = item.get(\"url\")\n \
+          \       if url not in unique_urls:\n            unique_urls.add(url)\n \
+          \           title = item.get(\"title\", \"\")\n            content = item.get(\"\
+          content\", \"\")\n            result.append(f\"title：{title}\" + f\"content:{content}\"\
+          )\n    \n    return {'result': \"\\n\".join(result)}"
+        code_language: python3
+        desc: ''
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: deduplicate
+        type: code
+        variables:
+        - value_selector:
+          - '1747633726639'
+          - output
+          variable: data
+      height: 54
+      id: '1747968189016'
+      position:
+        x: 2446.562071249595
+        y: 329.5
+      positionAbsolute:
+        x: 2446.562071249595
+        y: 329.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
     viewport:
-      x: -729.5911155984663
-      y: -96.9761364833488
-      zoom: 1.042431361132927
+      x: -2188.030544367659
+      y: -254.09845222736658
+      zoom: 0.8627673325312368
