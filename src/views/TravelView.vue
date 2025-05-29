@@ -196,19 +196,33 @@
         <h2>为您制定了以下旅游规划</h2>
         <!-- Day plan tabs -->
         <div class="day-tabs">
-          <button 
-            v-for="(day, index) in dayPlanKeys" 
-            :key="index"
-            class="day-tab-button"
-            :class="{ 'active': selectedDay === day }"
-            @click="selectDay(day)"
-          >
-            {{ day.replace('Day_', '第') }}天
-          </button>
+        <button 
+          v-for="(day, index) in dayPlanKeys" 
+          :key="index"
+          class="day-tab-button"
+          :class="{ 'active': selectedDay === day }"
+          @click="selectDay(day)"
+        >
+          {{ day.replace('Day_', '第') }}天
+        </button>
+        <button 
+          v-if="currentDayPlan && currentDayPlan.attractions && currentDayPlan.attractions.length > 1"
+          class="map-button"
+          @click="showRouteMap()"
+        >
+          查看地图路线
+        </button>
         </div>
         
-        <!-- Selected day plan -->
-        <div class="day-plan-container">
+      <!-- 地图容器 -->
+      <div id="map-container" v-show="showMap" class="map-container">
+        <div id="container"></div>
+        <div id="panel"></div>
+        <button class="close-map-button" @click="closeMap">关闭地图</button>
+      </div>
+
+      <!-- Selected day plan -->
+      <div class="day-plan-container">
           <div class="day-plan-header">
             <h2>{{ selectedDay.replace('Day_', '第') }}天 - {{ currentDayPlan.theme_or_area }}</h2>
             <div class="day-time-info">
@@ -344,7 +358,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, computed, watch } from 'vue';
+import { ref, onMounted, nextTick, computed, watch, onBeforeUnmount } from 'vue';
 import ImageViewer from '../components/modals/ImageViewer.vue';
 import ProductWindow from '../components/modals/ProductWindow.vue';
 import SettingsModal from '../components/modals/SettingsModal.vue';
@@ -684,6 +698,10 @@ class DifyWorkflowClient {
     }
   }
 }
+
+// 地图相关状态
+const showMap = ref(false);
+const mapInitialized = ref(false);
 
 // User input for search
 const userInput = ref('');
@@ -1318,6 +1336,134 @@ const totalAttractions = computed(() => {
   return count;
 });
 
+// 地图相关方法
+const showRouteMap = async () => {
+  showMap.value = true;
+  
+  // 等待DOM更新后初始化地图
+  await nextTick();
+  
+  // 每次显示地图时都重新初始化，确保路线正确显示
+  mapInitialized.value = false;
+  initMap();
+};
+
+const closeMap = () => {
+  showMap.value = false;
+};
+
+const initMap = () => {
+  // 添加安全密钥配置
+  if (!window._AMapSecurityConfig) {
+    window._AMapSecurityConfig = {
+      securityJsCode: "ab6be27976f6495b5eefd19c89f2f425", // 这里应该使用你申请的安全密钥
+    };
+  }
+  
+  // 如果已经加载了AMapLoader，直接使用
+  if (window.AMapLoader) {
+    loadMap();
+  } else {
+    // 动态加载AMapLoader
+    const script = document.createElement('script');
+    script.src = 'https://webapi.amap.com/loader.js';
+    script.async = true;
+    script.onload = () => {
+      loadMap();
+    };
+    document.head.appendChild(script);
+  }
+};
+
+const loadMap = () => {
+  // 使用AMapLoader加载高德地图API
+  window.AMapLoader.load({
+    key: "b7e2044eae5d5b47d9fe9500789f969f", // 使用您的高德地图API密钥
+    version: "2.0",
+    plugins: ['AMap.Driving'], // 需要使用的插件
+  })
+  .then((AMap) => {
+    // 创建地图实例
+    const map = new AMap.Map("container", {
+      viewMode: '2D',
+      resizeEnable: true,
+      zoom: 13, // 地图显示的缩放级别
+      center: [116.397428, 39.90923], // 默认中心点
+    });
+    
+    // 标记地图已初始化
+    mapInitialized.value = true;
+    
+    // 绘制路线
+    drawRoute(map, AMap);
+  })
+  .catch((e) => {
+    console.error("地图加载失败:", e);
+  });
+};
+
+const drawRoute = (map, AMap) => {
+  console.log('开始绘制路线...');
+  
+  if (!map) {
+    console.error('地图实例不存在，无法绘制路线');
+    return;
+  }
+  
+  // 获取当前选中日期的景点
+  const attractions = currentDayPlan.value.attractions;
+  if (!attractions || attractions.length < 2) {
+    console.error('景点数量不足，无法绘制路线');
+    return;
+  }
+  
+  console.log('当天景点数量：', attractions.length);
+  
+  try {
+    // 创建驾车导航实例
+    const driving = new AMap.Driving({
+      map: map,
+      panel: "panel"
+    });
+    
+    // 构建搜索点数组
+    const searchPoints = [];
+    
+    // 添加所有景点作为路线点
+    for (let i = 0; i < attractions.length; i++) {
+      searchPoints.push({
+        keyword: attractions[i].site_name
+      });
+    }
+    
+    console.log('路线规划点：', searchPoints);
+    
+    // 搜索驾车路线
+    driving.search(searchPoints, function(status, result) {
+      if (status === 'complete') {
+        console.log('绘制驾车路线完成');
+        // 调整地图视野以包含所有路线点
+        map.setFitView();
+      } else {
+        console.error('获取驾车数据失败：', result);
+      }
+    });
+  } catch (error) {
+    console.error('绘制路线时发生错误：', error);
+  }
+};
+
+// 在组件卸载前清理地图资源
+onBeforeUnmount(() => {
+  if (mapInitialized.value) {
+    // 获取地图实例并销毁
+    const mapDiv = document.getElementById("container");
+    if (mapDiv && mapDiv.__amap_map_instance) {
+      mapDiv.__amap_map_instance.destroy();
+    }
+  }
+});
+
 // Methods
 const updateTime = () => {
   const now = new Date();
@@ -1339,6 +1485,21 @@ const selectDay = (day) => {
       const dayPlanContainer = travelContent.value.querySelector('.day-plan-container');
       if (dayPlanContainer) {
         dayPlanContainer.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    
+    // 如果地图已经显示，重新绘制路线
+    if (showMap.value && mapInitialized.value) {
+      // 获取地图实例
+      const mapDiv = document.getElementById("container");
+      if (mapDiv && mapDiv.__amap_map_instance) {
+        // 清除之前的路线
+        mapDiv.__amap_map_instance.clearMap();
+        // 重新绘制路线
+        drawRoute(mapDiv.__amap_map_instance);
+      } else {
+        // 如果没有找到地图实例，重新初始化地图
+        initMap();
       }
     }
   });
@@ -3165,5 +3326,81 @@ onMounted(() => {
 .search-result-link:hover {
   color: #ff6700;
   text-decoration: underline;
+}
+
+/* 地图容器样式 */
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#container {
+  width: 100%;
+  height: 100%;
+}
+
+#panel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 280px;
+  max-height: 90%;
+  overflow-y: auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.close-map-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  transition: all 0.2s ease;
+}
+
+.close-map-button:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.map-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-button::before {
+  content: "🗺️";
+}
+
+.map-button:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
 </style>
