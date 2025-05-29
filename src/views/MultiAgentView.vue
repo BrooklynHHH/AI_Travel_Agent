@@ -57,6 +57,7 @@
                 <div class="mi-logo-text">MI</div>
               </div>
               <div class="message-bubble main-response multi-agent-response">
+                <!-- 新增：searchItem -->
                 <div v-if="message.searchPlan" class="search-plan-container response-text">
                   <div v-html="renderMarkdown(message.searchPlan)"></div>
                 </div>
@@ -70,17 +71,16 @@
                 <!-- 搜索结果 -->
                 <div v-if="message.searchResults" v-show="!isSearchPlanCollapsed" class="search-results-container">
                   <div v-for="(result, idx) in message.searchResults" :key="idx" class="search-item">
-                    <div class="search-title">
-                      <div class="search-header" @click="toggleSearchResult(result)">
-                        <span class="toggle-icon">{{ result.show ? '▼' : '▶' }}</span>
-                        <span class="search-query">{{ result.search_item }}</span>
+                    <div class="search-header" @click="toggleSearchResult(result)">
+                      <span class="toggle-icon">{{ result.show ? '▼' : '▶' }}</span>
+                      <span class="search-query">{{ result.search_item || '搜索中...' }}</span>
+                    </div>
+                    <div v-if="!result.show && result.search_summary" class="summary" v-html="renderMarkdown(result.search_summary)"></div>
+                    <div v-show="result.show" class="search-content">
+                      <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
+                        <a class="result-link" :href="item.url">{{ item.title }}</a>
                       </div>
                       <div v-if="result.search_summary" class="summary" v-html="renderMarkdown(result.search_summary)"></div>
-                      <div v-show="result.show" class="search-content">
-                        <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
-                          <a class="result-link" :href="item.url">{{ item.title }}</a>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -151,10 +151,9 @@
 import { ref, onMounted, nextTick } from 'vue';
 import MarkdownIt from 'markdown-it';
 
-
 // Quick action buttons - loaded from config
 const quickActions = ref([
-  '斑马鱼和宝莲灯可以一起养吗？'
+  '有一位文学家A参与了一场的文学革新运动，提倡简而有法，反对追求奇险，首创诗话这一评论诗文的新体式。另一位同时代的文学家B评论其"器质深厚，知识高远"，请问文学家B是谁？'
 ]);
 
 // Handler for quick action buttons
@@ -417,7 +416,8 @@ try {
     searchResults: null,
     answerText: '',
     searchPlan: '',
-    roleCard: null
+    roleCard: null,
+    searchItems: []
   };
   messages.value.push(newMessage);
   const assistantMessage = {
@@ -426,7 +426,8 @@ try {
     searchResults: null,
     answerText: '',
     searchPlan: '',
-    roleCard: null
+    roleCard: null,
+    searchItems: []
   };
   messages.value.push(assistantMessage);
   
@@ -434,7 +435,7 @@ try {
   const response = await fetch('http://10.18.4.170/v1/chat-messages', {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer app-SMpjs4vGlUQIpJ2yL7bhHDuQ',
+      'Authorization': 'Bearer app-asNGRMX6hrM23jliFVzNsbmH',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -481,14 +482,47 @@ try {
               currentMessage.roleCard = JSON.parse(outputs.output_role.message.content).role;
             }
 
-            // 处理搜索结果（追加到数组）
+            // 新增：处理 output_search_item
+            if (outputs.output_search_item) {
+              try {
+                const searchItemObj = JSON.parse(outputs.output_search_item.message.content);
+                // 立即创建占位卡片
+                currentMessage.searchResults = currentMessage.searchResults || [];
+                currentMessage.searchResults.push({
+                  search_item: searchItemObj.search_item,
+                  search_summary: '',
+                  search_result: [],
+                  show: false,
+                  isPlaceholder: true
+                });
+                messages.value = [...messages.value]; // 触发响应式
+              } catch (e) {
+                console.error('解析 output_search_item.content 失败', e);
+              }
+            }
+            // 处理搜索结果（更新对应的占位卡片）
             if (outputs.output_search_result) {
               console.log('Received search result:', outputs.output_search_result);
               currentMessage.searchResults = currentMessage.searchResults || [];
               let json_search_result = JSON.parse(outputs.output_search_result.message.content);
-              json_search_result.show = false;  // 添加show状态
-              console.log('Parsed search result:', json_search_result);
-              currentMessage.searchResults.push(json_search_result);
+              
+              // 找到对应的占位卡片并更新
+              const placeholderIndex = currentMessage.searchResults.findIndex(item => item.isPlaceholder && !item.search_result.length);
+              if (placeholderIndex !== -1) {
+                // 更新现有占位卡片
+                currentMessage.searchResults[placeholderIndex] = {
+                  ...currentMessage.searchResults[placeholderIndex],
+                  ...json_search_result,
+                  show: false,
+                  isPlaceholder: false
+                };
+              } else {
+                // 如果没有占位卡片，直接添加
+                json_search_result.show = false;
+                currentMessage.searchResults.push(json_search_result);
+              }
+              
+              console.log('Updated search results:', currentMessage.searchResults);
             }
             // 合并其他字段
             console.log('Updated assistant message:', currentMessage);
@@ -497,7 +531,8 @@ try {
             messages.value.push({
               role: 'assistant',
               ...outputs,
-              searchResults: outputs.output_search_result ? [outputs.output_search_result] : []
+              searchResults: outputs.output_search_result ? [outputs.output_search_result] : [],
+              searchItems: outputs.output_search_item ? [outputs.output_search_item] : []
             });
           }
         } 
@@ -515,7 +550,6 @@ try {
             answerFlag = 2;
             continue
           }
-          console.log('Last answerFlag:', answerFlag);
           if (answerFlag === 1) {
             messages.value[lastAssistantIndex].searchPlan += eventData.answer;
           }
@@ -580,6 +614,9 @@ setInterval(() => {
     el.style.opacity = el.style.opacity === '0' ? '1' : '0';
   });
 }, 500);
+
+// Add isSearchPlanCollapsed variable
+const isSearchPlanCollapsed = ref(false);
 
 </script>
 
@@ -728,10 +765,6 @@ setInterval(() => {
 .thinking-container pre code {
   background-color: transparent;
   padding: 0;
-  color: #eee;
-  text-shadow: 0 1px rgba(0, 0, 0, 0.3);
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  line-height: 1.5;
 }
 
 .search-plan-container {
