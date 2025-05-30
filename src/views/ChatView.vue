@@ -1588,11 +1588,14 @@ setInterval(() => {
 }
 
 .response-text pre {
-  background-color: #f1f1f1;
-  padding: 12px;
-  border-radius: 6px;
-  overflow: auto;
-  margin: 12px 0;
+  background-color: #f1f1f1; /* 保留现有背景色，因为 .hljs 未定义 */
+  padding: 10px;             /* 采纳 .hljs */
+  border-radius: 4px;          /* 采纳 .hljs (通用化) */
+  white-space: pre-wrap;     /* 采纳 .hljs */
+  word-wrap: break-word;     /* 采纳 .hljs */
+  font-size: 13px;           /* 采纳 .hljs */
+  overflow: auto;            /* 保留 */
+  margin: 12px 0;            /* 保留现有 margin */
 }
 
 .response-text pre code {

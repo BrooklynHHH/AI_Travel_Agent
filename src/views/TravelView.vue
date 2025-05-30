@@ -2378,13 +2378,16 @@ onMounted(() => {
 }
 
 .phase-content pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #333;
+  margin: 0; /* 保留 */
+  white-space: pre-wrap; /* 保留 */
+  word-wrap: break-word; /* 保留 */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* 保留 */
+  font-size: 13px; /* 采纳 .hljs */
+  line-height: 1.6; /* 保留 */
+  color: #333; /* 保留 */
+  padding: 10px; /* 采纳 .hljs */
+  border-radius: 4px; /* 采纳 .hljs (通用化) */
+  /* 背景色将由 .phase-content 提供 (#fafafa) */
 }
 
 /* 特殊样式用于景点总结内容 */
