@@ -61,14 +61,20 @@
                   <div v-html="renderMarkdown(message.searchPlan)"></div>
                 </div>
                 <!-- analysis 流式展示 -->
-                <div v-if="message.analysisText" class="analysis-block">
-                  <span class="analysis-content">{{ message.analysisText }}</span>
+                <div v-if="message.analysisText">
+                  <div class="analysis-label-block">
+                    <i class="analysis-label-icon">🔍</i>
+                    <span class="analysis-label-text">搜前分析</span>
+                  </div>
+                  <div class="analysis-block">
+                    <div class="analysis-content">{{ message.analysisText }}</div>
+                  </div>
                 </div>
                 <!-- 所有专家卡片，放在滑动区前面 -->
                 <div v-if="message.roleCards && message.roleCards.length" class="expert-card all-experts-card" style="margin-bottom: 18px;">
                   <div class="expert-header">
                     <i class="expert-icon">👥</i>
-                    <span class="expert-title">所有专家</span>
+                    <span class="expert-title">专家分配</span>
                   </div>
                   <div class="all-experts-list" style="padding: 20px 24px 24px 24px;">
                     <ul style="margin:0; padding:0; list-style:none;">
@@ -80,24 +86,34 @@
                 </div>
                 <!-- 滑动区 -->
                 <div v-if="message.roleCards && message.roleCards.length" class="expert-swiper-container">
+                  <!-- 新增：专家意见标识 -->
+                  <div class="expert-opinion-label">
+                    <i class="expert-opinion-icon">📝</i>
+                    <span>专家意见</span>
+                  </div>
                   <div class="expert-swiper" :ref="el => setExpertSwiper(el, index)">
                     <div
                       class="expert-card expert-slide"
                       v-for="(roleObj, idx) in message.roleCards"
                       :key="idx"
                     >
-                      <!-- 专家身份区，增加折叠按钮 -->
-                      <div class="expert-header" @click="roleObj.showSearch = !roleObj.showSearch">
+                      <!-- 专家身份区 -->
+                      <div class="expert-header">
                         <i class="expert-icon">💡</i>
                         <span class="expert-title">{{ roleObj.role }}</span>
-                        <span class="toggle-icon" style="margin-left:8px;cursor:pointer;">{{ roleObj.showSearch ? '▼' : '▶' }}</span>
                       </div>
-                      <!-- 折叠内容：专家搜索结果 -->
-                      <div v-show="roleObj.showSearch" class="expert-search-block">
-                        <div v-for="(result, idx2) in roleObj.searchResults" :key="idx2" class="search-item">
-                          <div class="search-content">
-                            <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
-                              <a class="result-link" :href="item.url">{{ item.title }}</a>
+                      <!-- 新增：引用资料折叠区 -->
+                      <div v-if="roleObj.searchResults && roleObj.searchResults.length" class="expert-ref-toggle-block">
+                        <div class="ref-toggle-header" @click="roleObj.showRefs = !roleObj.showRefs">
+                          <span class="ref-toggle-text">引用{{ roleObj.searchResults.reduce((sum, s) => sum + (s.search_result ? s.search_result.length : 0), 0) }}篇资料</span>
+                          <span class="ref-toggle-btn">{{ roleObj.showRefs ? '▼' : '▶' }}</span>
+                        </div>
+                        <div v-show="roleObj.showRefs" class="expert-ref-list">
+                          <div v-for="(result, idx2) in roleObj.searchResults" :key="idx2" class="search-item">
+                            <div class="search-content">
+                              <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
+                                <a class="result-link" :href="item.url">{{ item.title }}</a>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -108,16 +124,6 @@
                         <div class="answer-content expert-markdown" v-html="renderMarkdown(roleObj.expert_answer.text)"></div>
                       </div>
                     </div>
-                  </div>
-                  <!-- 分页小圆点 -->
-                  <div v-if="message.roleCards.length > 1" class="expert-pagination">
-                    <span
-                      v-for="(roleObj, idx2) in message.roleCards"
-                      :key="'dot-' + idx2"
-                      class="dot"
-                      :class="{ active: (expertPageMap[index] || 0) === idx2 }"
-                      @click="() => handleExpertDotClick(index, idx2)"
-                    ></span>
                   </div>
                 </div>
                 <!-- 搜索结果 -->
@@ -154,8 +160,14 @@
                   </div>
                 </div>
                 <!-- 专家卡片下方渲染总结 -->
-                <div v-if="message.summaryText" class="summary-block">
-                  <div class="summary-content" v-html="renderMarkdown(message.summaryText)"></div>
+                <div v-if="message.summaryText">
+                  <div class="summary-label-block">
+                    <i class="summary-label-icon">📢</i>
+                    <span class="summary-label-text">综合意见</span>
+                  </div>
+                  <div class="summary-block">
+                    <div class="summary-content" v-html="renderMarkdown(message.summaryText)"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -821,18 +833,6 @@ function setExpertSwiper(el, msgIdx) {
   if (el) expertSwipers.value[msgIdx] = el;
 }
 
-// 小圆点点击，平滑滚动到对应卡片
-function handleExpertDotClick(msgIdx, cardIdx) {
-  const swiperEl = expertSwipers.value[msgIdx];
-  if (!swiperEl) return;
-  const cards = swiperEl.querySelectorAll('.expert-card');
-  const card = cards[cardIdx];
-  if (card) {
-    const left = card.offsetLeft - swiperEl.offsetLeft;
-    swiperEl.scrollTo({ left, behavior: 'smooth' });
-  }
-}
-
 // 滚动时动态高亮
 function onExpertScroll(msgIdx) {
   const swiperEl = expertSwipers.value[msgIdx];
@@ -1219,49 +1219,36 @@ overflow: visible;
 
 .expert-swiper-container {
   width: 100%;
-  overflow: hidden;
+  overflow: visible; /* 不再需要横向滚动 */
   position: relative;
   margin-bottom: 16px;
 }
 
 .expert-swiper {
   display: flex;
-  flex-direction: row;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
+  flex-wrap: wrap;
+  column-gap: 16px;
+  row-gap: 8px;
   width: 100%;
-}
-.expert-swiper::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  overflow: visible;
 }
 
 .expert-slide {
-  flex: 0 0 100%;
-  max-width: 100%;
-  scroll-snap-align: start;
+  flex: 0 0 calc(50% - 8px);
+  max-width: calc(50% - 8px);
   box-sizing: border-box;
-  margin-right: 0;
+  /* 移除 margin-bottom，避免与 row-gap 冲突 */
+}
+
+@media (max-width: 600px) {
+  .expert-slide {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
 }
 
 .expert-pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 8px;
-  gap: 8px;
-}
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ccc;
-  display: inline-block;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.dot.active {
-  background: #ff6700;
+  display: none !important;
 }
 
 .expert-card {
@@ -1360,6 +1347,93 @@ overflow: visible;
   margin-top: 6px;
   font-size: 15px;
   color: #222;
+}
+
+.expert-ref-toggle-block {
+  padding: 0 24px 0 24px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+.ref-toggle-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0;
+  padding: 10px 12px 6px 12px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  transition: background 0.2s;
+}
+.ref-toggle-header:hover {
+  background: #f0f4ff;
+}
+.ref-toggle-text {
+  font-size: 14px;
+  color: #1976d2;
+  user-select: none;
+}
+.ref-toggle-btn {
+  font-size: 15px;
+  color: #1976d2;
+  margin-left: 12px;
+  user-select: none;
+}
+.expert-ref-list {
+  padding: 0 0 8px 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+.expert-opinion-label {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1976d2;
+  margin: 0 0 10px 8px;
+}
+.expert-opinion-icon {
+  font-size: 20px;
+  margin-right: 6px;
+}
+
+.analysis-label-block {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.analysis-label-icon {
+  font-size: 18px;
+  margin-right: 6px;
+  color: #1976d2;
+}
+.analysis-label-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1976d2;
+}
+.summary-label-block {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.summary-label-icon {
+  font-size: 20px;
+  margin-right: 6px;
+  color: #ff9800;
+}
+.summary-label-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ff9800;
 }
 </style>
 
