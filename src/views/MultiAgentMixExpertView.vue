@@ -70,18 +70,23 @@
                     <div class="analysis-content">{{ message.analysisText }}</div>
                   </div>
                 </div>
-                <!-- 所有专家卡片，放在滑动区前面 -->
-                <div v-if="message.roleCards && message.roleCards.length" class="expert-card all-experts-card" style="margin-bottom: 18px;">
-                  <div class="expert-header">
-                    <i class="expert-icon">👥</i>
-                    <span class="expert-title">专家分配</span>
+                <!-- 专家分配标识 -->
+                <div v-if="message.roleCards && message.roleCards.length" class="experts-assign-label">
+                  <i class="experts-assign-icon">👥</i>
+                  <span class="experts-assign-title">专家分配</span>
+                </div>
+                <!-- 专家分配模块 -->
+                <div v-if="message.roleCards && message.roleCards.length" class="experts-assign-block">
+                  <div class="experts-avatars">
+                    <div v-for="(roleObj, idx) in message.roleCards" :key="idx" class="expert-avatar">
+                      <span class="expert-avatar-icon">👤</span>
+                    </div>
                   </div>
-                  <div class="all-experts-list" style="padding: 20px 24px 24px 24px;">
-                    <ul style="margin:0; padding:0; list-style:none;">
-                      <li v-for="(roleObj, idx) in message.roleCards" :key="idx" style="margin-bottom: 10px; font-size: 15px; color: #1976d2; font-weight: 500;">
-                        <i class="expert-icon" style="font-size:16px; margin-right:6px;">💡</i>{{ roleObj.role }}
-                      </li>
-                    </ul>
+                  <div class="experts-desc">
+                    专家队列：
+                    <span class="experts-names">
+                      {{ message.roleCards.map(r => r.role).join('、') }}
+                    </span>
                   </div>
                 </div>
                 <!-- 滑动区 -->
@@ -120,7 +125,6 @@
                       </div>
                       <!-- 专家回答区 -->
                       <div v-if="roleObj.expert_answer && roleObj.expert_answer.text" class="expert-answer-block">
-                        <div class="answer-title">专家回答</div>
                         <div class="answer-content expert-markdown" v-html="renderMarkdown(roleObj.expert_answer.text)"></div>
                       </div>
                     </div>
@@ -1161,11 +1165,11 @@ overflow: visible;
 }
 
 .analysis-block {
-  margin-bottom: 16px;
-  background: #f0f7ff;
-  border-left: 4px solid #1890ff;
-  border-radius: 4px;
-  padding: 10px 16px;
+  /* 移除蓝色背景和左侧色条 */
+  background: none;
+  border-left: none;
+  border-radius: 0;
+  padding: 0;
   font-size: 16px;
 }
 .analysis-label {
@@ -1178,11 +1182,11 @@ overflow: visible;
 }
 
 .summary-block {
-  margin-top: 24px;
-  background: #fffbe6;
-  border-left: 4px solid #ffb300;
-  border-radius: 4px;
-  padding: 12px 18px;
+  /* 移除黄色背景和左侧色条 */
+  background: none;
+  border-left: none;
+  border-radius: 0;
+  padding: 0;
   font-size: 17px;
 }
 .summary-label {
@@ -1195,6 +1199,13 @@ overflow: visible;
   font-size: 15px;
   line-height: 1.7;
   word-break: break-word;
+}
+.summary-content :deep(h1) {
+  font-size: 18px;
+}
+.summary-content :deep(h2),
+.summary-content :deep(h3) {
+  font-size: 16px;
 }
 .summary-content ul,
 .summary-content ol {
@@ -1395,10 +1406,12 @@ overflow: visible;
 .expert-opinion-label {
   display: flex;
   align-items: center;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
   color: #1976d2;
-  margin: 0 0 10px 8px;
+  margin-bottom: 8px;
+  margin-left: 0;
+  margin-top: 20px;
 }
 .expert-opinion-icon {
   font-size: 20px;
@@ -1408,7 +1421,8 @@ overflow: visible;
 .analysis-label-block {
   display: flex;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  margin-top: 20px;
 }
 .analysis-label-icon {
   font-size: 18px;
@@ -1416,7 +1430,7 @@ overflow: visible;
   color: #1976d2;
 }
 .analysis-label-text {
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 600;
   color: #1976d2;
 }
@@ -1424,16 +1438,159 @@ overflow: visible;
   display: flex;
   align-items: center;
   margin-bottom: 8px;
+  margin-top: 20px;
 }
 .summary-label-icon {
   font-size: 20px;
   margin-right: 6px;
-  color: #ff9800;
+  color: #1976d2;
 }
 .summary-label-text {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
-  color: #ff9800;
+  color: #1976d2;
+}
+
+.all-experts-card {
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-bottom: 18px;
+}
+.all-experts-header {
+  display: flex;
+  align-items: center;
+  font-size: 26px;
+  font-weight: bold;
+  color: #2176ff;
+  margin-bottom: 10px;
+  margin-left: 2px;
+}
+.all-experts-icon {
+  font-size: 32px;
+  margin-right: 8px;
+  color: #2176ff;
+}
+.all-experts-title {
+  font-size: 26px;
+  font-weight: bold;
+  color: #2176ff;
+}
+.all-experts-avatars {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+  margin-left: 2px;
+}
+.expert-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #f2f6fc;
+  box-shadow: 0 2px 8px rgba(33, 118, 255, 0.08);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.expert-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.all-experts-desc {
+  font-size: 15px;
+  color: #888;
+  font-weight: 500;
+  margin-left: 2px;
+  margin-bottom: 0;
+  margin-top: 8px;
+}
+.all-experts-names {
+  color: #888;
+  font-size: 15px;
+  font-weight: 500;
+}
+.experts-assign-block {
+  margin-bottom: 24px;
+}
+.experts-avatars {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.expert-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #f2f6fc;
+  box-shadow: 0 2px 8px rgba(33, 118, 255, 0.08);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.expert-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.experts-desc {
+  font-size: 15px;
+  color: #888;
+  font-weight: 500;
+  margin-bottom: 0;
+  margin-top: 8px;
+}
+.experts-names {
+  color: #888;
+  font-size: 15px;
+  font-weight: 500;
+}
+.expert-avatar-icon {
+  font-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.experts-assign-label {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1976d2;
+  margin-bottom: 8px;
+  margin-left: 0;
+  margin-top: 20px;
+}
+.experts-assign-icon {
+  font-size: 20px;
+  margin-right: 6px;
+  color: #1976d2;
+}
+.experts-assign-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.experts-assign-icon,
+.expert-opinion-icon,
+.analysis-label-icon,
+.summary-label-icon {
+  font-style: normal;
 }
 </style>
 
@@ -2461,5 +2618,16 @@ line-height: 1.6;
 .expert-markdown li {
   margin-left: 0 !important;
   list-style-position: outside !important;
+}
+.all-experts-card {
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-bottom: 18px;
+}
+.all-experts-list {
+  padding: 0 0 24px 0 !important;
 }
 </style>
