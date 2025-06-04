@@ -210,7 +210,7 @@ const handleQuickAction = (text) => {
   // 这里可以实现跳转到聊天页面并设置输入内容为选定的问题
   console.log('选择了问题:', text);
   router.push({
-    name: 'advanced-result', // 跳转到AdvancedResultView界面
+    name: '高级搜索结果', // 跳转到AdvancedResultView界面
     query: { 
       query: text, // 将被点中项的内容设置给query
       isdeep: false // isdeep为false
@@ -258,7 +258,7 @@ const handleFeature = (feature) => {
   } else {
     // 其他功能正常跳转到结果页
     router.push({
-      name: 'advanced-result', // 跳转到AdvancedResultView界面
+      name: '高级搜索结果', // 跳转到AdvancedResultView界面
       query: { 
         query: feature, // 将被点中项的内容设置给query
         isdeep: false // isdeep为false

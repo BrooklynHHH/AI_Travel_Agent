@@ -132,7 +132,7 @@ const onSend = () => {
   if (query !== '') {
     addToHistory(query); // 保存到历史记录
     router.push({
-      name: 'advanced-result',
+      name: '高级搜索结果',
       query: {
         query: query,
         isdeep: deepSearchSelected.value,
@@ -223,7 +223,7 @@ const clearHistory = () => {
 const selectHistoryItem = (item) => {
   // emit('select', item); // 原始逻辑是emit，现在改为跳转
   router.push({
-    name: 'advanced-result',
+    name: '高级搜索结果',
     query: {
       query: item,
       isdeep: deepSearchSelected.value,

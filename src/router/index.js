@@ -54,7 +54,7 @@ export const routes = [ // Add export here
   },
   {
     path: '/advanced-result',
-    name: '高级搜索结果', // Translated
+    name: '高级搜索结果', // Keep Chinese name
     component: AdvancedResultView
   },
   {
