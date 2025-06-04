@@ -41,7 +41,7 @@ package_binary_preview:
 build_image_main:
   stage: build_image_main
   image:
-    name: cr.d.xiaomi.net/containercloud/kaniko-executor-xiaomi:release
+    name: micr.cloud.mioffice.cn/containercloud/kaniko-executor-xiaomi:release
     entrypoint: [ "" ]
   script:
     - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:main-$CI_COMMIT_SHORT_SHA
@@ -57,7 +57,7 @@ build_image_main:
 build_image_preview:
   stage: build_image_preview
   image:
-    name: cr.d.xiaomi.net/containercloud/kaniko-executor-xiaomi:release
+    name: micr.cloud.mioffice.cn/containercloud/kaniko-executor-xiaomi:release
     entrypoint: [ "" ]
   script:
     - export APP_IMAGE=$REPO_SERVER/$REPO_NAMESPACE/mify-agent:preview-$CI_COMMIT_SHORT_SHA
