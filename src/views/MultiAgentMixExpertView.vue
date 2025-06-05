@@ -1359,6 +1359,11 @@ overflow: visible;
   font-size: 15px;
   color: #222;
 }
+.expert-markdown :deep(h1),
+.expert-markdown :deep(h2),
+.expert-markdown :deep(h3) {
+  font-size: 15px;
+}
 
 .expert-ref-toggle-block {
   padding: 0 24px 0 24px;
