@@ -6,6 +6,7 @@ import AdvancedView from '../views/AdvancedView.vue'
 import AdvancedResultView from '../views/AdvancedResultView.vue'
 import MultiAgentView from '../views/MultiAgentView.vue'
 import OcrView from '../views/OcrView.vue'
+import PodcastView from '../views/PodcastView.vue'
 
 import TravelView from '../views/TravelView.vue'
 import RouteLinksView from '../views/RouteLinksView.vue'
@@ -16,6 +17,11 @@ export const routes = [ // Add export here
     path: '/route-links',
     name: '页面索引', // Translated
     component: RouteLinksView
+  },
+  {
+    path: '/podcast',
+    name: '播客',
+    component: PodcastView
   },
   {
     path: '/search',
@@ -70,6 +76,11 @@ export const routes = [ // Add export here
     path: '/multi-agent-experts',
     name: 'multi-agent-experts',
     component: MultiAgentMixExpertView
+  },
+  {
+    path: '/podcast-detail',
+    name: 'PodcastDetail',
+    component: () => import('../views/PodcastDetailView.vue')
   },
 ]
 
