@@ -94,7 +94,7 @@
                   <!-- 新增：专家意见标识 -->
                   <div class="expert-opinion-label">
                     <i class="expert-opinion-icon">📝</i>
-                    <span>专家意见</span>
+                    <span>多元视角</span>
                   </div>
                   <div class="expert-swiper" :ref="el => setExpertSwiper(el, index)">
                     <div
@@ -115,6 +115,9 @@
                         </div>
                         <div v-show="roleObj.showRefs" class="expert-ref-list">
                           <div v-for="(result, idx2) in roleObj.searchResults" :key="idx2" class="search-item">
+                            <div class="search-query" v-if="result.search_item" style="font-weight: bold; color: #1976d2; margin-bottom: 4px;">
+                              {{ result.search_item }}
+                            </div>
                             <div class="search-content">
                               <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
                                 <a class="result-link" :href="item.url">{{ item.title }}</a>
@@ -125,7 +128,7 @@
                       </div>
                       <!-- 专家回答区 -->
                       <div v-if="roleObj.expert_answer && roleObj.expert_answer.text" class="expert-answer-block">
-                        <div class="answer-content expert-markdown" v-html="renderMarkdown(roleObj.expert_answer.text)"></div>
+                        <div class="answer-content expert-markdown" v-html="renderMarkdownRaw(roleObj.expert_answer.text)"></div>
                       </div>
                     </div>
                   </div>
@@ -226,7 +229,7 @@ import MarkdownIt from 'markdown-it';
 
 // Quick action buttons - loaded from config
 const quickActions = ref([
-  '斑马鱼和宝莲灯可以一起养吗',
+  '小米15Ultra怎么样',
   '无人机可怕的死亡尖啸，为何大多数士兵听到就有心理阴影？'
 ]);
 
@@ -440,10 +443,23 @@ const isStreaming = ref(false);
 const messages = ref([]);
 
 // Markdown renderer function
+const renderMarkdownRaw = (content) => {
+  if (!content) return '';
+  return md.render(content);
+};
+
 const renderMarkdown = (content) => {
   if (!content) return '';
-  // Then process the custom product format
-  return md.render(content);
+  let html = md.render(content);
+  // 段落之间插空行
+  html = html.replace(/(<\/p>)(\s*)<p>/g, '$1<div style="height:1em"></div><p>');
+  // 标题和段落之间插空行
+  html = html.replace(/(<\/h[1-6]>)(\s*)<p>/g, '$1<div style="height:1em"></div><p>');
+  // 段落后紧跟标题前插空行
+  html = html.replace(/(<\/p>)(\s*)<(h[1-6]>)/g, '$1<div style="height:1em"></div><$3');
+  // 标题和标题之间插空行
+  html = html.replace(/(<\/h[1-6]>)(\s*)<(h[1-6]>)/g, '$1<div style="height:1em"></div><$3');
+  return html;
 };
 
 // Methods
@@ -526,8 +542,6 @@ try {
   let shouldContinue = true;
     let expertNames = [];
     let analysisText = '';
-    let collectingAnalysis = false;
-    let lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
   while (shouldContinue) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -537,31 +551,23 @@ try {
     for (const line of lines) {
       if (line.startsWith('data: ')) {
         const eventData = JSON.parse(line.slice(6));
-          // 收集 analysis（以1开头）并流式渲染
+          // 收集 analysis（不再以1开头）并流式渲染
           if (eventData.event === 'message' && typeof eventData.answer === 'string') {
-            if (eventData.answer.startsWith('1')) {
-              collectingAnalysis = true;
-              analysisText += eventData.answer.substring(1);
-          if (lastAssistantIndex >= 0) {
-                messages.value[lastAssistantIndex].analysisText = analysisText;
-              }
-              console.log('[sendMessage] 收到analysis片段(首段):', eventData.answer.substring(1));
-            } else if (collectingAnalysis) {
-              analysisText += eventData.answer;
-              if (lastAssistantIndex >= 0) {
-                messages.value[lastAssistantIndex].analysisText = analysisText;
-              }
-              console.log('[sendMessage] 收到analysis片段:', eventData.answer);
+            analysisText += eventData.answer;
+            const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
+            if (lastAssistantIndex >= 0) {
+              messages.value[lastAssistantIndex].analysisText = analysisText;
             }
+            console.log('[sendMessage] 收到analysis片段:', eventData.answer);
           }
           // 结束 analysis，遇到专家角色输出，流式渲染专家卡片
           if (eventData.event === 'node_finished' && eventData.data.title && eventData.data.title.includes('专家角色')) {
-            collectingAnalysis = false;
             if (eventData.data.outputs && eventData.data.outputs.output_role) {
               const content = JSON.parse(eventData.data.outputs.output_role.message.content);
               if (Array.isArray(content.role)) {
                 expertNames = content.role;
                 // 立即渲染专家卡片（初始为"正在生成..."）
+                const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
                 if (lastAssistantIndex >= 0) {
                   messages.value[lastAssistantIndex].roleCards = expertNames.map(role => ({
                     role,
@@ -715,14 +721,16 @@ try {
       })
     );
     // 3. 渲染到roleCards已在流式过程中完成
+    const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
     if (lastAssistantIndex >= 0) {
       console.log('[sendMessage] 所有专家及回答已渲染:', messages.value[lastAssistantIndex].roleCards);
     }
 
     // === 新增：调用第三个API进行总结 ===
     // 1. 收集所有专家名和回答
+    const lastAssistantIndex2 = messages.value.findLastIndex(m => m.role === 'assistant');
     const expertIdeas = expertNames.map((name, idx) => {
-      const card = messages.value[lastAssistantIndex].roleCards[idx];
+      const card = messages.value[lastAssistantIndex2].roleCards[idx];
       const answer = card && card.expert_answer && card.expert_answer.text ? card.expert_answer.text : '';
       return answer ? `${name}：${answer}` : '';
     }).filter(Boolean).join('\n\n');
@@ -761,6 +769,7 @@ try {
           const eventData = JSON.parse(line.slice(6));
           if (eventData.event === 'message' && typeof eventData.answer === 'string') {
             summaryText += eventData.answer;
+            const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
             if (lastAssistantIndex >= 0) {
               messages.value[lastAssistantIndex].summaryText = summaryText;
               messages.value = [...messages.value];
@@ -771,6 +780,7 @@ try {
             // 兼容旧的 text_chunk 事件
             if (collectingSummary) {
               summaryText += eventData.data.text;
+              const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
               if (lastAssistantIndex >= 0) {
                 messages.value[lastAssistantIndex].summaryText = summaryText;
                 messages.value = [...messages.value];
@@ -1596,6 +1606,12 @@ overflow: visible;
 .analysis-label-icon,
 .summary-label-icon {
   font-style: normal;
+}
+
+.summary-content p,
+.expert-markdown p,
+.response-text p {
+  margin: 0 0 16px 0;
 }
 </style>
 
