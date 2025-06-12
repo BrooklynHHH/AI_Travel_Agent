@@ -1,0 +1,6 @@
+appid: "3629151115"
+token: "uGFwSN8p4R7u6MJiuDcj3Pi3zS7hM8Oy"
+cluster: "volcano_tts"
+voice_types:
+  female: "zh_female_tianmeitaozi_mars_bigtts"
+host: "openspeech.bytedance.com" 
