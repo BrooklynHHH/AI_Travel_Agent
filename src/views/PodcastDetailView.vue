@@ -2,7 +2,13 @@
   <div class="podcast-detail-bg">
     <div class="podcast-detail-container">
       <div class="podcast-header-row">
-        <img class="podcast-cover" src="@/assets/podcast-cover.png" alt="cover" />
+        <img 
+          class="podcast-cover" 
+          :src="coverImage" 
+          alt="cover" 
+          @error="handleImageError"
+          @load="handleImageLoad"
+        />
         <div class="podcast-meta">
           <div class="podcast-title">{{ title }}</div>
           <div class="podcast-time">{{ formatDuration(duration) }} ｜ {{ currentDate }}</div>
@@ -10,13 +16,13 @@
           <div class="podcast-actions">
             <audio controls :src="audioFile" class="audio-player" @loadedmetadata="handleLoadedMetadata"></audio>
             <button class="action-btn">分享</button>
-            <button class="action-btn">導出腳本為PDF</button>
+            <button class="action-btn">导出脚本为PDF</button>
           </div>
         </div>
       </div>
 
       <div class="podcast-tabs">
-        <button class="tab-btn active">播客腳本</button>
+        <button class="tab-btn active">播客脚本</button>
       </div>
 
       <div class="podcast-script-block">
@@ -42,12 +48,14 @@ export default {
       content: '', // 從路由獲取的 Dify 生成的文本內容
       summary: '', // 播客摘要
       parsedBlocks: [], // 解析後的腳本分段
-      duration: 0 // 音頻時長
+      duration: 0, // 音頻時長
+      coverImage: '', // 默認封面
+      defaultCover: '' // 備用封面
     }
   },
   computed: {
     currentDate() {
-      return new Date().toLocaleDateString('zh-TW', {
+      return new Date().toLocaleDateString('zh-CN', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -55,10 +63,10 @@ export default {
     },
     audioFile() {
       // 從 Flask 服務器獲取音頻文件
-      return this.audioFilename ? `http://localhost:5001/audio/${this.audioFilename}` : ''
+      return this.audioFilename ? `http://10.7.32.218:5001/audio/${this.audioFilename}` : ''
     }
   },
-  created() {
+  async created() {
     // 從路由參數獲取數據
     const { title, audioFile, content } = this.$route.query
     this.title = decodeURIComponent(title || '生成的播客')
@@ -69,6 +77,15 @@ export default {
     this.summary = this.content.slice(0, 200) + (this.content.length > 200 ? '...' : '')
     // 解析角色分段
     this.parsedBlocks = this.parseScript(this.content)
+
+    // 動態導入圖片
+    try {
+      const image = await import('@/assets/podcast.jpeg')
+      this.coverImage = image.default
+      this.defaultCover = image.default
+    } catch (error) {
+      console.error('圖片加載失敗:', error)
+    }
   },
   methods: {
     handleLoadedMetadata(event) {
@@ -82,7 +99,9 @@ export default {
     },
     // 假設AI返回格式為：角色名: 內容\n角色名: 內容\n...
     parseScript(text) {
-      const lines = text.split(/\n|\r/).filter(l => l.trim())
+      // 先將 \n 替換為實際的換行符
+      const processedText = text.replace(/\\n/g, '\n')
+      const lines = processedText.split(/\n|\r/).filter(l => l.trim())
       const blocks = []
       let lastRole = ''
       lines.forEach(line => {
@@ -104,6 +123,13 @@ export default {
       if (/王涛/.test(role)) return '🧑‍💼'
       if (/李靜/.test(role)) return '🧑‍💼'
       return '🎙️'
+    },
+    handleImageError(e) {
+      console.error('圖片加載失敗:', e.target.src)
+      this.coverImage = this.defaultCover
+    },
+    handleImageLoad(e) {
+      console.log('圖片加載成功:', e.target.src)
     }
   }
 }
@@ -273,5 +299,12 @@ export default {
     width: 100%;
     height: 180px;
   }
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #ff7e5f, #feb47b); /* 漸變顏色 */
+  -webkit-background-clip: text; /* 讓背景裁剪到文字形狀 */
+  background-clip: text;
+  color: transparent; /* 讓文字本身透明，顯示背景 */
 }
 </style> 

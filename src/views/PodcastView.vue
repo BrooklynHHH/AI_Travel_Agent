@@ -2,25 +2,26 @@
   <div class="chat-container podcast-bg">
     <div class="podcast-content-container">
       <div class="main-header">
-        <h1 class="main-title">AI 播客生成器</h1>
-        <div class="main-desc">在幾秒鐘內將您的內容轉為可分享的播客節目</div>
+        <h1 class="main-title">
+          <span class="icon-circle"></span>
+          <span class="gradient-ai">AI</span>
+          <span class="icon-bell"></span>
+          <span class="gradient-podcast">播客生成器</span>
+          <span class="icon-books"></span>
+        </h1>
+        <div class="main-desc">在几秒钟内将您的内容转为可分享的播客节目</div>
       </div>
       <div class="input-card">
         <div class="input-row">
-          <textarea v-model="podcastText" class="topic-input" placeholder="貼上URL到這裡" />
+          <textarea v-model="podcastText" class="topic-input" placeholder="粘贴URL到这里" />
         </div>
         <div class="option-row">
-          <select v-model="lang" class="option-select">
-            <option value="zh-CN">簡體中文</option>
-            <option value="zh-TW">繁體中文</option>
-            <option value="en">English</option>
-          </select>
           <div class="host-select">
             <span>主持人：</span>
-            <span class="host-avatar">🧑‍💼 李靜</span>
-            <span class="host-avatar">🧑‍💼 王濤</span>
-            <button class="type-btn" :class="{active: selectedType==='single'}" @click="selectType('single')">單人</button>
-            <button class="type-btn" :class="{active: selectedType==='double'}" @click="selectType('double')">雙人</button>
+            <span class="host-avatar">🧑‍💼 李静</span>
+            <span class="host-avatar">🧑‍💼 王涛</span>
+            <button class="type-btn" :class="{active: selectedType==='single'}" @click="selectType('single')">单人</button>
+            <button class="type-btn" :class="{active: selectedType==='double'}" @click="selectType('double')">双人</button>
           </div>
         </div>
         <button class="main-generate-btn" :disabled="!podcastText.trim() || isGenerating" @click="handleGenerate">
@@ -29,18 +30,18 @@
         </button>
       </div>
       <div class="example-section">
-        <div class="example-title">示例提示詞</div>
+        <div class="example-title">示例提示词</div>
         <div class="example-list">
-          <span class="example-item">斯坦福 AI 指數報告 2024</span>
-          <span class="example-item">馬斯克的願景：構建明天</span>
-          <span class="example-item">大語言模型中的知識蒸餾</span>
-          <span class="example-item">5 個日常生產力小貼士</span>
+          <span class="example-item" @click="useExample('斯坦福 AI 指数报告 2024')">斯坦福 AI 指数报告 2024</span>
+          <span class="example-item" @click="useExample('马斯克的愿景：构建明天')">马斯克的愿景：构建明天</span>
+          <span class="example-item" @click="useExample('大语言模型中的知识蒸馏')">大语言模型中的知识蒸馏</span>
+          <span class="example-item" @click="useExample('5 个日常生产力小贴士')">5 个日常生产力小贴士</span>
         </div>
       </div>
       <div class="podcast-output" v-if="isGenerating">
         <div class="loading-container">
           <div class="loading-spinner"></div>
-          <div class="loading-text">播客生成中，請稍候...</div>
+          <div class="loading-text">播客生成中，请稍候...</div>
         </div>
       </div>
       <div class="error-message" v-if="error">
@@ -58,25 +59,27 @@ export default {
   name: 'PodcastView',
   data() {
     return {
-      selectedType: 'single', // 默認單人
-      podcastText: '', // 用戶輸入的播客主題
-      difyGeneratedContent: '', // Dify 生成的文本內容
-      lang: 'zh-CN',
+      selectedType: 'single', // 默认单人
+      podcastText: '', // 用户输入的播客主题
+      difyGeneratedContent: '', // Dify 生成的文本内容
       isGenerating: false,
       error: null,
-      loadingDify: false, // 新增：Dify 生成中狀態
-      loadingAudio: false, // 新增：音頻生成中狀態
-      userId: 'podcast-user', // Dify 用戶 ID
-      controller: null // 用於取消 Dify 請求
+      loadingDify: false, // 新增：Dify 生成中状态
+      loadingAudio: false, // 新增：音频生成中状态
+      userId: 'podcast-user', // Dify 用户 ID
+      controller: null // 用于取消 Dify 请求
     }
   },
   methods: {
+    useExample(text) {
+      this.podcastText = text
+    },
     selectType(type) {
       this.selectedType = type
     },
     async handleGenerate() {
       if (!this.podcastText.trim()) {
-        this.error = '請輸入播客主題'
+        this.error = '请输入播客主题'
         return
       }
 
@@ -86,7 +89,7 @@ export default {
       this.difyGeneratedContent = ''
 
       try {
-        // 步驟 1: 呼叫 Dify API 生成播客文本
+        // 步骤 1: 呼叫 Dify API 生成播客文本
         const apiKey = this.selectedType === 'single' ? 'app-kGi6NkKSrDzQqJyizV1hKjxI' : 'app-b87p8SKFRgsvKjCVHfXGqokW'
         const url = 'http://10.18.4.170/v1/chat-messages'
         const headers = {
@@ -108,7 +111,7 @@ export default {
           signal: this.controller.signal
         })
 
-        if (!response.body) throw new Error('無法獲取 Dify 流式數據')
+        if (!response.body) throw new Error('无法获取 Dify 流式数据')
 
         const reader = response.body.getReader()
         let buffer = ''
@@ -143,7 +146,7 @@ export default {
         }
         this.difyGeneratedContent = fullAnswer
 
-        // 步驟 2: Dify 文本生成完成，開始生成音頻
+        // 步骤 2: Dify 文本生成完成，开始生成音频
         this.loadingDify = false
         this.loadingAudio = true
 
@@ -160,15 +163,15 @@ export default {
             }
           })
         } else {
-          this.error = result.error || '生成播客音頻失敗'
+          this.error = result.error || '生成播客音频失败'
           ElMessage.error(this.error)
         }
       } catch (error) {
         if (error.name === 'AbortError') {
-          console.log('Dify 請求被取消')
+          console.log('Dify 请求被取消')
           this.error = '生成已被取消'
         } else {
-          this.error = error.message || '生成播客時出錯'
+          this.error = error.message || '生成播客时出错'
         }
         ElMessage.error(this.error)
       } finally {
@@ -208,28 +211,79 @@ export default {
   gap: 28px;
 }
 .main-header {
-  margin-bottom: 8px;
+  text-align: center;
+  margin-bottom: 30px;
+  position: relative;
 }
 .main-title {
-  font-size: 32px;
-  font-weight: bold;
-  color: #222;
-  text-align: center;
+  font-size: 48px; /* 根據最新圖片調整大小 */
+  font-weight: 800; /* 調整字體粗細 */
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px; /* 調整文字和圖標之間的間距 */
+}
+.gradient-ai {
+  background: linear-gradient(to right, #ff6b6b, #e03636); /* 红色渐变 */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.gradient-podcast {
+  background: linear-gradient(to right, #333, #000); /* 黑色渐变 */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* 小图标的占位符样式，您可以替换为实际的 SVG 或 CSS 图标 */
+.icon-circle,
+.icon-bell,
+.icon-books {
+  display: inline-block;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  vertical-align: middle;
+}
+.icon-circle {
+  width: 20px;
+  height: 20px;
+  background-color: #333; /* 模拟圆点 */
+  border-radius: 50%;
+  margin-right: 5px; /* 调整间距 */
+}
+.icon-bell {
+  width: 24px;
+  height: 24px;
+  background-image: url('@/assets/bell-icon.svg'); /* 替换为您的铃铛图标 SVG 路径 */
+  margin: 0 5px;
+}
+.icon-books {
+  width: 28px;
+  height: 28px;
+  background-image: url('@/assets/books-icon.svg'); /* 替换为您的书籍图标 SVG 路径 */
+  margin-left: 5px;
 }
 .main-desc {
-  color: #888;
-  font-size: 17px;
-  margin-top: 10px;
-  text-align: center;
+  font-size: 18px;
+  color: #666;
 }
 .input-card {
-  background: #fafbfc;
-  border-radius: 12px;
-  padding: 28px 24px 18px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  background: rgba(255, 255, 255, 0.6); /* 半透明背景，讓毛玻璃效果可見 */
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* 調整陰影，使其更柔和 */
+  backdrop-filter: blur(10px); /* 毛玻璃效果 */
+  -webkit-backdrop-filter: blur(10px); /* 兼容 Safari */
+  border: 1px solid transparent; /* 基礎邊框，寬度減小 */
+  border-image: linear-gradient(to right, #ff6700, #ffb300); /* 漸變邊框 */
+  border-image-slice: 1; /* 確保漸變應用於整個邊框 */
+  /* 這些屬性有助於確保 border-radius 與 border-image 正確結合 */
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  padding: 30px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .input-row {
   display: flex;
@@ -245,20 +299,15 @@ export default {
   font-size: 16px;
   background: #f5f5f5;
   resize: none;
+  margin-bottom: 20px; /* 增加与下方选项的间距 */
 }
 .option-row {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 20px; /* 调整选项之间的间距 */
   font-size: 16px;
   flex-wrap: wrap;
-}
-.option-select {
-  padding: 8px 18px;
-  border-radius: 8px;
-  border: 1px solid #eee;
-  background: #fff;
-  font-size: 16px;
+  margin-bottom: 20px; /* 增加与立即生成按钮的间距 */
 }
 .host-select {
   display: flex;
@@ -271,16 +320,14 @@ export default {
   border-radius: 12px;
   padding: 4px 14px;
   font-size: 16px;
-  margin-right: 6px;
 }
 .type-btn {
-  padding: 6px 18px;
+  padding: 8px 20px; /* 调整按钮内边距 */
   border: 1px solid #eee;
   border-radius: 12px;
   background: #fff;
   color: #888;
   font-size: 15px;
-  margin-left: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -294,7 +341,9 @@ export default {
   color: #fff;
   border: none;
   border-radius: 20px;
-  padding: 16px 0;
+  padding: 16px 0; /* 之前是 0，導致過短 */
+  width: 100%; /* 確保按鈕橫跨整個容器 */
+  padding: 16px; /* 添加水平內邊距 */
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
@@ -321,15 +370,17 @@ export default {
 }
 .example-item {
   background: #f5f5f5;
+  padding: 8px 16px;
   border-radius: 8px;
-  padding: 8px 18px;
-  font-size: 16px;
+  font-size: 15px;
   color: #444;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 .example-item:hover {
   background: #ffecdb;
+  color: #333;
+  transform: translateY(-1px);
 }
 .podcast-output {
   background: #fff;
