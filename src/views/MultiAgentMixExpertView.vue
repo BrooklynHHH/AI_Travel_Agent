@@ -25,22 +25,18 @@
     <button class="settings-button" @click="openSettingsModal">
       <span class="settings-icon">⚙️</span>
     </button>
-    
+
     <!-- Chat content -->
     <div class="chat-content" ref="chatContent">
       <div class="messages-container">
         <!-- Quick action buttons -->
         <div class="quick-actions">
-          <button 
-            v-for="(action, index) in quickActions" 
-            :key="index"
-            class="quick-action-button"
-            @click="handleQuickAction(action)"
-          >
+          <button v-for="(action, index) in quickActions" :key="index" class="quick-action-button"
+            @click="handleQuickAction(action)">
             {{ action }}
           </button>
         </div>
-        
+
         <!-- Messages -->
         <div v-for="(message, index) in messages" :key="index">
           <!-- User message -->
@@ -49,7 +45,7 @@
               {{ message.content }}
             </div>
           </div>
-  
+
           <!-- Bot message -->
           <template v-else-if="message.role === 'assistant'">
             <div class="message-container bot-message">
@@ -85,7 +81,7 @@
                   <div class="experts-desc">
                     专家队列：
                     <span class="experts-names">
-                      {{ message.roleCards.map(r => r.role).join('、') }}
+                      {{message.roleCards.map(r => r.role).join('、')}}
                     </span>
                   </div>
                 </div>
@@ -97,11 +93,7 @@
                     <span>多元视角</span>
                   </div>
                   <div class="expert-swiper" :ref="el => setExpertSwiper(el, index)">
-                    <div
-                      class="expert-card expert-slide"
-                      v-for="(roleObj, idx) in message.roleCards"
-                      :key="idx"
-                    >
+                    <div class="expert-card expert-slide" v-for="(roleObj, idx) in message.roleCards" :key="idx">
                       <!-- 专家身份区 -->
                       <div class="expert-header">
                         <i class="expert-icon">💡</i>
@@ -110,12 +102,14 @@
                       <!-- 新增：引用资料折叠区 -->
                       <div v-if="roleObj.searchResults && roleObj.searchResults.length" class="expert-ref-toggle-block">
                         <div class="ref-toggle-header" @click="roleObj.showRefs = !roleObj.showRefs">
-                          <span class="ref-toggle-text">引用{{ roleObj.searchResults.reduce((sum, s) => sum + (s.search_result ? s.search_result.length : 0), 0) }}篇资料</span>
+                          <span class="ref-toggle-text">引用{{roleObj.searchResults.reduce((sum, s) => sum +
+                            (s.search_result ? s.search_result.length : 0), 0) }}篇资料</span>
                           <span class="ref-toggle-btn">{{ roleObj.showRefs ? '▼' : '▶' }}</span>
                         </div>
                         <div v-show="roleObj.showRefs" class="expert-ref-list">
                           <div v-for="(result, idx2) in roleObj.searchResults" :key="idx2" class="search-item">
-                            <div class="search-query" v-if="result.search_item" style="font-weight: bold; color: #1976d2; margin-bottom: 4px;">
+                            <div class="search-query" v-if="result.search_item"
+                              style="font-weight: bold; color: #1976d2; margin-bottom: 4px;">
                               {{ result.search_item }}
                             </div>
                             <div class="search-content">
@@ -128,7 +122,8 @@
                       </div>
                       <!-- 专家回答区 -->
                       <div v-if="roleObj.expert_answer && roleObj.expert_answer.text" class="expert-answer-block">
-                        <div class="answer-content expert-markdown" v-html="renderMarkdownRaw(roleObj.expert_answer.text)"></div>
+                        <div class="answer-content expert-markdown"
+                          v-html="renderMarkdownRaw(roleObj.expert_answer.text)"></div>
                       </div>
                     </div>
                   </div>
@@ -156,36 +151,29 @@
                 <div v-if="message.followUpQuestion" class="follow-up-question">
                   <p class="question-text">{{ message.followUpQuestion.question }}</p>
                   <div class="option-buttons">
-                    <button 
-                      v-for="(option, index) in message.followUpQuestion.options" 
-                      :key="index" 
-                      class="option-button"
-                      @click="sendFollowUpResponse(option)"
-                    >
+                    <button v-for="(option, index) in message.followUpQuestion.options" :key="index"
+                      class="option-button" @click="sendFollowUpResponse(option)">
                       {{ option }}
                     </button>
                   </div>
                 </div>
                 <!-- 专家卡片下方渲染总结 -->
-                <div v-if="message.summaryText">
-                  <div class="summary-label-block">
-                    <i class="summary-label-icon">📢</i>
-                    <span class="summary-label-text">综合意见</span>
-                  </div>
-                  <div class="summary-block">
-                    <div class="summary-content" v-html="renderMarkdown(message.summaryText)"></div>
-                  </div>
-                </div>
+                <ThinkingView 
+                  v-if="message.thinkingText || message.normalText"
+                  :thinkingText="message.thinkingText"
+                  :normalText="message.normalText"
+                  :uniqueIdSuffix="index"
+                />
               </div>
             </div>
           </template>
         </div>
-  
+
         <!-- Progress bar (visible when loading or streaming) -->
         <div v-if="isLoading || isStreaming" class="progress-container">
           <div class="progress-bar"></div>
         </div>
-        
+
         <!-- Small padding at bottom to ensure some space after last message -->
         <div style="height: 20px"></div>
       </div>
@@ -197,17 +185,12 @@
         <div class="plus-button">
           <i class="plus-icon">+</i>
         </div>
-        <input 
-          type="text" 
-          placeholder="输入你想问的问题" 
-          v-model="userInput"
-          @keyup.enter="sendMessage"
-        />
+        <input type="text" placeholder="输入你想问的问题" v-model="userInput" @keyup.enter="sendMessage" />
         <div class="voice-button" @click="sendMessage">
           <i class="send-icon">↑</i>
         </div>
       </div>
-      
+
       <div class="bottom-toolbar">
         <div class="toolbar-item">
           <i class="depth-icon">🔍</i>
@@ -225,6 +208,7 @@
 <script setup>
 import { ref, onMounted, nextTick, onUpdated } from 'vue';
 import MarkdownIt from 'markdown-it';
+import ThinkingView from '@/base/views/ThinkingView.vue';
 
 
 // Quick action buttons - loaded from config
@@ -334,18 +318,18 @@ document.head.appendChild(style);
 md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
   const token = tokens[idx];
   const href = token.attrGet('href');
-  
+
   // Check if link starts with aisearch://
   if (href && href.startsWith('aisearch://')) {
     // Add styling class for all aisearch links
     token.attrPush(['class', 'special-link']);
-    
+
     // Check if it's a product link
     if (href.startsWith('aisearch://product/')) {
       const productPath = href.substring('aisearch://product/'.length);
       token.attrPush(['data-product-url', productPath]);
       token.attrPush(['data-product', productPath]);
-    } 
+    }
     // Check if it's a jump link (to external URL)
     else if (href.startsWith('aisearch://jump/')) {
       const jumpUrl = href.substring('aisearch://jump/'.length);
@@ -359,7 +343,7 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
     token.attrPush(['target', '_blank']);
     token.attrPush(['rel', 'noopener noreferrer']);
   }
-  
+
   return self.renderToken(tokens, idx, options);
 };
 
@@ -368,13 +352,13 @@ const handleContentClick = (event) => {
   // Check if clicked element is an aisearch link (with the special-link class)
   if (event.target.tagName === 'A' && event.target.classList.contains('special-link')) {
     event.preventDefault();
-    
+
     // Check if it's a jump link (to external URL)
     const jumpUrl = event.target.getAttribute('data-jump-url');
     if (jumpUrl) {
       // Extract the URL and use it in the floating window
       productName.value = '外部链接';  // Set a generic title for the header
-      
+
       // Check if this is a Baidu URL and use our proxy if it is
       if (jumpUrl.includes('baidu.com')) {
         // Replace the Baidu domain with our proxy
@@ -383,7 +367,7 @@ const handleContentClick = (event) => {
       } else {
         productUrl.value = jumpUrl;
       }
-      
+
       showProductWindow.value = true;
     }
     // Check if it has a product URL
@@ -422,7 +406,7 @@ const getCookie = (name) => {
   const cookieName = name + "=";
   const decodedCookie = decodeURIComponent(document.cookie);
   const cookieArray = decodedCookie.split(';');
-  
+
   for (let i = 0; i < cookieArray.length; i++) {
     let cookie = cookieArray[i].trim();
     if (cookie.indexOf(cookieName) === 0) {
@@ -448,16 +432,14 @@ const renderMarkdownRaw = (content) => {
   return md.render(content);
 };
 
+// renderMarkdown function for content that is NOT part of ThinkingView
 const renderMarkdown = (content) => {
   if (!content) return '';
   let html = md.render(content);
-  // 段落之间插空行
+  // Add spacing between paragraphs and headings
   html = html.replace(/(<\/p>)(\s*)<p>/g, '$1<div style="height:1em"></div><p>');
-  // 标题和段落之间插空行
   html = html.replace(/(<\/h[1-6]>)(\s*)<p>/g, '$1<div style="height:1em"></div><p>');
-  // 段落后紧跟标题前插空行
   html = html.replace(/(<\/p>)(\s*)<(h[1-6]>)/g, '$1<div style="height:1em"></div><$3');
-  // 标题和标题之间插空行
   html = html.replace(/(<\/h[1-6]>)(\s*)<(h[1-6]>)/g, '$1<div style="height:1em"></div><$3');
   return html;
 };
@@ -485,7 +467,7 @@ const scrollToBottom = () => {
 const sendFollowUpResponse = (optionText) => {
   // Create Baidu search URL with the option text using our proxy
   const searchUrl = `/baidu-proxy/s?wd=${encodeURIComponent(optionText)}`;
-  
+
   // Open product window with the search URL
   productName.value = optionText;
   productUrl.value = searchUrl;
@@ -498,59 +480,62 @@ const toggleSearchResult = (result) => {
 };
 
 const sendMessage = async () => {
-try {
-  isStreaming.value = true;
-  const newMessage = {
-    role: 'user',
-    content: userInput.value,
-    searchResults: null,
-    answerText: '',
-    searchPlan: '',
+  try {
+    isStreaming.value = true;
+    const newMessage = {
+      role: 'user',
+      content: userInput.value,
+      searchResults: null,
+      answerText: '',
+      searchPlan: '',
       roleCards: []
-  };
-  messages.value.push(newMessage);
-  const assistantMessage = {
-    role: 'assistant',
-    content: '',
-    searchResults: null,
-    answerText: '',
-    searchPlan: '',
+    };
+    messages.value.push(newMessage);
+    const assistantMessage = {
+      role: 'assistant',
+      content: '',
+      searchResults: null,
+      answerText: '',
+      searchPlan: '',
       roleCards: [],
-      analysisText: ''
-  };
-  messages.value.push(assistantMessage);
-  
+      analysisText: '',
+      thinkingText: '', // 专门存储思考过程的内容
+      normalText: '',   // 存储非思考过程的内容
+      inThinkingMode: false // 新增：标记是否正在思考过程中
+    };
+    messages.value.push(assistantMessage);
+
     // 1. 第一个API流式获取专家名和analysis
     console.log('[sendMessage] 开始请求第一个API获取专家名和analysis');
-  const response = await fetch('http://10.18.4.170/v1/chat-messages', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer app-bCkBvqZL5WpDnEQqNjb0Buld',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      inputs: {},
-      query: userInput.value,
-      response_mode: 'streaming',
-      conversation_id: '',
-      user: 'abc-123'
-    })
-  });
+    const response = await fetch('http://10.18.4.170/v1/chat-messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer app-bCkBvqZL5WpDnEQqNjb0Buld',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        inputs: {},
+        query: userInput.value,
+        response_mode: 'streaming',
+        conversation_id: '',
+        user: 'abc-123'
+      })
+    });
 
-  const reader = response.body.getReader();
-  let partialLine = '';
-  let shouldContinue = true;
+    const reader = response.body.getReader();
+    let partialLine = '';
+    let shouldContinue = true;
     let expertNames = [];
     let analysisText = '';
-  while (shouldContinue) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = new TextDecoder().decode(value);
-    const lines = (partialLine + chunk).split('\n');
-    partialLine = lines.pop() || '';
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const eventData = JSON.parse(line.slice(6));
+    while (shouldContinue) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = new TextDecoder().decode(value);
+      const lines = (partialLine + chunk).split('\n');
+      partialLine = lines.pop() || '';
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const eventData = JSON.parse(line.slice(6));
           // 收集 analysis（不再以1开头）并流式渲染
           if (eventData.event === 'message' && typeof eventData.answer === 'string') {
             analysisText += eventData.answer;
@@ -768,10 +753,86 @@ try {
         if (line.startsWith('data: ')) {
           const eventData = JSON.parse(line.slice(6));
           if (eventData.event === 'message' && typeof eventData.answer === 'string') {
-            summaryText += eventData.answer;
+            const answer = eventData.answer;
+            summaryText += answer;
+
             const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
             if (lastAssistantIndex >= 0) {
-              messages.value[lastAssistantIndex].summaryText = summaryText;
+              const assistantMsg = messages.value[lastAssistantIndex];
+
+              // 检查当前片段是否包含<think>或</think>标签
+              if (answer.includes('<think>')) {
+                // 开始思考模式
+                assistantMsg.inThinkingMode = true;
+
+                // 处理<think>之前的普通内容
+                const beforeThinkContent = answer.split('<think>')[0];
+                if (beforeThinkContent.trim()) {
+                  assistantMsg.normalText = (assistantMsg.normalText || '') + beforeThinkContent;
+                }
+
+                // 处理<think>之后的思考内容
+                const afterThinkContent = answer.split('<think>')[1];
+                // 如果同一个片段中也有</think>，则提取中间部分
+                if (afterThinkContent.includes('</think>')) {
+                  const thinkContent = afterThinkContent.split('</think>')[0];
+                  assistantMsg.thinkingText = (assistantMsg.thinkingText || '') + thinkContent;
+
+                  // 处理</think>之后的普通内容
+                  const afterEndThinkContent = afterThinkContent.split('</think>')[1];
+                  if (afterEndThinkContent.trim()) {
+                    assistantMsg.normalText = (assistantMsg.normalText || '') + afterEndThinkContent;
+                  }
+
+                  // 结束思考模式
+                  assistantMsg.inThinkingMode = false;
+                } else {
+                  // 只有<think>没有</think>，则所有后续内容都是思考内容
+                  assistantMsg.thinkingText = (assistantMsg.thinkingText || '') + afterThinkContent;
+                }
+              } else if (answer.includes('</think>')) {
+                // 结束思考模式
+                if (assistantMsg.inThinkingMode) {
+                  const beforeEndThinkContent = answer.split('</think>')[0];
+                  assistantMsg.thinkingText = (assistantMsg.thinkingText || '') + beforeEndThinkContent;
+
+                  const afterEndThinkContent = answer.split('</think>')[1];
+                  if (afterEndThinkContent.trim()) {
+                    assistantMsg.normalText = (assistantMsg.normalText || '') + afterEndThinkContent;
+                  }
+
+                  assistantMsg.inThinkingMode = false;
+                } else {
+                  // 异常情况：有</think>但没有前面的<think>
+                  assistantMsg.normalText = (assistantMsg.normalText || '') + answer;
+                }
+              } else if (assistantMsg.inThinkingMode) {
+                // 正在思考模式中，内容添加到思考文本
+                assistantMsg.thinkingText = (assistantMsg.thinkingText || '') + answer;
+
+                // 更新思考文本后，确保自动滚动到最新内容
+                nextTick(() => {
+                  // 找到最新的思考块
+                  const thinkingBlocks = document.querySelectorAll('.thinking-block-wrapper');
+                  thinkingBlocks.forEach(block => {
+                    const blockId = block.getAttribute('data-thinking-id');
+                    if (blockId) {
+                      const contentElement = document.getElementById(blockId);
+                      if (contentElement) {
+                        const innerContent = contentElement.querySelector('.thinking-block-inner-content');
+                        if (innerContent && innerContent.style.overflow === 'auto') {
+                          // 只有在展开状态时才滚动到底部
+                          innerContent.scrollTop = innerContent.scrollHeight;
+                        }
+                      }
+                    }
+                  });
+                });
+              } else {
+                // 普通内容
+                assistantMsg.normalText = (assistantMsg.normalText || '') + answer;
+              }
+
               messages.value = [...messages.value];
             }
             console.log('[sendMessage] 总结流式片段(message):', eventData.answer);
@@ -791,10 +852,16 @@ try {
         }
       }
     }
-    console.log('[sendMessage] 总结完整内容:', summaryText);
+    const lastAssistantIndex3 = messages.value.findLastIndex(m => m.role === 'assistant');
+    if (lastAssistantIndex3 >= 0) {
+      const assistantMsg = messages.value[lastAssistantIndex3];
+      console.log('[sendMessage] 总结完整内容:', summaryText);
+      console.log('[sendMessage] 思考过程内容:', assistantMsg.thinkingText);
+      console.log('[sendMessage] 非思考过程内容:', assistantMsg.normalText);
+    }
     // === END 新增 ===
-} catch (error) {
-  console.error('请求错误:', error);
+  } catch (error) {
+    console.error('请求错误:', error);
     if (messages.value.length > 0 && messages.value[messages.value.length - 1].streaming) {
       messages.value.pop();
     }
@@ -809,6 +876,41 @@ try {
     isStreaming.value = false;
     nextTick(() => {
       scrollToBottom();
+
+      // 思考过程显示完成后，确保只保留一个思考块，并设置为折叠状态但不隐藏
+      setTimeout(() => {
+        const thinkingBlocks = document.querySelectorAll('.thinking-block-wrapper');
+
+        for (let i = 0; i < thinkingBlocks.length; i++) {
+          const blockId = thinkingBlocks[i].getAttribute('data-thinking-id');
+          if (blockId) {
+            const contentElement = document.getElementById(blockId);
+            if (contentElement) {
+              const innerContent = contentElement.querySelector('.thinking-block-inner-content');
+              if (innerContent) {
+                // 获取 thinkingText
+                const thinkingText = innerContent.textContent.trim();
+
+                if (thinkingText === '') {
+                  // 如果 thinkingText 为空，则隐藏 thinking-block-wrapper
+                  thinkingBlocks[i].style.display = 'none';
+                } else {
+                  // 如果 thinkingText 不为空，则折叠 thinking-block-wrapper
+                  thinkingBlocks[i].style.display = 'block'; // 确保思考块可见
+                  contentElement.style.display = 'block'; // 确保内容容器可见
+                  innerContent.style.maxHeight = '0px'; // 设置为0以完全折叠
+                  innerContent.style.padding = '0 12px'; // 移除上下 padding
+                  innerContent.style.overflow = 'hidden';
+
+                  const headerElement = contentElement.previousElementSibling;
+                  const iconElement = headerElement && headerElement.querySelector('.toggle-icon-think');
+                  if (iconElement) iconElement.textContent = '▶';
+                }
+              }
+            }
+          }
+        }
+      }, 500); // 设置延迟，确保所有内容都已渲染完成
     });
   }
 };
@@ -817,12 +919,12 @@ try {
 onMounted(() => {
   updateTime();
   setInterval(updateTime, 60000);
-  
+
   // Scroll to bottom initially
   nextTick(() => {
     scrollToBottom();
   });
-  
+
   // Add event listener for clicks on chat content
   const chatContentEl = document.querySelector('.chat-content');
   if (chatContentEl) {
@@ -952,7 +1054,7 @@ onUpdated(() => {
   color: #505050;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
@@ -1041,11 +1143,13 @@ onUpdated(() => {
 }
 
 .search-plan-container {
-  background-color: #f5f5f5; /* 浅灰色背景 */
+  background-color: #f5f5f5;
+  /* 浅灰色背景 */
   border-radius: 4px;
   padding: 12px;
   margin: 8px 0;
 }
+
 .search-plan-header {
   display: flex;
   align-items: center;
@@ -1053,27 +1157,32 @@ onUpdated(() => {
   cursor: pointer;
   user-select: none;
 }
+
 .search-plan-title {
   font-weight: 500;
   color: #333;
 }
+
 .search-result-title {
   font-weight: 500;
   color: #333;
 }
+
 .toggle-icon {
   font-size: 0.9em;
   color: #666;
 }
+
 .search-plan-content {
   margin-top: 8px;
-  color: #666; /* 内容文字灰色 */
+  color: #666;
+  /* 内容文字灰色 */
 }
 
 .role-card {
-display: flex;
-align-items: center;
-background: #f5f7fa;
+  display: flex;
+  align-items: center;
+  background: #f5f7fa;
   border-radius: 10px;
   padding: 20px 28px;
   margin-bottom: 28px;
@@ -1084,32 +1193,32 @@ background: #f5f7fa;
 }
 
 .expert-icon {
-font-size: 20px;
-margin-right: 10px;
-font-style: normal;
+  font-size: 20px;
+  margin-right: 10px;
+  font-style: normal;
 }
 
 .role-info {
-display: flex;
-flex-direction: column;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
 .role-title {
-font-size: 12px;
-color: #909399;
+  font-size: 12px;
+  color: #909399;
 }
 
 .role-name {
-font-size: 14px;
-font-weight: 500;
-color: #303133;
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
 }
 
 /* 确保消息气泡宽度适应新卡片 */
 .message-bubble {
-max-width: 85%;
-overflow: visible;
+  max-width: 85%;
+  overflow: visible;
 }
 
 /* Add keyword highlighting */
@@ -1155,9 +1264,11 @@ overflow: visible;
 .role-cards-row {
   display: flex;
   flex-direction: row;
-  gap: 12px; /* 卡片间距 */
+  gap: 12px;
+  /* 卡片间距 */
   margin-bottom: 12px;
-  flex-wrap: wrap; /* 超出自动换行 */
+  flex-wrap: wrap;
+  /* 超出自动换行 */
 }
 
 .expert-answer {
@@ -1168,6 +1279,7 @@ overflow: visible;
   border-radius: 4px;
   padding: 6px 8px;
 }
+
 .answer-label {
   color: #888;
   font-size: 12px;
@@ -1182,57 +1294,24 @@ overflow: visible;
   padding: 0;
   font-size: 16px;
 }
+
 .analysis-label {
   color: #1976d2;
   font-weight: bold;
   margin-right: 8px;
 }
+
 .analysis-content {
   color: #333;
 }
 
-.summary-block {
-  /* 移除黄色背景和左侧色条 */
-  background: none;
-  border-left: none;
-  border-radius: 0;
-  padding: 0;
-  font-size: 17px;
-}
-.summary-label {
-  color: #ff9800;
-  font-weight: bold;
-  margin-right: 8px;
-}
-.summary-content {
-  color: #333;
-  font-size: 15px;
-  line-height: 1.7;
-  word-break: break-word;
-}
-.summary-content :deep(h1) {
-  font-size: 18px;
-}
-.summary-content :deep(h2),
-.summary-content :deep(h3) {
-  font-size: 16px;
-}
-.summary-content ul,
-.summary-content ol {
-  padding-left: 2em !important;
-  margin-left: 0 !important;
-  list-style-position: outside !important;
-}
-.summary-content li {
-  margin-left: 0 !important;
-  list-style-position: outside !important;
-}
 .expert-markdown ul,
 .expert-markdown ol {
   padding-left: 0 !important;
   margin-left: 0 !important;
   list-style-position: outside !important;
 }
+
 .expert-markdown li {
   margin-left: 0 !important;
   list-style-position: outside !important;
@@ -1240,7 +1319,8 @@ overflow: visible;
 
 .expert-swiper-container {
   width: 100%;
-  overflow: visible; /* 不再需要横向滚动 */
+  overflow: visible;
+  /* 不再需要横向滚动 */
   position: relative;
   margin-bottom: 16px;
 }
@@ -1275,7 +1355,7 @@ overflow: visible;
 .expert-card {
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1.5px solid #e4e7ed;
   margin-bottom: 24px;
   overflow: hidden;
@@ -1369,6 +1449,7 @@ overflow: visible;
   font-size: 15px;
   color: #222;
 }
+
 .expert-markdown :deep(h1),
 .expert-markdown :deep(h2),
 .expert-markdown :deep(h3) {
@@ -1383,6 +1464,7 @@ overflow: visible;
   margin-top: 8px;
   margin-bottom: 0;
 }
+
 .ref-toggle-header {
   display: flex;
   align-items: center;
@@ -1397,20 +1479,24 @@ overflow: visible;
   border: 1px solid #e0e0e0;
   transition: background 0.2s;
 }
+
 .ref-toggle-header:hover {
   background: #f0f4ff;
 }
+
 .ref-toggle-text {
   font-size: 14px;
   color: #1976d2;
   user-select: none;
 }
+
 .ref-toggle-btn {
   font-size: 15px;
   color: #1976d2;
   margin-left: 12px;
   user-select: none;
 }
+
 .expert-ref-list {
   padding: 0 0 8px 0;
   background: none;
@@ -1428,6 +1514,7 @@ overflow: visible;
   margin-left: 0;
   margin-top: 20px;
 }
+
 .expert-opinion-icon {
   font-size: 20px;
   margin-right: 6px;
@@ -1439,27 +1526,33 @@ overflow: visible;
   margin-bottom: 8px;
   margin-top: 20px;
 }
+
 .analysis-label-icon {
   font-size: 18px;
   margin-right: 6px;
   color: #1976d2;
 }
+
 .analysis-label-text {
   font-size: 20px;
   font-weight: 600;
   color: #1976d2;
 }
+
 .summary-label-block {
   display: flex;
   align-items: center;
   margin-bottom: 8px;
   margin-top: 20px;
 }
+
 .summary-label-icon {
   font-size: 20px;
   margin-right: 6px;
   color: #1976d2;
+  font-style: normal; /* Added to match ThinkingView */
 }
+
 .summary-label-text {
   font-size: 20px;
   font-weight: 600;
@@ -1474,6 +1567,7 @@ overflow: visible;
   padding: 0 !important;
   margin-bottom: 18px;
 }
+
 .all-experts-header {
   display: flex;
   align-items: center;
@@ -1483,16 +1577,19 @@ overflow: visible;
   margin-bottom: 10px;
   margin-left: 2px;
 }
+
 .all-experts-icon {
   font-size: 32px;
   margin-right: 8px;
   color: #2176ff;
 }
+
 .all-experts-title {
   font-size: 26px;
   font-weight: bold;
   color: #2176ff;
 }
+
 .all-experts-avatars {
   display: flex;
   align-items: center;
@@ -1500,6 +1597,7 @@ overflow: visible;
   margin-bottom: 18px;
   margin-left: 2px;
 }
+
 .expert-avatar {
   width: 40px;
   height: 40px;
@@ -1512,6 +1610,7 @@ overflow: visible;
   align-items: center;
   justify-content: center;
 }
+
 .expert-avatar img {
   width: 100%;
   height: 100%;
@@ -1519,6 +1618,7 @@ overflow: visible;
   border-radius: 50%;
   display: block;
 }
+
 .all-experts-desc {
   font-size: 15px;
   color: #888;
@@ -1527,20 +1627,24 @@ overflow: visible;
   margin-bottom: 0;
   margin-top: 8px;
 }
+
 .all-experts-names {
   color: #888;
   font-size: 15px;
   font-weight: 500;
 }
+
 .experts-assign-block {
   margin-bottom: 24px;
 }
+
 .experts-avatars {
   display: flex;
   align-items: center;
   gap: 18px;
   margin-bottom: 18px;
 }
+
 .expert-avatar {
   width: 40px;
   height: 40px;
@@ -1553,6 +1657,7 @@ overflow: visible;
   align-items: center;
   justify-content: center;
 }
+
 .expert-avatar img {
   width: 100%;
   height: 100%;
@@ -1560,6 +1665,7 @@ overflow: visible;
   border-radius: 50%;
   display: block;
 }
+
 .experts-desc {
   font-size: 15px;
   color: #888;
@@ -1567,11 +1673,13 @@ overflow: visible;
   margin-bottom: 0;
   margin-top: 8px;
 }
+
 .experts-names {
   color: #888;
   font-size: 15px;
   font-weight: 500;
 }
+
 .expert-avatar-icon {
   font-size: 40px;
   display: flex;
@@ -1580,6 +1688,7 @@ overflow: visible;
   width: 100%;
   height: 100%;
 }
+
 .experts-assign-label {
   display: flex;
   align-items: center;
@@ -1590,11 +1699,13 @@ overflow: visible;
   margin-left: 0;
   margin-top: 20px;
 }
+
 .experts-assign-icon {
   font-size: 20px;
   margin-right: 6px;
   color: #1976d2;
 }
+
 .experts-assign-title {
   font-size: 20px;
   font-weight: 600;
@@ -1603,16 +1714,17 @@ overflow: visible;
 
 .experts-assign-icon,
 .expert-opinion-icon,
-.analysis-label-icon,
-.summary-label-icon {
+.analysis-label-icon {
+/* .summary-label-icon removed as it's now in ThinkingView.vue */
   font-style: normal;
 }
 
-.summary-content p,
-.expert-markdown p,
+.expert-markdown p, /* .summary-content p removed */
 .response-text p {
   margin: 0 0 16px 0;
 }
+
+/* Styles for thinking blocks are now in ThinkingView.vue */
 </style>
 
 <!-- Non-scoped styles for dynamically injected HTML content -->
@@ -1637,7 +1749,8 @@ overflow: visible;
   bottom: 0;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent scrolling on container level */
+  overflow: hidden;
+  /* Prevent scrolling on container level */
   background-color: #f5f7fa;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -1651,7 +1764,8 @@ overflow: visible;
   position: sticky;
   top: 0;
   width: 100%;
-  display: none; /* Hide the mobile header */
+  display: none;
+  /* Hide the mobile header */
 }
 
 .status-bar {
@@ -1668,10 +1782,12 @@ overflow: visible;
 }
 
 .chat-header {
-  display: none; /* Hide the chat header */
+  display: none;
+  /* Hide the chat header */
 }
 
-.back-button, .add-button {
+.back-button,
+.add-button {
   width: 24px;
   height: 24px;
   display: flex;
@@ -1681,7 +1797,8 @@ overflow: visible;
   cursor: pointer;
 }
 
-.back-icon, .add-icon {
+.back-icon,
+.add-icon {
   font-size: 20px;
 }
 
@@ -1695,21 +1812,26 @@ overflow: visible;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px;
-  padding-bottom: 100px; /* Increase bottom padding to create more space above input area */
+  padding-bottom: 100px;
+  /* Increase bottom padding to create more space above input area */
   -webkit-overflow-scrolling: touch;
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center content horizontally */
+  align-items: center;
+  /* Center content horizontally */
 }
 
 /* Container for each message to maintain consistent width */
 .messages-container {
   width: 100%;
-  max-width: 800px; /* Maximum width on large screens */
-  min-width: 320px; /* Minimum width on small screens */
+  max-width: 800px;
+  /* Maximum width on large screens */
+  min-width: 320px;
+  /* Minimum width on small screens */
   margin: 0 auto;
-  padding: 0 16px; /* Add some padding on the sides */
+  padding: 0 16px;
+  /* Add some padding on the sides */
 }
 
 /* Media queries for responsive design */
@@ -1718,15 +1840,17 @@ overflow: visible;
     width: 100%;
     padding: 0 12px;
   }
-  
+
   .message-bubble {
-    max-width: 90%; /* Allow bubbles to be wider on small screens */
+    max-width: 90%;
+    /* Allow bubbles to be wider on small screens */
   }
 }
 
 @media (min-width: 1200px) {
   .messages-container {
-    max-width: 900px; /* Slightly wider on very large screens */
+    max-width: 900px;
+    /* Slightly wider on very large screens */
   }
 }
 
@@ -1748,7 +1872,8 @@ overflow: visible;
 }
 
 .message-bubble {
-  max-width: 85%; /* Slightly reduced max width for better proportions */
+  max-width: 85%;
+  /* Slightly reduced max width for better proportions */
   min-width: 0;
   padding: 12px 16px;
   border-radius: 18px;
@@ -1758,7 +1883,8 @@ overflow: visible;
 }
 
 .multi-agent-response {
-  min-width: 70%;  /* 初始固定最小宽度（可根据实际需求调整数值） */
+  min-width: 70%;
+  /* 初始固定最小宽度（可根据实际需求调整数值） */
 }
 
 .user-message .message-bubble {
@@ -1774,7 +1900,8 @@ overflow: visible;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.mi-logo, .spacer-logo {
+.mi-logo,
+.spacer-logo {
   width: 32px;
   height: 32px;
   margin-right: 8px;
@@ -1829,11 +1956,11 @@ overflow: visible;
 }
 
 /* Markdown styles */
-.response-text h1, 
-.response-text h2, 
-.response-text h3, 
-.response-text h4, 
-.response-text h5, 
+.response-text h1,
+.response-text h2,
+.response-text h3,
+.response-text h4,
+.response-text h5,
 .response-text h6 {
   margin: 16px 0 8px 0;
   font-weight: 600;
@@ -1866,29 +1993,29 @@ overflow: visible;
 }
 
 search-header {
-cursor: pointer;
-padding: 8px;
-background-color: #f5f5f5;
-border-radius: 4px;
-display: flex;
-align-items: center;
-transition: background-color 0.2s;
+  cursor: pointer;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s;
 
-&:hover {
-  background-color: #e8e8e8;
-}
+  &:hover {
+    background-color: #e8e8e8;
+  }
 }
 
 .toggle-icon {
-margin-right: 8px;
-font-size: 0.8em;
-color: #666;
+  margin-right: 8px;
+  font-size: 0.8em;
+  color: #666;
 }
 
 .search-content {
-margin-top: 8px;
-padding-left: 24px;
-border-left: 2px solid #eee;
+  margin-top: 8px;
+  padding-left: 24px;
+  border-left: 2px solid #eee;
 }
 
 .response-text code {
@@ -1912,7 +2039,7 @@ border-left: 2px solid #eee;
   padding: 0;
 }
 
-.response-text ul, 
+.response-text ul,
 .response-text ol {
   margin: 8px 0;
   padding-left: 24px;
@@ -1962,7 +2089,8 @@ border-left: 2px solid #eee;
 /* Progress bar */
 .progress-container {
   width: 100%;
-  max-width: 800px; /* Match message container max width */
+  max-width: 800px;
+  /* Match message container max width */
   margin: 12px auto;
   background-color: #f0f0f0;
   border-radius: 2px;
@@ -1982,6 +2110,7 @@ border-left: 2px solid #eee;
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(400%);
   }
@@ -2001,14 +2130,15 @@ border-left: 2px solid #eee;
   align-items: center;
 }
 
-.chat-input .input-container, 
+.chat-input .input-container,
 .chat-input .bottom-toolbar {
   width: 100%;
   max-width: 800px;
 }
 
 @media (min-width: 1200px) {
-  .chat-input .input-container, 
+
+  .chat-input .input-container,
   .chat-input .bottom-toolbar {
     max-width: 900px;
   }
@@ -2023,7 +2153,8 @@ border-left: 2px solid #eee;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.plus-button, .voice-button {
+.plus-button,
+.voice-button {
   width: 32px;
   height: 32px;
   display: flex;
@@ -2089,78 +2220,79 @@ input {
 }
 
 .search-results-container {
-margin: 12px 0;
-border-radius: 12px;
-background: #f8f9fa;
-box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin: 12px 0;
+  border-radius: 12px;
+  background: #f8f9fa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .search-item {
-padding: 12px 16px;
-transition: all 0.2s ease;
+  padding: 12px 16px;
+  transition: all 0.2s ease;
 }
 
 .search-header {
-display: flex;
-align-items: center;
-padding: 8px 12px;
-border-radius: 8px;
-background: white;
-cursor: pointer;
-transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .search-header:hover {
-background: #f1f3f5;
+  background: #f1f3f5;
 }
 
 .toggle-icon {
-font-size: 12px;
-color: #868e96;
-margin-right: 10px;
-transition: transform 0.2s ease;
+  font-size: 12px;
+  color: #868e96;
+  margin-right: 10px;
+  transition: transform 0.2s ease;
 }
 
 .search-query {
-font-weight: 500;
-color: #212529;
-font-size: 14px;
+  font-weight: 500;
+  color: #212529;
+  font-size: 14px;
 }
 
 .search-content {
-margin-top: 8px;
-padding: 8px 0;
-border-top: 1px solid #e9ecef;
+  margin-top: 8px;
+  padding: 8px 0;
+  border-top: 1px solid #e9ecef;
 }
 
 .result-item {
-padding: 8px 12px;
-margin: 4px 0;
-background: white;
-border-radius: 6px;
-transition: all 0.2s ease;
+  padding: 8px 12px;
+  margin: 4px 0;
+  background: white;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
 .result-item:hover {
-transform: translateX(4px);
+  transform: translateX(4px);
 }
 
 .result-link {
-color: #228be6;
-text-decoration: none;
-font-size: 14px;
-line-height: 1.4;
+  color: #228be6;
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .result-link:hover {
-text-decoration: underline;
-color: #1971c2;
+  text-decoration: underline;
+  color: #1971c2;
 }
 
 /* Quick action buttons */
 .quick-actions {
   width: 100%;
-  max-width: 800px; /* Match message container max width */
+  max-width: 800px;
+  /* Match message container max width */
   margin: 0 auto 20px auto;
   display: flex;
   flex-wrap: wrap;
@@ -2232,6 +2364,7 @@ color: #1971c2;
   from {
     transform: translateY(100%);
   }
+
   to {
     transform: translateY(0);
   }
@@ -2257,7 +2390,8 @@ color: #1971c2;
   font-size: 18px;
   font-weight: 600;
   text-align: left;
-  margin-right: 50px; /* Make room for the drag handle */
+  margin-right: 50px;
+  /* Make room for the drag handle */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2280,7 +2414,8 @@ color: #1971c2;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  touch-action: none; /* Improves touch handling */
+  touch-action: none;
+  /* Improves touch handling */
 }
 
 .drag-handle:hover {
@@ -2297,10 +2432,12 @@ color: #1971c2;
 .drag-icon {
   font-size: 22px;
   color: #555;
-  user-select: none; /* Prevent text selection during drag */
+  user-select: none;
+  /* Prevent text selection during drag */
 }
 
-.expand-button, .close-button {
+.expand-button,
+.close-button {
   background: none;
   border: none;
   font-size: 20px;
@@ -2334,9 +2471,11 @@ color: #1971c2;
   color: black !important;
   font-weight: bold;
   font-style: italic;
-  text-decoration: none; /* Remove underline */
+  text-decoration: none;
+  /* Remove underline */
   cursor: pointer;
-  background-color: rgba(255, 103, 0, 0.1); /* Light orange background */
+  background-color: rgba(255, 103, 0, 0.1);
+  /* Light orange background */
   padding: 2px 4px;
   border-radius: 3px;
 }
@@ -2449,6 +2588,7 @@ color: #1971c2;
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -2534,32 +2674,34 @@ color: #1971c2;
 }
 
 .title-link {
-color: #007bff;
-text-decoration: none;
-cursor: pointer;
-display: flex;
-align-items: center;
-margin: 1rem 0;
-&:hover {
-  text-decoration: underline;
-}
+  color: #007bff;
+  text-decoration: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .preview-frame {
-width: 100%;
-border: 1px solid #eee;
-border-radius: 4px;
-margin-top: 8px;
-transition: height 0.3s ease;
+  width: 100%;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin-top: 8px;
+  transition: height 0.3s ease;
 }
 
 .arrow-icon {
-margin-left: 8px;
-font-size: 0.8em;
-transition: transform 0.3s ease;
-&.rotate-180 {
-  transform: rotate(180deg);
-}
+  margin-left: 8px;
+  font-size: 0.8em;
+  transition: transform 0.3s ease;
+
+  &.rotate-180 {
+    transform: rotate(180deg);
+  }
 }
 
 /* 角色卡片 */
@@ -2584,46 +2726,46 @@ transition: transform 0.3s ease;
 
 /* 搜索结果 */
 .search-results-container {
-margin: 1rem 0;
-border-radius: 8px;
+  margin: 1rem 0;
+  border-radius: 8px;
 }
 
 .search-item {
-border: 1px solid #eee;
-padding: 10px;
-margin-bottom: 10px;
+  border: 1px solid #eee;
+  padding: 10px;
+  margin-bottom: 10px;
 }
 
 .search-link {
-color: #333;
-text-decoration: none;
+  color: #333;
+  text-decoration: none;
 }
 
 .search-title {
-font-weight: 500;
-color: #1890ff;
+  font-weight: 500;
+  color: #1890ff;
 }
 
 .search-content {
-color: #666;
-font-size: 0.9em;
-margin: 0.5rem 0;
+  color: #666;
+  font-size: 0.9em;
+  margin: 0.5rem 0;
 }
 
 .search-meta {
-display: flex;
-justify-content: space-between;
-font-size: 0.8em;
-color: #999;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8em;
+  color: #999;
 }
 
 /* 文本回答 */
 .answer-text {
-margin-top: 1rem;
-padding: 0.8rem;
-background: #f8f9fa;
-border-radius: 4px;
-line-height: 1.6;
+  margin-top: 1rem;
+  padding: 0.8rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  line-height: 1.6;
 }
 
 /* 统一列表缩进，保证小圆点和正文内容左对齐且美观 */
@@ -2635,11 +2777,13 @@ line-height: 1.6;
   margin-left: 0 !important;
   list-style-position: outside !important;
 }
+
 .summary-content li,
 .expert-markdown li {
   margin-left: 0 !important;
   list-style-position: outside !important;
 }
+
 .all-experts-card {
   background: none !important;
   border: none !important;
@@ -2648,7 +2792,32 @@ line-height: 1.6;
   padding: 0 !important;
   margin-bottom: 18px;
 }
+
 .all-experts-list {
   padding: 0 0 24px 0 !important;
 }
+
+/* 为思考过程中的引用块添加样式 */
+.thinking-block-inner-content blockquote {
+  border-left: 4px solid #007bff !important;
+  background-color: #f8f9fa !important;
+  padding: 10px 12px !important;
+  margin: 8px 0 !important;
+  color: #666 !important;
+  font-size: 0.9em !important;
+}
+
+/* 确保思考过程中的段落样式 */
+.thinking-block-inner-content blockquote p {
+  margin-bottom: 0.5em !important;
+  line-height: 1.5 !important;
+}
+
+/* 针对以 | 开头的段落添加特殊样式 */
+.thinking-block-inner-content blockquote p::first-letter {
+  margin-right: 3px !important;
+  color: #999 !important;
+}
+
+/* Styles related to .summary-content > p etc. are removed as they are now in ThinkingView.vue */
 </style>

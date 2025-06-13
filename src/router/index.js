@@ -72,11 +72,6 @@ export const routes = [ // Add export here
     redirect: '/route-links' // Change redirect to the new page
   },
   {
-    path: '/multi-agent-experts',
-    name: 'multi-agent-experts',
-    component: MultiAgentMixExpertView
-  },
-  {
     path: '/podcast-detail',
     name: 'PodcastDetail',
     component: () => import('../views/PodcastDetailView.vue')
