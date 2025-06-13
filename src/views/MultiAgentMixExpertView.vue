@@ -60,7 +60,7 @@
                 <div v-if="message.analysisText">
                   <div class="analysis-label-block">
                     <i class="analysis-label-icon">🔍</i>
-                    <span class="analysis-label-text">搜前分析</span>
+                    <span class="analysis-label-text">问题分析</span>
                   </div>
                   <div class="analysis-block">
                     <div class="analysis-content">{{ message.analysisText }}</div>
@@ -69,16 +69,11 @@
                 <!-- 专家分配标识 -->
                 <div v-if="message.roleCards && message.roleCards.length" class="experts-assign-label">
                   <i class="experts-assign-icon">👥</i>
-                  <span class="experts-assign-title">专家分配</span>
+                  <span class="experts-assign-title">专家观点</span>
                 </div>
                 <!-- 专家分配模块 -->
                 <div v-if="message.roleCards && message.roleCards.length" class="experts-assign-block">
-                  <div class="experts-avatars">
-                    <div v-for="(roleObj, idx) in message.roleCards" :key="idx" class="expert-avatar">
-                      <span class="expert-avatar-icon">👤</span>
-                    </div>
-                  </div>
-                  <div class="experts-desc">
+                  <div class="experts-desc" v-if="false">
                     专家队列：
                     <span class="experts-names">
                       {{message.roleCards.map(r => r.role).join('、')}}
@@ -87,16 +82,11 @@
                 </div>
                 <!-- 滑动区 -->
                 <div v-if="message.roleCards && message.roleCards.length" class="expert-swiper-container">
-                  <!-- 新增：专家意见标识 -->
-                  <div class="expert-opinion-label">
-                    <i class="expert-opinion-icon">📝</i>
-                    <span>多元视角</span>
-                  </div>
                   <div class="expert-swiper" :ref="el => setExpertSwiper(el, index)">
                     <div class="expert-card expert-slide" v-for="(roleObj, idx) in message.roleCards" :key="idx">
                       <!-- 专家身份区 -->
                       <div class="expert-header">
-                        <i class="expert-icon">💡</i>
+                        <i class="expert-icon">👤</i>
                         <span class="expert-title">{{ roleObj.role }}</span>
                       </div>
                       <!-- 新增：引用资料折叠区 -->
