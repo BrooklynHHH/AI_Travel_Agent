@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://10.7.32.218:5001' // 修改為正確的端口
+const API_BASE_URL = 'http://10.167.174.27:5001' // 修改為正確的端口
 
 export const generatePodcast = async (text, type) => {
   try {

@@ -24,7 +24,12 @@
             <button class="type-btn" :class="{active: selectedType==='double'}" @click="selectType('double')">双人</button>
           </div>
         </div>
-        <button class="main-generate-btn" :disabled="!podcastText.trim() || isGenerating" @click="handleGenerate">
+        <button 
+          class="main-generate-btn" 
+          :disabled="!podcastText.trim() || isGenerating" 
+          @click="handleGenerate"
+        >
+          <img src="@/assets/light.svg" alt="生成" class="btn-icon" />
           <span v-if="isGenerating">生成中...</span>
           <span v-else>立即生成</span>
         </button>
@@ -341,19 +346,28 @@ export default {
   color: #fff;
   border: none;
   border-radius: 20px;
-  padding: 16px 0; /* 之前是 0，導致過短 */
-  width: 100%; /* 確保按鈕橫跨整個容器 */
-  padding: 16px; /* 添加水平內邊距 */
+  padding: 16px;
+  width: 100%;
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
   margin-top: 12px;
   transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
+
 .main-generate-btn:disabled {
   background: #eee;
   color: #bbb;
   cursor: not-allowed;
+}
+
+.btn-icon {
+  width: 24px;
+  height: 24px;
 }
 .example-section {
   margin-bottom: 12px;
@@ -445,5 +459,23 @@ export default {
   font-size: 16px;
   margin-top: 12px;
   text-align: center;
+}
+.podcast-view {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fff5eb 0%, #ffe4cc 100%);
+  padding: 20px;
+}
+
+.podcast-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.podcast-header {
+  margin-bottom: 24px;
 }
 </style> 
