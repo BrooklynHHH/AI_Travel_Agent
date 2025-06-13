@@ -14,15 +14,18 @@
           <div class="podcast-time">{{ formatDuration(duration) }} ｜ {{ currentDate }}</div>
           <div class="podcast-desc">{{ summary }}</div>
           <div class="podcast-actions">
-            <audio controls :src="audioFile" class="audio-player" @loadedmetadata="handleLoadedMetadata"></audio>
-            <button class="action-btn">分享</button>
-            <button class="action-btn">导出脚本为PDF</button>
+            <div class="action-buttons">
+              <button class="action-btn" @click="sharePodcast">
+                <img src="@/assets/share.svg" alt="分享" class="btn-icon" />
+                分享
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="podcast-tabs">
-        <button class="tab-btn active">播客脚本</button>
+        <button class="tab-btn active">播客腳本</button>
       </div>
 
       <div class="podcast-script-block">
@@ -34,6 +37,20 @@
           <div class="role-content">{{ block.content }}</div>
         </div>
       </div>
+    </div>
+  </div>
+  
+  <div class="audio-player-bottom-bar">
+    <div class="control-left">
+      <img src="@/assets/play-icon.svg" alt="播放" class="play-icon" />
+    </div>
+    <div class="audio-progress">
+      <span class="current-time">00:00</span>
+      <audio controls :src="audioFile" class="audio-player" @loadedmetadata="handleLoadedMetadata"></audio>
+      <span class="total-time">{{ formatDuration(duration) }}</span>
+    </div>
+    <div class="control-right">
+      <img src="@/assets/download-icon.svg" alt="下載" class="download-icon" @click="downloadAudio" />
     </div>
   </div>
 </template>
@@ -63,7 +80,7 @@ export default {
     },
     audioFile() {
       // 從 Flask 服務器獲取音頻文件
-      return this.audioFilename ? `http://10.7.32.218:5001/audio/${this.audioFilename}` : ''
+      return this.audioFilename ? `http://10.167.174.27:5001/audio/${this.audioFilename}` : ''
     }
   },
   async created() {
@@ -97,21 +114,35 @@ export default {
       const formattedSeconds = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds
       return `${minutes}:${formattedSeconds}`
     },
-    // 假設AI返回格式為：角色名: 內容\n角色名: 內容\n...
     parseScript(text) {
-      // 先將 \n 替換為實際的換行符
-      const processedText = text.replace(/\\n/g, '\n')
+      if (!text) return []
+      // 替換 \n 為實際換行符，並處理可能的 \r
+      const processedText = text.replace(/\\n/g, '\n').replace(/\\r/g, '')
+
+      // 如果文本中沒有冒號，假設整個文本都是主持人的內容
+      if (!processedText.includes(':')) {
+        return [{
+          role: '主持人',
+          content: processedText.trim()
+        }]
+      }
+
       const lines = processedText.split(/\n|\r/).filter(l => l.trim())
       const blocks = []
       let lastRole = ''
+
       lines.forEach(line => {
+        // 匹配 "角色名: 內容" 或 "角色名：內容"
         const match = line.match(/^([\u4e00-\u9fa5A-Za-z0-9_-]+)[:：]\s*(.*)$/)
         if (match) {
-          blocks.push({ role: match[1], content: match[2] })
+          blocks.push({ role: match[1], content: match[2].trim() })
           lastRole = match[1]
-        } else if (lastRole) {
-          // 多行內容合併
-          blocks[blocks.length - 1].content += '\n' + line
+        } else if (lastRole && blocks.length > 0) {
+          // 如果沒有匹配到新角色，將此行內容追加到上一個角色的內容中
+          blocks[blocks.length - 1].content += '\n' + line.trim()
+        } else {
+          // 如果沒有匹配到角色且沒有上一個角色，創建一個默認角色
+          blocks.push({ role: '主持人', content: line.trim() })
         }
       })
       return blocks
@@ -130,6 +161,18 @@ export default {
     },
     handleImageLoad(e) {
       console.log('圖片加載成功:', e.target.src)
+    },
+    sharePodcast() {
+      // 實現分享功能
+      console.log('分享播客')
+    },
+    downloadAudio() {
+      const link = document.createElement('a')
+      link.href = this.audioFile
+      link.download = this.audioFilename || 'podcast_audio.mp3'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     }
   }
 }
@@ -208,9 +251,18 @@ export default {
   color: #444;
   cursor: pointer;
   transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+
 .action-btn:hover {
   background: #ffecdb;
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
 }
 .podcast-tabs {
   display: flex;
@@ -240,6 +292,7 @@ export default {
   box-shadow: 0 1px 4px rgba(0,0,0,0.03);
   max-height: calc(100vh - 400px); /* 調整高度以適應內容 */
   overflow-y: auto;
+  margin-bottom: 100px; /* 為底部播放器留出空間 */
 }
 .script-block {
   margin-bottom: 24px;
@@ -278,26 +331,84 @@ export default {
   white-space: pre-line;
   padding: 0 8px;
 }
-.audio-player {
+.audio-player-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
   width: 100%;
-  max-width: 400px; /* 調整音頻播放器寬度 */
-  height: 40px;
-  margin-right: 12px;
+  background: #fff;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 居中對齊 */
+  gap: 20px; /* 元素間距 */
+  z-index: 1000;
+  box-sizing: border-box; /* 確保 padding 不增加寬度 */
+}
+
+.control-left,
+.control-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.play-icon {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}
+
+.audio-progress {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 600px; /* 限制播放器進度條的最大寬度 */
+}
+
+.audio-player {
+  flex-grow: 1;
+  height: 30px;
+  width: 100%; /* 確保在 audio-progress 中佔滿可用空間 */
+}
+
+.current-time,
+.total-time {
+  font-size: 14px;
+  color: #555;
+  white-space: nowrap; /* 防止時間換行 */
+}
+
+.download-icon {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
 }
 
 @media (max-width: 900px) {
-  .podcast-detail-container {
-    max-width: 100vw;
-    padding: 12px 2px 8px 2px;
+  .audio-player-bottom-bar {
+    padding: 10px 15px;
+    gap: 10px;
   }
-  .podcast-header-row {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
+  .play-icon {
+    width: 28px;
+    height: 28px;
   }
-  .podcast-cover {
-    width: 100%;
-    height: 180px;
+  .download-icon {
+    width: 20px;
+    height: 20px;
+  }
+  .audio-player {
+    height: 25px;
+  }
+  .current-time,
+  .total-time {
+    font-size: 12px;
+  }
+  .audio-progress {
+    max-width: none; /* 在小屏幕上不限制最大寬度 */
   }
 }
 
