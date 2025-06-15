@@ -7,5 +7,8 @@ module.exports = {
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [require("daisyui")],
+  daisyui: {
+    themes: ["light", "dark", "cupcake"], // 你可以选择你喜欢的主题
+  },
 }

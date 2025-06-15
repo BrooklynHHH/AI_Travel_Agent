@@ -627,9 +627,9 @@ const doOcr = async () => {
     // 创建worker和scheduler
     const worker = await createWorker('chi_sim+eng', { 
       logger: false, // 移除函数日志记录器，改为false禁用日志
-      workerPath: false,  // 使用浏览器内部Worker
-      corePath: false,    // 使用默认core
-      langPath: false     // 使用默认语言包路径
+      workerPath: 'https://unpkg.com/tesseract.js@v6.0.1/dist/worker.min.js',  // 使用unpkg CDN替代jsdelivr
+      corePath: 'https://unpkg.com/tesseract.js-core@v4.0.4/tesseract-core.wasm.js',
+      langPath: 'https://tessdata.projectnaptha.com/4.0.0',
     });
     
     const scheduler = createScheduler();
