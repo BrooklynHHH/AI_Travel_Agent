@@ -10,6 +10,7 @@ import PodcastView from '../views/PodcastView.vue'
 import TravelView from '../views/TravelView.vue'
 import RouteLinksView from '../views/RouteLinksView.vue'
 import MultiAgentMixExpertView from '../views/MultiAgentMixExpertView.vue'
+import VideoGenerationView from '@/views/VideoGenerationView.vue'
 
 export const routes = [ // Add export here
   {
@@ -38,8 +39,13 @@ export const routes = [ // Add export here
     component: ChatView
   },
   {
+    path: '/video',
+    name: '视频生成', // Translated
+    component: VideoGenerationView
+  },
+  {
     path: '/ocr',
-    name: '搜题', // Translated
+    name: 'ocr', // Translated
     component: OcrView
   },
   {
