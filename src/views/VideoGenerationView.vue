@@ -27,49 +27,75 @@
         <!-- 用户消息 -->
         <div v-if="message.role === 'user'" class="message-container user-message">
           <div class="message-bubble">
-            <div v-if="message.image" class="user-image-container" :data-task-id="message.taskId">
-              <div style="position: relative; display: inline-block;">
-                <img :src="message.image" :ref="el => { if(message.hasOcr) ocrImage = el }" style="max-width: 320px; max-height: 300px; border: 1px solid #eee; object-fit: contain;" />
-                <canvas
-                  v-if="message.hasOcr"
-                  width="320"
-                  height="240"
-                  ref="ocrCanvas"
-                  style="position: absolute; left: 0; top: 0; pointer-events: none;"
-                ></canvas>
-                <!-- 视频播放按钮 -->
-                <div v-if="message.videoUrl" class="play-button-overlay" @click="openVideoInNewTab(message.videoUrl)">
-                  <div class="play-button-icon">▶</div>
+            <div v-if="message.image" class="user-image-container card bg-base-100 shadow-sm theme-light" :data-task-id="message.taskId" style="max-width: 320px;">
+              <figure>
+                <div style="position: relative; display: inline-block;">
+                  <img :src="message.image" :ref="el => { if(message.hasOcr) ocrImage = el }" style="max-width: 320px; max-height: 300px; object-fit: contain;" />
+                  <canvas
+                    v-if="message.hasOcr"
+                    width="320"
+                    height="240"
+                    ref="ocrCanvas"
+                    style="position: absolute; left: 0; top: 0; pointer-events: none;"
+                  ></canvas>
+                  <!-- 视频播放按钮 -->
+                  <div v-if="message.videoUrl" class="play-button-overlay" @click="playVideo(message.videoUrl)">
+                    <div class="play-button-icon">▶</div>
+                  </div>
+                  <!-- 视频生成进度条 -->
+                  <div v-if="message.isGenerating" class="progress-overlay">
+                    <div class="spinner"></div>
+                  </div>
                 </div>
-                <!-- 视频生成进度条 -->
-                <div v-if="message.isGenerating" class="progress-overlay">
-                  <div class="spinner"></div>
+              </figure>
+              <div class="card-body p-4">
+                <div v-if="message.content">{{ message.content }}</div>
+                <div class="card-actions justify-end mt-2">
+                  <div class="badge badge-outline" style="display: inline-flex; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.375rem; border: 1px solid #666; color: #666; margin: 0.125rem;">{{ selectedResolution }}</div>
+                  <div class="badge badge-outline" style="display: inline-flex; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.375rem; border: 1px solid #666; color: #666; margin: 0.125rem;">{{ selectedDuration }}</div>
+                  <div class="badge badge-outline" style="display: inline-flex; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.375rem; border: 1px solid #666; color: #666; margin: 0.125rem;">镜头: {{ selectedCameraFixed.text }}</div>
                 </div>
               </div>
             </div>
-            <div v-if="message.content">{{ message.content }}</div>
           </div>
         </div>
         
-        <!-- 系统消息 -->
-        <div v-else-if="message.role === 'system'" class="message-container system-message">
-          <div role="alert" :class="getAlertClass(message.content)">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{{ message.content }}</span>
-            
-            <!-- 视频预览（如果有） -->
-            <div v-if="message.videoUrl" class="video-preview-container" @click="playVideo(message.videoUrl)">
-              <div class="video-thumbnail">
-                <div class="play-button-overlay">
-                  <div class="play-button-icon">▶</div>
-                </div>
-                <!-- 使用纯色背景代替图片 -->
-                <div class="video-thumbnail-placeholder"></div>
-              </div>
-              <div class="video-preview-text">点击播放视频</div>
+    <!-- 系统消息 -->
+    <div v-else-if="message.role === 'system'" class="message-container system-message">
+      <div role="alert" :class="getAlertClass(message.content)">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ message.content }}</span>
+        
+        <!-- 视频预览（如果有） -->
+        <div v-if="message.videoUrl" class="video-preview-container" @click="playVideo(message.videoUrl)">
+          <div class="video-thumbnail">
+            <div class="play-button-overlay">
+              <div class="play-button-icon">▶</div>
             </div>
+            <!-- 使用纯色背景代替图片 -->
+            <div class="video-thumbnail-placeholder"></div>
+          </div>
+          <div class="video-preview-text">点击播放视频</div>
+        </div>
+        
+        <!-- 使用 vue3-video-play 组件播放视频 -->
+        <div v-if="message.videoUrl" class="core-player-container">
+          <vue3VideoPlay
+            width="100%"
+            height="auto"
+            :title="'生成的视频'"
+            :src="message.videoUrl"
+            poster=""
+            autoPlay
+            muted
+            class="native-video-player"
+            @play="onVideoPlay"
+            @pause="onVideoPlay"
+            @canplay="onVideoPlay"
+          />
+        </div>
           </div>
         </div>
       </div>
@@ -149,10 +175,165 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, watch, onBeforeUnmount } from 'vue'; // Added watch, onBeforeUnmount
+import { ref, nextTick, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import VideoPlayer from '../components/modals/VideoPlayer.vue';
 import { generateVideo, checkVideoGenerationStatus } from '../utils/videoGenerationApi';
+// 引入 vue3-video-play 样式
+import 'vue3-video-play/dist/style.css';
+
+// 本地存储键名
+const STORAGE_KEY_MESSAGES = 'video_generation_messages';
+const STORAGE_KEY_VIDEOS = 'video_generation_videos';
+
+
+// 保存消息到本地存储
+const saveMessagesToLocalStorage = () => {
+  try {
+    localStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(messages.value));
+    console.log('消息已保存到本地存储');
+  } catch (error) {
+    console.error('保存消息到本地存储失败:', error);
+  }
+};
+
+// 移除状态消息（处理中或排队中）
+const removeStatusMessages = () => {
+  const statusIndicesToRemove = [];
+  messages.value.forEach((msg, index) => {
+    if (msg.role === 'system' && 
+        (msg.content.includes('视频生成处理中') || 
+         msg.content.includes('视频生成排队中'))) {
+      statusIndicesToRemove.push(index);
+    }
+  });
+  
+  // 从后往前删除，避免索引变化
+  for (let i = statusIndicesToRemove.length - 1; i >= 0; i--) {
+    messages.value.splice(statusIndicesToRemove[i], 1);
+  }
+};
+
+// 从本地存储加载消息
+const loadMessagesFromLocalStorage = () => {
+  try {
+    const storedMessages = localStorage.getItem(STORAGE_KEY_MESSAGES);
+    if (storedMessages) {
+      const parsedMessages = JSON.parse(storedMessages);
+      if (parsedMessages && parsedMessages.length > 0) {
+        // 过滤掉所有状态消息，确保初始状态下不显示
+        const filteredMessages = parsedMessages.filter(msg => 
+          !(msg.role === 'system' && 
+            (msg.content.includes('视频生成处理中') || 
+             msg.content.includes('视频生成排队中'))));
+        
+        messages.value = filteredMessages;
+        console.log('从本地存储加载了消息');
+        
+        // 检查每个消息的状态
+        messages.value.forEach(message => {
+          if (message.role === 'user' && message.taskId) {
+            checkMessageStatus(message);
+          }
+        });
+      } else {
+        console.log('本地存储中没有有效的消息');
+      }
+    } else {
+      console.log('本地存储中没有消息');
+    }
+  } catch (error) {
+    console.error('从本地存储加载消息失败:', error);
+  }
+};
+
+// 检查消息状态并更新UI
+const checkMessageStatus = async (message) => {
+  if (!message.taskId) return;
+  
+  try {
+    // 1. 从本地缓存中读取任务状态
+    let videoCache = {};
+    let cachedStatus = null;
+    let cachedRemoteUrl = null;
+    
+    try {
+      videoCache = JSON.parse(localStorage.getItem(STORAGE_KEY_VIDEOS) || '{}');
+      if (videoCache[message.taskId]) {
+        cachedStatus = videoCache[message.taskId].status;
+        cachedRemoteUrl = videoCache[message.taskId].remoteUrl;
+      }
+    } catch (error) {
+      console.error('读取缓存任务状态失败:', error);
+    }
+    
+    // 2. 如果任务状态是succeeded且remoteUrl已存在，则不需要调用API
+    if (cachedStatus === 'succeeded' && cachedRemoteUrl) {
+      console.log(`任务 ${message.taskId} 已完成，使用缓存状态`);
+      message.isGenerating = false;
+      message.videoUrl = cachedRemoteUrl;
+      return;
+    }
+    
+    // 3. 如果任务状态不是succeeded或remoteUrl不存在，则调用API检查状态
+    const statusResult = await checkVideoGenerationStatus(message.taskId);
+    console.log(`检查任务状态 ${message.taskId}:`, statusResult);
+    
+    // 更新缓存任务状态
+    try {
+      if (!videoCache[message.taskId]) {
+        videoCache[message.taskId] = {};
+      }
+      videoCache[message.taskId].status = statusResult.status;
+      videoCache[message.taskId].timestamp = Date.now();
+      localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(videoCache));
+    } catch (error) {
+      console.error('缓存任务状态失败:', error);
+    }
+    
+    if (statusResult.status === 'succeeded') {
+      // 任务成功完成
+      message.isGenerating = false;
+      
+      // 如果有视频URL，添加到消息中
+      if (statusResult.content && statusResult.content.video_url) {
+        const videoUrlValue = statusResult.content.video_url;
+        
+        // 直接使用原始URL
+        message.videoUrl = videoUrlValue;
+        
+        // 存储视频URL到本地存储
+        try {
+          if (!videoCache[message.taskId]) {
+            videoCache[message.taskId] = {};
+          }
+          videoCache[message.taskId].remoteUrl = videoUrlValue;
+          videoCache[message.taskId].status = 'succeeded';
+          videoCache[message.taskId].timestamp = Date.now();
+          localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(videoCache));
+        } catch (error) {
+          console.error('存储视频URL失败:', error);
+        }
+        
+        console.log('已将视频URL添加到用户消息:', message);
+      }
+    } else if (statusResult.status === 'failed' || statusResult.status === 'cancelled') {
+      // 任务失败或取消
+      message.isGenerating = false;
+      message.hasFailed = true; // 添加失败标记
+    } else if (statusResult.status === 'running' || statusResult.status === 'queued') {
+      // 任务仍在处理中，继续检查
+      message.isGenerating = true;
+      currentTaskId.value = message.taskId;
+      startTaskStatusCheck();
+    }
+    
+    // 保存更新后的消息到本地存储
+    saveMessagesToLocalStorage();
+  } catch (error) {
+    console.error(`检查任务状态失败 ${message.taskId}:`, error);
+  }
+};
 
 const router = useRouter();
 const userInput = ref('');
@@ -193,11 +374,14 @@ const goBack = () => {
   router.push('/advanced');
 };
 
-// 在组件加载时生成会话ID
+// 在组件加载时生成会话ID并加载本地存储的消息
 onMounted(() => {
   const timestamp = new Date().getTime();
   conversationId.value = `ocr_${timestamp}`;
   console.log('生成会话ID:', conversationId.value);
+  
+  // 从本地存储加载消息
+  loadMessagesFromLocalStorage();
 });
 
 // 将DataURL转换为Blob
@@ -303,16 +487,12 @@ const showFullScreenImage = () => {
 // 播放视频
 const playVideo = (videoUrlValue) => {
   if (videoUrlValue) {
+    console.log('播放视频:', videoUrlValue);
+    
+    // 直接使用原始URL
     videoUrl.value = videoUrlValue;
     videoTitle.value = '生成的视频';
     showVideoPlayer.value = true;
-  }
-};
-
-// 在新标签页中打开视频
-const openVideoInNewTab = (url) => {
-  if (url) {
-    window.open(url, '_blank');
   }
 };
 
@@ -320,6 +500,11 @@ const openVideoInNewTab = (url) => {
 const hideFullScreenImage = () => {
   isFullScreenImageVisible.value = false;
   fullScreenImageUrl.value = '';
+};
+
+// 视频播放事件处理函数
+const onVideoPlay = () => {
+  console.log('视频播放事件');
 };
 
 // 清除选中的图片
@@ -377,6 +562,9 @@ const sendMessage = async () => {
   
   messages.value.push(message);
   
+  // 保存消息到本地存储
+  saveMessagesToLocalStorage();
+  
   // 调用视频生成API
   try {
     // 检查是否有图片和文本输入
@@ -414,7 +602,7 @@ const sendMessage = async () => {
       
       // 调用generateVideo函数
       const result = await generateVideo(
-        message.content || "无人机以极快速度穿越复杂障碍或自然奇观，带来沉浸式飞行体验", // 如果没有文本，使用默认文本
+        message.content || "", // 如果没有文本，使用默认文本
         resolution,
         duration,
         cameraFixed,
@@ -477,13 +665,74 @@ const startTaskStatusCheck = () => {
       return;
     }
     
+    // 检查本地缓存中的任务状态
+    let shouldCheck = true;
+    let cachedRemoteUrl = null;
+    try {
+      const videoCache = JSON.parse(localStorage.getItem(STORAGE_KEY_VIDEOS) || '{}');
+      if (videoCache[currentTaskId.value]) {
+        // 如果任务状态是succeeded且remoteUrl存在，则不需要检查，直接更新UI
+        if (videoCache[currentTaskId.value].status === 'succeeded' && videoCache[currentTaskId.value].remoteUrl) {
+          console.log('任务已完成，使用缓存视频URL:', currentTaskId.value);
+          shouldCheck = false;
+          cachedRemoteUrl = videoCache[currentTaskId.value].remoteUrl;
+          
+          // 更新UI显示视频
+          isLoading.value = false;
+          
+          // 找到对应的用户消息
+          const userMessage = messages.value.find(msg => 
+            msg.role === 'user' && msg.taskId === currentTaskId.value);
+          
+          if (userMessage) {
+            userMessage.isGenerating = false;
+            userMessage.videoUrl = cachedRemoteUrl;
+            
+            // 保存消息到本地存储
+            saveMessagesToLocalStorage();
+          }
+          
+          // 清除定时器
+          clearInterval(taskCheckInterval.value);
+          return;
+        }
+        // 如果任务状态不是running或queued，则不需要检查
+        else if (videoCache[currentTaskId.value].status !== 'running' && 
+            videoCache[currentTaskId.value].status !== 'queued') {
+          shouldCheck = false;
+        }
+      }
+    } catch (error) {
+      console.error('获取缓存任务状态失败:', error);
+    }
+    
+    // 如果不需要检查，则清除定时器并返回
+    if (!shouldCheck) {
+      clearInterval(taskCheckInterval.value);
+      return;
+    }
+    
     try {
       const statusResult = await checkVideoGenerationStatus(currentTaskId.value);
       console.log('任务状态:', statusResult);
       
+      // 缓存任务状态
+      try {
+        const videoCache = JSON.parse(localStorage.getItem(STORAGE_KEY_VIDEOS) || '{}');
+        if (!videoCache[currentTaskId.value]) {
+          videoCache[currentTaskId.value] = {};
+        }
+        videoCache[currentTaskId.value].status = statusResult.status;
+        videoCache[currentTaskId.value].timestamp = Date.now();
+        localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(videoCache));
+      } catch (error) {
+        console.error('缓存任务状态失败:', error);
+      }
+      
       // 找到对应的用户消息
       const userMessage = messages.value.find(msg => 
         msg.role === 'user' && msg.taskId === currentTaskId.value);
+      
       
       // 根据任务状态更新UI
       if (statusResult.status === 'succeeded') {
@@ -496,6 +745,9 @@ const startTaskStatusCheck = () => {
           userMessage.isGenerating = false;
         }
         
+        // 移除之前的状态消息
+        removeStatusMessages();
+        
         // 检查是否已经添加了成功消息，避免重复添加
         const hasSuccessMessage = messages.value.some(msg => 
           msg.role === 'system' && msg.content.includes('视频生成成功'));
@@ -505,15 +757,25 @@ const startTaskStatusCheck = () => {
           if (statusResult.content && statusResult.content.video_url) {
             const videoUrlValue = statusResult.content.video_url;
             
-            // 更新消息，添加视频预览
-            // const videoMessage = {
-            //   role: 'system',
-            //   content: '视频生成成功！点击预览查看视频',
-            //   videoUrl: videoUrlValue
-            // };
+            // 直接使用原始URL
+            const finalVideoUrl = videoUrlValue;
+            
+            // 存储视频URL到本地存储
+            try {
+              const videoCache = JSON.parse(localStorage.getItem(STORAGE_KEY_VIDEOS) || '{}');
+              if (!videoCache[currentTaskId.value]) {
+                videoCache[currentTaskId.value] = {};
+              }
+              videoCache[currentTaskId.value].remoteUrl = videoUrlValue;
+              videoCache[currentTaskId.value].status = 'succeeded';
+              videoCache[currentTaskId.value].timestamp = Date.now();
+              localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(videoCache));
+            } catch (error) {
+              console.error('存储视频URL失败:', error);
+            }
             
             // 存储视频URL，以便点击时播放
-            videoUrl.value = videoUrlValue;
+            videoUrl.value = finalVideoUrl;
             videoTitle.value = '生成的视频';
             
             // 找到对应的用户消息，添加视频URL
@@ -521,20 +783,49 @@ const startTaskStatusCheck = () => {
               msg.role === 'user' && msg.taskId === currentTaskId.value);
             
             if (userMessage) {
-              userMessage.videoUrl = videoUrlValue;
+              userMessage.videoUrl = finalVideoUrl;
               console.log('已将视频URL添加到用户消息:', userMessage);
             }
             
-            // 添加消息并确保只在DOM更新后滚动一次
-            // messages.value.push(videoMessage);
+            // 保存消息到本地存储
+            saveMessagesToLocalStorage();
+            
+            // 添加成功消息，3秒后自动消失
+            const successMessage = {
+              role: 'system',
+              content: '视频生成成功！',
+              autoRemove: true
+            };
+            messages.value.push(successMessage);
+            
+            // 3秒后移除消息
+            setTimeout(() => {
+              const index = messages.value.indexOf(successMessage);
+              if (index !== -1) {
+                messages.value.splice(index, 1);
+              }
+            }, 3000);
+            
             nextTick(() => {
               scrollToBottom();
             });
           } else {
-            messages.value.push({
+            // 添加消息，3秒后自动消失
+            const completeMessage = {
               role: 'system',
-              content: '视频生成完成，但未返回视频URL'
-            });
+              content: '视频生成完成，但未返回视频URL',
+              autoRemove: true
+            };
+            messages.value.push(completeMessage);
+            
+            // 3秒后移除消息
+            setTimeout(() => {
+              const index = messages.value.indexOf(completeMessage);
+              if (index !== -1) {
+                messages.value.splice(index, 1);
+              }
+            }, 3000);
+            
             nextTick(() => {
               scrollToBottom();
             });
@@ -550,10 +841,27 @@ const startTaskStatusCheck = () => {
           userMessage.isGenerating = false;
         }
         
-        messages.value.push({
+        // 移除之前的状态消息
+        removeStatusMessages();
+        
+        // 添加失败消息，3秒后自动消失
+        const failedMessage = {
           role: 'system',
-          content: `视频生成失败: ${statusResult.error || '未知错误'}`
-        });
+          content: `视频生成失败: ${statusResult.error || '未知错误'}`,
+          autoRemove: true
+        };
+        messages.value.push(failedMessage);
+        
+        // 3秒后移除消息
+        setTimeout(() => {
+          const index = messages.value.indexOf(failedMessage);
+          if (index !== -1) {
+            messages.value.splice(index, 1);
+          }
+        }, 3000);
+        
+        // 保存消息到本地存储
+        saveMessagesToLocalStorage();
       } else if (statusResult.status === 'running' || statusResult.status === 'queued') {
         // 任务仍在处理中或排队中
         
@@ -578,6 +886,9 @@ const startTaskStatusCheck = () => {
           nextTick(() => {
             scrollToBottom();
           });
+          
+          // 保存消息到本地存储
+          saveMessagesToLocalStorage();
         }
       } else if (statusResult.status === 'cancelled') {
         // 任务被取消
@@ -589,10 +900,27 @@ const startTaskStatusCheck = () => {
           userMessage.isGenerating = false;
         }
         
-        messages.value.push({
+        // 移除之前的状态消息
+        removeStatusMessages();
+        
+        // 添加取消消息，3秒后自动消失
+        const cancelledMessage = {
           role: 'system',
-          content: '视频生成任务已被取消'
-        });
+          content: '视频生成任务已被取消',
+          autoRemove: true
+        };
+        messages.value.push(cancelledMessage);
+        
+        // 3秒后移除消息
+        setTimeout(() => {
+          const index = messages.value.indexOf(cancelledMessage);
+          if (index !== -1) {
+            messages.value.splice(index, 1);
+          }
+        }, 3000);
+        
+        // 保存消息到本地存储
+        saveMessagesToLocalStorage();
       }
       
       // 注意：移除这里的滚动，因为我们已经在各个状态处理中添加了滚动
@@ -938,9 +1266,12 @@ onBeforeUnmount(() => {
 
 /* 系统消息样式 */
 .message-container.system-message {
-  justify-content: center;
-  margin: 8px 0;
-  width: 100%;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: auto;
+  max-width: 80%;
+  z-index: 100;
 }
 
 /* DaisyUI alert样式覆盖 */
@@ -1012,4 +1343,25 @@ onBeforeUnmount(() => {
   /* 如果希望整个 chat-content 元素向下移动，而不是其内容，则应使用 margin-top。
      但通常对于滚动内容区域，padding-top 是合适的。*/
 }
+
+/* 这里使用 daisyUI 的原生样式，不需要自定义 */
+
+/* 原生视频播放器样式 */
+.core-player-container {
+  margin-top: 15px;
+  width: 100%;
+  max-width: 640px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.native-video-player {
+  width: 100%;
+  height: auto;
+  display: block;
+  background-color: #000;
+}
+
 </style>

@@ -22,23 +22,21 @@
         {{ videoDescription }}
       </div>
       <div class="video-player-body">
-        <video
-          v-if="videoUrl && (videoUrl.endsWith('.mp4') || videoUrl.endsWith('.webm') || videoUrl.endsWith('.ogg'))"
+        <!-- 使用 vue3-video-play 组件 -->
+        <vue3VideoPlay
+          v-if="videoUrl"
+          width="100%"
+          height="100%"
+          :title="videoTitle || '生成的视频'"
           :src="videoUrl"
+          poster=""
+          autoPlay
+          muted
           class="video-iframe"
-          controls
-          autoplay
-          playsinline
-          loop
-        ></video>
-        <iframe
-          v-else-if="videoUrl"
-          :src="getAutoplayUrl(videoUrl)"
-          class="video-iframe"
-          frameborder="0"
-          allow="autoplay; fullscreen"
-          allowfullscreen
-        ></iframe>
+          @play="onPlay"
+          @pause="onPlay"
+          @canplay="onPlay"
+        />
       </div>
     </div>
   </div>
@@ -46,8 +44,9 @@
 
 <script setup>
 import { defineProps, defineEmits } from 'vue';
+import 'vue3-video-play/dist/style.css';
 
-defineProps({
+const props = defineProps({
   show: Boolean,
   videoUrl: String,
   videoTitle: String,
@@ -58,16 +57,14 @@ defineProps({
 });
 const emit = defineEmits(['update:show']);
 
+// 视频播放事件处理函数
+const onPlay = () => {
+  console.log('视频播放事件', props.videoUrl);
+};
+
 const handleClose = () => {
   emit('update:show', false);
   document.body.style.overflow = '';
-};
-
-const getAutoplayUrl = (url) => {
-  if (!url) return '';
-  if (url.includes('autoplay=1')) return url;
-  if (url.includes('?')) return url + '&autoplay=1';
-  return url + '?autoplay=1';
 };
 </script>
 
