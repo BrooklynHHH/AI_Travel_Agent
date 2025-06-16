@@ -94,7 +94,7 @@
                   <!-- 新增：专家意见标识 -->
                   <div class="expert-opinion-label">
                     <i class="expert-opinion-icon">📝</i>
-                    <span>多元视角</span>
+                    <span>专家意见</span>
                   </div>
                   <div class="expert-swiper" :ref="el => setExpertSwiper(el, index)">
                     <div
@@ -115,9 +115,6 @@
                         </div>
                         <div v-show="roleObj.showRefs" class="expert-ref-list">
                           <div v-for="(result, idx2) in roleObj.searchResults" :key="idx2" class="search-item">
-                            <div class="search-query" v-if="result.search_item" style="font-weight: bold; color: #1976d2; margin-bottom: 4px;">
-                              {{ result.search_item }}
-                            </div>
                             <div class="search-content">
                               <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
                                 <a class="result-link" :href="item.url">{{ item.title }}</a>
@@ -128,7 +125,7 @@
                       </div>
                       <!-- 专家回答区 -->
                       <div v-if="roleObj.expert_answer && roleObj.expert_answer.text" class="expert-answer-block">
-                        <div class="answer-content expert-markdown" v-html="renderMarkdownRaw(roleObj.expert_answer.text)"></div>
+                        <div class="answer-content expert-markdown" v-html="renderMarkdown(roleObj.expert_answer.text)"></div>
                       </div>
                     </div>
                   </div>
@@ -229,7 +226,7 @@ import MarkdownIt from 'markdown-it';
 
 // Quick action buttons - loaded from config
 const quickActions = ref([
-  '小米15Ultra怎么样',
+  '斑马鱼和宝莲灯可以一起养吗',
   '无人机可怕的死亡尖啸，为何大多数士兵听到就有心理阴影？'
 ]);
 
@@ -443,23 +440,10 @@ const isStreaming = ref(false);
 const messages = ref([]);
 
 // Markdown renderer function
-const renderMarkdownRaw = (content) => {
-  if (!content) return '';
-  return md.render(content);
-};
-
 const renderMarkdown = (content) => {
   if (!content) return '';
-  let html = md.render(content);
-  // 段落之间插空行
-  html = html.replace(/(<\/p>)(\s*)<p>/g, '$1<div style="height:1em"></div><p>');
-  // 标题和段落之间插空行
-  html = html.replace(/(<\/h[1-6]>)(\s*)<p>/g, '$1<div style="height:1em"></div><p>');
-  // 段落后紧跟标题前插空行
-  html = html.replace(/(<\/p>)(\s*)<(h[1-6]>)/g, '$1<div style="height:1em"></div><$3');
-  // 标题和标题之间插空行
-  html = html.replace(/(<\/h[1-6]>)(\s*)<(h[1-6]>)/g, '$1<div style="height:1em"></div><$3');
-  return html;
+  // Then process the custom product format
+  return md.render(content);
 };
 
 // Methods
@@ -498,303 +482,240 @@ const toggleSearchResult = (result) => {
 };
 
 const sendMessage = async () => {
-try {
-  isStreaming.value = true;
-  const newMessage = {
-    role: 'user',
-    content: userInput.value,
-    searchResults: null,
-    answerText: '',
-    searchPlan: '',
+  try {
+    isStreaming.value = true;
+    const newMessage = {
+      role: 'user',
+      content: userInput.value,
+      searchResults: null,
+      answerText: '',
+      searchPlan: '',
       roleCards: []
-  };
-  messages.value.push(newMessage);
-  const assistantMessage = {
-    role: 'assistant',
-    content: '',
-    searchResults: null,
-    answerText: '',
-    searchPlan: '',
+    };
+    messages.value.push(newMessage);
+    const assistantMessage = {
+      role: 'assistant',
+      content: '',
+      searchResults: null,
+      answerText: '',
+      searchPlan: '',
       roleCards: [],
-      analysisText: ''
-  };
-  messages.value.push(assistantMessage);
-  
-    // 1. 第一个API流式获取专家名和analysis
-    console.log('[sendMessage] 开始请求第一个API获取专家名和analysis');
-  const response = await fetch('http://10.18.4.170/v1/chat-messages', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer app-bCkBvqZL5WpDnEQqNjb0Buld',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      inputs: {},
-      query: userInput.value,
-      response_mode: 'streaming',
-      conversation_id: '',
-      user: 'abc-123'
-    })
-  });
+      analysisText: '',
+      summaryText: ''
+    };
+    messages.value.push(assistantMessage);
 
-  const reader = response.body.getReader();
-  let partialLine = '';
-  let shouldContinue = true;
-    let expertNames = [];
-    let analysisText = '';
-  while (shouldContinue) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = new TextDecoder().decode(value);
-    const lines = (partialLine + chunk).split('\n');
-    partialLine = lines.pop() || '';
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const eventData = JSON.parse(line.slice(6));
-          // 收集 analysis（不再以1开头）并流式渲染
-          if (eventData.event === 'message' && typeof eventData.answer === 'string') {
-            analysisText += eventData.answer;
-            const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
-            if (lastAssistantIndex >= 0) {
-              messages.value[lastAssistantIndex].analysisText = analysisText;
-            }
-            console.log('[sendMessage] 收到analysis片段:', eventData.answer);
-          }
-          // 结束 analysis，遇到专家角色输出，流式渲染专家卡片
-          if (eventData.event === 'node_finished' && eventData.data.title && eventData.data.title.includes('专家角色')) {
-            if (eventData.data.outputs && eventData.data.outputs.output_role) {
-              const content = JSON.parse(eventData.data.outputs.output_role.message.content);
-              if (Array.isArray(content.role)) {
-                expertNames = content.role;
-                // 立即渲染专家卡片（初始为"正在生成..."）
-                const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
-                if (lastAssistantIndex >= 0) {
-                  messages.value[lastAssistantIndex].roleCards = expertNames.map(role => ({
-                    role,
-                    expert_answer: { text: '正在生成...' },
-                    searchResults: []
-                  }));
-                  console.log('[sendMessage] 收到专家名并渲染卡片:', expertNames);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    console.log('[sendMessage] analysis 完整内容:', analysisText);
-    // 2. 并发调用第二个API获取每个专家的独立回答，流式更新卡片内容
-    console.log('[sendMessage] 开始并发请求每个专家的独立总结');
-    await Promise.all(
-      expertNames.map(async (expert, idx) => {
-        console.log(`[sendMessage] 请求专家 ${expert} 的独立总结`);
-        const res2 = await fetch('http://10.18.4.170/v1/chat-messages', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer app-fiDcyif946Bsa9u88xKvMR51',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            inputs: {
-              role: expert,
-              analysis: analysisText
-            },
-            query: userInput.value,
-            response_mode: 'streaming',
-            conversation_id: '',
-            user: 'abc-123'
-          })
-        });
-        // 解析流式返回，拼接专家总结，实时更新卡片内容
-        const reader2 = res2.body.getReader();
-        let partial2 = '';
-        let expertSummary = '';
-        let shouldContinue2 = true;
-        let lastAssistantIndex2 = messages.value.findLastIndex(m => m.role === 'assistant');
-        while (shouldContinue2) {
-          const { done, value } = await reader2.read();
-          if (done) break;
-          const chunk2 = new TextDecoder().decode(value);
-          const lines2 = (partial2 + chunk2).split('\n');
-          partial2 = lines2.pop() || '';
-          for (const line2 of lines2) {
-            if (line2.startsWith('data: ')) {
-              const eventData2 = JSON.parse(line2.slice(6));
-              // 收集专家总结并流式渲染
-              if (eventData2.event === 'message' && typeof eventData2.answer === 'string') {
-                expertSummary += eventData2.answer;
-                if (lastAssistantIndex2 >= 0 && messages.value[lastAssistantIndex2].roleCards && messages.value[lastAssistantIndex2].roleCards[idx]) {
-                  const oldCard = messages.value[lastAssistantIndex2].roleCards[idx];
-                  messages.value[lastAssistantIndex2].roleCards[idx] = {
-                    ...oldCard,
-                    expert_answer: {
-                      ...oldCard.expert_answer,
-                      text: expertSummary
-                    }
-                  };
-                  messages.value[lastAssistantIndex2].roleCards = [
-                    ...messages.value[lastAssistantIndex2].roleCards
-                  ];
-                  messages.value = [...messages.value];
-                }
-                console.log(`[sendMessage] 收到专家 ${expert} 总结片段:`, eventData2.answer);
-              }
-              // 新增：先处理 output_search_item
-              if (
-                eventData2.event === 'node_finished' &&
-                eventData2.data &&
-                eventData2.data.outputs &&
-                eventData2.data.outputs.output_search_item
-              ) {
-                let searchItemObj = JSON.parse(eventData2.data.outputs.output_search_item.message.content);
-                let searchItem = searchItemObj.search_item || '';
-                // 先渲染 search_item
-                if (
-                  lastAssistantIndex2 >= 0 &&
-                  messages.value[lastAssistantIndex2].roleCards &&
-                  messages.value[lastAssistantIndex2].roleCards[idx]
-                ) {
-                  const oldCard = messages.value[lastAssistantIndex2].roleCards[idx];
-                  messages.value[lastAssistantIndex2].roleCards[idx] = {
-                    ...oldCard,
-                    searchResults: [
-                      ...(oldCard.searchResults || []),
-                      {
-                        search_item: searchItem, // 只渲染字符串
-                        search_result: [],
-                        search_summary: '',
-                        show: false
-                      }
-                    ]
-                  };
-                  messages.value[lastAssistantIndex2].roleCards = [
-                    ...messages.value[lastAssistantIndex2].roleCards
-                  ];
-                  messages.value = [...messages.value];
-                }
-              }
-              // 收集专家搜索结果（补充 search_result 和 search_summary）
-              if (
-                eventData2.event === 'node_finished' &&
-                eventData2.data &&
-                eventData2.data.outputs &&
-                eventData2.data.outputs.output_search_result
-              ) {
-                let searchResultData = JSON.parse(eventData2.data.outputs.output_search_result.message.content);
-                if (
-                  lastAssistantIndex2 >= 0 &&
-                  messages.value[lastAssistantIndex2].roleCards &&
-                  messages.value[lastAssistantIndex2].roleCards[idx]
-                ) {
-                  const oldCard = messages.value[lastAssistantIndex2].roleCards[idx];
-                  const searchResults = [...(oldCard.searchResults || [])];
-                  // 找到最后一个 search_result 为空的项
-                  let targetIdx = -1;
-                  for (let i = searchResults.length - 1; i >= 0; i--) {
-                    if (Array.isArray(searchResults[i].search_result) && searchResults[i].search_result.length === 0) {
-                      targetIdx = i;
-                      break;
-                    }
-                  }
-                  if (targetIdx !== -1 && searchResults[targetIdx]) {
-                    searchResults[targetIdx].search_result = searchResultData.search_result || [];
-                  } else {
-                    // 没有空的项，直接 push 一个新的
-                    searchResults.push({
-                      search_result: searchResultData.search_result || []
-                    });
-                  }
-                  messages.value[lastAssistantIndex2].roleCards[idx] = {
-                    ...oldCard,
-                    searchResults
-                  };
-                  messages.value[lastAssistantIndex2].roleCards = [
-                    ...messages.value[lastAssistantIndex2].roleCards
-                  ];
-                  messages.value = [...messages.value];
-                }
-              }
-            }
-          }
-        }
-        console.log(`[sendMessage] 专家 ${expert} 总结完整:`, expertSummary);
-      })
-    );
-    // 3. 渲染到roleCards已在流式过程中完成
-    const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
-    if (lastAssistantIndex >= 0) {
-      console.log('[sendMessage] 所有专家及回答已渲染:', messages.value[lastAssistantIndex].roleCards);
-    }
-
-    // === 新增：调用第三个API进行总结 ===
-    // 1. 收集所有专家名和回答
-    const lastAssistantIndex2 = messages.value.findLastIndex(m => m.role === 'assistant');
-    const expertIdeas = expertNames.map((name, idx) => {
-      const card = messages.value[lastAssistantIndex2].roleCards[idx];
-      const answer = card && card.expert_answer && card.expert_answer.text ? card.expert_answer.text : '';
-      return answer ? `${name}：${answer}` : '';
-    }).filter(Boolean).join('\n\n');
-
-    console.log('[sendMessage] 开始调用第三个API进行总结，expert_idea:', expertIdeas);
-    // 2. 调用新版第三个API
-    let summaryText = '';
-    let collectingSummary = false;
-    const summaryRes = await fetch('https://mify-be.pt.xiaomi.com/api/v1/chat-messages', {
+    // 新API请求
+    const response = await fetch('https://mify-be.pt.xiaomi.com/api/v1/chat-messages', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer app-QFLCZ51CgCHHIweJdSZHEPhx',
+        'Authorization': 'Bearer app-NgDA3A8Ruk6MzlqleoO4RlVq',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        inputs: {
-          expert_idea: expertIdeas
-        },
+        inputs: {},
         query: userInput.value,
         response_mode: 'streaming',
         conversation_id: '',
         user: 'abc-123'
       })
     });
-    const summaryReader = summaryRes.body.getReader();
-    let partialSummary = '';
-    let shouldContinueSummary = true;
-    while (shouldContinueSummary) {
-      const { done, value } = await summaryReader.read();
+
+    const reader = response.body.getReader();
+    let partialLine = '';
+    let expertNames = [];
+    let analysisText = '';
+    let summaryText = '';
+    let lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
+    // roleCards结构：[{role, expert_answer: {text}, searchResults: [{search_item, search_result, search_summary, show}]}]
+    let roleCards = [];
+    let analysisCollecting = false;
+    let summaryCollecting = false;
+    let expertCollectingIndex = null;
+
+    let done = false;
+    while (!done) {
+      const { done: readDone, value } = await reader.read();
+      done = readDone;
       if (done) break;
       const chunk = new TextDecoder().decode(value);
-      const lines = (partialSummary + chunk).split('\n');
-      partialSummary = lines.pop() || '';
+      const lines = (partialLine + chunk).split('\n');
+      partialLine = lines.pop() || '';
       for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const eventData = JSON.parse(line.slice(6));
-          if (eventData.event === 'message' && typeof eventData.answer === 'string') {
-            summaryText += eventData.answer;
-            const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
+        if (!line.startsWith('data: ')) continue;
+        const eventData = JSON.parse(line.slice(6));
+        // 1. 分析片段（严格区间流式收集）
+        if (
+          eventData.event === 'node_started' &&
+          eventData.data &&
+          eventData.data.title === 'analysis before search'
+        ) {
+          analysisCollecting = true;
+        }
+        if (
+          eventData.event === 'node_finished' &&
+          eventData.data &&
+          eventData.data.title === 'analysis before search'
+        ) {
+          analysisCollecting = false;
+        }
+        if (
+          analysisCollecting &&
+          eventData.event === 'message' &&
+          typeof eventData.answer === 'string'
+        ) {
+          analysisText += eventData.answer;
+          if (lastAssistantIndex >= 0) {
+            messages.value[lastAssistantIndex].analysisText = analysisText;
+          }
+        }
+        // 2. 综合总结片段（严格区间流式收集）
+        if (
+          eventData.event === 'node_started' &&
+          eventData.data &&
+          eventData.data.title === 'summary'
+        ) {
+          summaryCollecting = true;
+        }
+        if (
+          eventData.event === 'node_finished' &&
+          eventData.data &&
+          eventData.data.title === 'summary'
+        ) {
+          summaryCollecting = false;
+        }
+        if (
+          summaryCollecting &&
+          eventData.event === 'message' &&
+          typeof eventData.answer === 'string'
+        ) {
+          summaryText += eventData.answer;
+          if (lastAssistantIndex >= 0) {
+            messages.value[lastAssistantIndex].summaryText = summaryText;
+            messages.value = [...messages.value];
+          }
+        }
+        // 2. 专家名
+        if (eventData.event === 'node_finished' && eventData.data && eventData.data.title && eventData.data.title.includes('专家角色')) {
+          if (eventData.data.outputs && eventData.data.outputs.output_role) {
+            const content = JSON.parse(eventData.data.outputs.output_role.message.content);
+            if (Array.isArray(content.role)) {
+              expertNames = content.role;
+              // 初始化专家卡片
+              roleCards = expertNames.map(role => ({
+                role,
+                expert_answer: { text: '' },
+                searchResults: []
+              }));
+              if (lastAssistantIndex >= 0) {
+                messages.value[lastAssistantIndex].roleCards = roleCards;
+              }
+            }
+          }
+        }
+        // 3. 专家卡片内容（回答、search_item、search_result等）
+        // 3.1 专家回答
+        if (eventData.event === 'message' && eventData.type === 'expert_answer') {
+          // 需要有 eventData.role 字段标识专家名
+          const idx = expertNames.findIndex(r => r === eventData.role);
+          if (idx !== -1 && roleCards[idx]) {
+            roleCards[idx].expert_answer.text += eventData.answer;
             if (lastAssistantIndex >= 0) {
-              messages.value[lastAssistantIndex].summaryText = summaryText;
+              messages.value[lastAssistantIndex].roleCards = [...roleCards];
               messages.value = [...messages.value];
             }
-            console.log('[sendMessage] 总结流式片段(message):', eventData.answer);
           }
-          if (eventData.event === 'text_chunk' && eventData.data && typeof eventData.data.text === 'string') {
-            // 兼容旧的 text_chunk 事件
-            if (collectingSummary) {
-              summaryText += eventData.data.text;
-              const lastAssistantIndex = messages.value.findLastIndex(m => m.role === 'assistant');
-              if (lastAssistantIndex >= 0) {
-                messages.value[lastAssistantIndex].summaryText = summaryText;
-                messages.value = [...messages.value];
+        }
+        // 3.2 search_item
+        if (eventData.event === 'node_finished' && eventData.data && eventData.data.outputs && eventData.data.outputs.output_search_item) {
+          const searchItemObj = JSON.parse(eventData.data.outputs.output_search_item.message.content);
+          const searchItem = searchItemObj.search_item || '';
+          // 需要有 eventData.data.role 字段标识专家名
+          const idx = expertNames.findIndex(r => r === eventData.data.role);
+          if (idx !== -1 && roleCards[idx]) {
+            roleCards[idx].searchResults.push({
+              search_item: searchItem,
+              search_result: [],
+              search_summary: '',
+              show: false
+            });
+            if (lastAssistantIndex >= 0) {
+              messages.value[lastAssistantIndex].roleCards = [...roleCards];
+              messages.value = [...messages.value];
+            }
+          }
+        }
+        // 3.3 search_result
+        if (eventData.event === 'node_finished' && eventData.data && eventData.data.outputs && eventData.data.outputs.output_search_result) {
+          const searchResultData = JSON.parse(eventData.data.outputs.output_search_result.message.content);
+          const idx = expertNames.findIndex(r => r === eventData.data.role);
+          if (idx !== -1 && roleCards[idx]) {
+            // 找到最后一个 search_result 为空的项
+            const searchResults = [...roleCards[idx].searchResults];
+            let targetIdx = -1;
+            for (let i = searchResults.length - 1; i >= 0; i--) {
+              if (Array.isArray(searchResults[i].search_result) && searchResults[i].search_result.length === 0) {
+                targetIdx = i;
+                break;
               }
-              console.log('[sendMessage] 总结流式片段(text_chunk):', eventData.data.text);
+            }
+            if (targetIdx !== -1 && searchResults[targetIdx]) {
+              searchResults[targetIdx].search_result = searchResultData.search_result || [];
+            } else {
+              searchResults.push({
+                search_result: searchResultData.search_result || []
+              });
+            }
+            roleCards[idx].searchResults = searchResults;
+            if (lastAssistantIndex >= 0) {
+              messages.value[lastAssistantIndex].roleCards = [...roleCards];
+              messages.value = [...messages.value];
+            }
+          }
+        }
+        // 4. 综合总结
+        if (eventData.event === 'message' && (eventData.type === 'summary' || (typeof eventData.answer === 'string' && eventData.answer.startsWith('【综合意见】')))) {
+          // 兼容旧格式：answer以【综合意见】开头
+          const text = eventData.type === 'summary' ? eventData.answer : eventData.answer.replace(/^【综合意见】/, '');
+          summaryText += text;
+          if (lastAssistantIndex >= 0) {
+            messages.value[lastAssistantIndex].summaryText = summaryText;
+            messages.value = [...messages.value];
+          }
+        }
+        // 3. 专家卡片内容流式收集
+        if (
+          eventData.event === 'iteration_next' &&
+          eventData.data &&
+          typeof eventData.data.index === 'number'
+        ) {
+          // index为1代表第一个专家卡片
+          expertCollectingIndex = eventData.data.index - 1;
+        }
+        if (
+          eventData.event === 'node_finished' &&
+          eventData.data &&
+          eventData.data.title === 'single expert answer'
+        ) {
+          expertCollectingIndex = null;
+        }
+        if (
+          expertCollectingIndex !== null &&
+          eventData.event === 'message' &&
+          typeof eventData.answer === 'string'
+        ) {
+          if (roleCards[expertCollectingIndex]) {
+            roleCards[expertCollectingIndex].expert_answer.text += eventData.answer;
+            if (lastAssistantIndex >= 0) {
+              messages.value[lastAssistantIndex].roleCards = [...roleCards];
+              messages.value = [...messages.value];
             }
           }
         }
       }
     }
-    console.log('[sendMessage] 总结完整内容:', summaryText);
-    // === END 新增 ===
-} catch (error) {
-  console.error('请求错误:', error);
+  } catch (error) {
+    console.error('请求错误:', error);
     if (messages.value.length > 0 && messages.value[messages.value.length - 1].streaming) {
       messages.value.pop();
     }
@@ -1606,12 +1527,6 @@ overflow: visible;
 .analysis-label-icon,
 .summary-label-icon {
   font-style: normal;
-}
-
-.summary-content p,
-.expert-markdown p,
-.response-text p {
-  margin: 0 0 16px 0;
 }
 </style>
 

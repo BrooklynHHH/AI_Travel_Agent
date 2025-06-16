@@ -9,6 +9,7 @@ import OcrView from '../views/OcrView.vue'
 import TravelView from '../views/TravelView.vue'
 import RouteLinksView from '../views/RouteLinksView.vue'
 import MultiAgentMixExpertView from '../views/MultiAgentMixExpertView.vue'
+import MultiAgentMixExpertView_Mify from '../views/MultiAgentMixExpertView_Mify.vue'
 
 export const routes = [ // Add export here
   {
@@ -60,6 +61,11 @@ export const routes = [ // Add export here
     path: '/multi-agent-experts',
     name: '多专家',
     component: MultiAgentMixExpertView
+  },
+  {
+    path: '/multi-agent-experts-mify',
+    name: '多专家_mify',
+    component: MultiAgentMixExpertView_Mify
   },
   {
     path: '/',
