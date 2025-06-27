@@ -1982,7 +1982,7 @@ onUpdated(() => {
   text-decoration: underline;
 }
 
-search-header {
+.search-header {
   cursor: pointer;
   padding: 8px;
   background-color: #f5f5f5;
@@ -1990,10 +1990,10 @@ search-header {
   display: flex;
   align-items: center;
   transition: background-color 0.2s;
+}
 
-  &:hover {
-    background-color: #e8e8e8;
-  }
+.search-header:hover {
+  background-color: #e8e8e8;
 }
 
 .toggle-icon {
@@ -2670,10 +2670,10 @@ input {
   display: flex;
   align-items: center;
   margin: 1rem 0;
+}
 
-  &:hover {
-    text-decoration: underline;
-  }
+.title-link:hover {
+  text-decoration: underline;
 }
 
 .preview-frame {
@@ -2688,10 +2688,10 @@ input {
   margin-left: 8px;
   font-size: 0.8em;
   transition: transform 0.3s ease;
+}
 
-  &.rotate-180 {
-    transform: rotate(180deg);
-  }
+.arrow-icon.rotate-180 {
+  transform: rotate(180deg);
 }
 
 /* 角色卡片 */

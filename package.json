@@ -9,6 +9,7 @@
     "tailwind:init": "tailwindcss init -p"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.0",
     "axios": "^1.10.0",
     "body-parser": "^2.2.0",
     "core-js": "^3.8.3",
@@ -19,6 +20,8 @@
     "markdown-it": "^14.1.0",
     "markdown-it-katex": "^2.0.3",
     "marked": "^15.0.11",
+    "postcss-nesting": "^13.0.2",
+    "tailwindcss": "^3.4.0",
     "tesseract.js": "^6.0.1",
     "vant": "^4.9.18",
     "vue": "^3.5.13",
@@ -29,7 +32,6 @@
   "devDependencies": {
     "@babel/core": "^7.12.16",
     "@babel/eslint-parser": "^7.12.16",
-    "@tailwindcss/postcss": "^4.1.4",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "^5.0.0",
     "@vue/cli-service": "^5.0.8",
@@ -39,8 +41,7 @@
     "eslint": "^7.32.0",
     "eslint-loader": "^4.0.2",
     "eslint-plugin-vue": "^8.0.3",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^4.1.4"
+    "postcss": "^8.5.3"
   },
   "eslintConfig": {
     "root": true,
