@@ -1,4 +1,4 @@
-const BACKEND_URL = 'http://localhost:3001';
+const BACKEND_URL = 'http://staging-llm.search.miui.srv/agent-fortune';
 
 /**
  * 大師群聊 API
