@@ -7,6 +7,7 @@ import AdvancedResultView from '../views/AdvancedResultView.vue'
 import MultiAgentView from '../views/MultiAgentView.vue'
 import OcrView from '../views/OcrView.vue'
 import PodcastView from '../views/PodcastView.vue'
+import FortuneView from '../views/FortuneView.vue'
 
 import TravelView from '../views/TravelView.vue'
 import RouteLinksView from '../views/RouteLinksView.vue'
@@ -67,6 +68,11 @@ export const routes = [ // Add export here
     path: '/multi-agent',
     name: '多智能体', // Translated
     component: MultiAgentView
+  },
+  {
+    path: '/fortune',
+    name: '算命',
+    component: FortuneView
   },
   {
     path: '/',

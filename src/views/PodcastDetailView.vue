@@ -80,7 +80,7 @@ export default {
     },
     audioFile() {
       // 從 Flask 服務器獲取音頻文件
-      return this.audioFilename ? `http://10.167.174.27:5001/audio/${this.audioFilename}` : ''
+      return this.audioFilename ? `http://localhost:5001/audio/${this.audioFilename}` : ''
     }
   },
   async created() {

@@ -20,4 +20,16 @@ app.config.globalProperties.$appConfig = appConfig
 app.use(router)
 app.use(ElementPlus)
 
+// 在 main.js 顶部插入以下代码，动态引入 public/css/style.css 和 mystical-theme.css
+if (typeof window !== 'undefined') {
+  const styleLink = document.createElement('link');
+  styleLink.rel = 'stylesheet';
+  styleLink.href = '/css/style.css';
+  document.head.appendChild(styleLink);
+  const mysticalLink = document.createElement('link');
+  mysticalLink.rel = 'stylesheet';
+  mysticalLink.href = '/css/mystical-theme.css';
+  document.head.appendChild(mysticalLink);
+}
+
 app.mount('#app')

@@ -123,6 +123,8 @@ async def generate_audio(text, output_file):
     submit_request_json["request"]["reqid"] = str(uuid.uuid4())
     submit_request_json["request"]["text"] = text
     
+    print(f"請求參數: {json.dumps(submit_request_json, ensure_ascii=False)}")
+    
     # 壓縮請求負載
     payload_bytes = str.encode(json.dumps(submit_request_json))
     payload_bytes = gzip.compress(payload_bytes)
@@ -133,21 +135,29 @@ async def generate_audio(text, output_file):
     full_client_request.extend(payload_bytes)
     
     print(f"正在生成音頻: {text}")
+    print(f"WebSocket URL: {api_url}")
     
     # 打開文件準備寫入
     file_to_save = open(output_file, "wb")
     
     # 建立WebSocket連接並發送請求
     header = {"Authorization": f"Bearer; {token}"}
+    print(f"認證頭: {header}")
+    
     try:
-        ws = await websockets.connect(api_url, additional_headers=header, ping_interval=None)
+        ws = await websockets.connect(api_url, extra_headers=header, ping_interval=None)
+        print("WebSocket連接成功")
         await ws.send(full_client_request)
+        print("請求已發送")
+        
         while True:
             res = await ws.recv()
+            print(f"收到響應，長度: {len(res)} bytes")
             done = parse_response(res, file_to_save)
             if done:
                 file_to_save.close()
                 await ws.close()
+                print("WebSocket連接已關閉")
                 break
         print(f"音頻生成完成: {output_file}")
         return True

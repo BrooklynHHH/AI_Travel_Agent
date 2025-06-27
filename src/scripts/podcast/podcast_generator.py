@@ -161,8 +161,8 @@ async def generate_audio(text, voice_type, output_file):
     # 建立WebSocket連接並發送請求
     header = {"Authorization": f"Bearer; {token}"}
     try:
-        # 使用最新版本的websockets庫的方法
-        ws = await websockets.connect(api_url, additional_headers=header, ping_interval=None)
+        # 修改 WebSocket 連接方式
+        ws = await websockets.connect(api_url, extra_headers=header, ping_interval=None)
         await ws.send(full_client_request)
         while True:
             res = await ws.recv()
