@@ -150,4 +150,4 @@ export const handleFortuneStream = async (response, options = {}) => {
     console.error('Error in fortune stream handling:', error);
     onError(error);
   }
-}; 
+};

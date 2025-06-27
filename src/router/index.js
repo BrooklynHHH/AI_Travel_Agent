@@ -4,7 +4,6 @@ import MovieView from '../views/MovieView.vue'
 import BaiduView from '../views/BaiduView.vue'
 import AdvancedView from '../views/AdvancedView.vue'
 import AdvancedResultView from '../views/AdvancedResultView.vue'
-import MultiAgentView from '../views/MultiAgentView.vue'
 import OcrView from '../views/OcrView.vue'
 import PodcastView from '../views/PodcastView.vue'
 import FortuneView from '../views/FortuneView.vue'
@@ -12,6 +11,7 @@ import FortuneView from '../views/FortuneView.vue'
 import TravelView from '../views/TravelView.vue'
 import RouteLinksView from '../views/RouteLinksView.vue'
 import MultiAgentMixExpertView from '../views/MultiAgentMixExpertView.vue'
+import VideoGenerationView from '@/views/VideoGenerationView.vue'
 
 export const routes = [ // Add export here
   {
@@ -40,8 +40,13 @@ export const routes = [ // Add export here
     component: ChatView
   },
   {
+    path: '/video',
+    name: '视频生成', // Translated
+    component: VideoGenerationView
+  },
+  {
     path: '/ocr',
-    name: '搜题', // Translated
+    name: 'ocr', // Translated
     component: OcrView
   },
   {
@@ -65,9 +70,9 @@ export const routes = [ // Add export here
     component: AdvancedResultView
   },
   {
-    path: '/multi-agent',
-    name: '多智能体', // Translated
-    component: MultiAgentView
+    path: '/multi-agent-experts',
+    name: '多专家',
+    component: MultiAgentMixExpertView
   },
   {
     path: '/fortune',
@@ -77,11 +82,6 @@ export const routes = [ // Add export here
   {
     path: '/',
     redirect: '/route-links' // Change redirect to the new page
-  },
-  {
-    path: '/multi-agent-experts',
-    name: 'multi-agent-experts',
-    component: MultiAgentMixExpertView
   },
   {
     path: '/podcast-detail',

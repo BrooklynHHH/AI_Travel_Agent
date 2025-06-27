@@ -685,4 +685,4 @@ onMounted(() => {
   flex-direction: column;
   gap: 28px;
 }
-</style> 
+</style>

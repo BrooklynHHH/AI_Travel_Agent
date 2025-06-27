@@ -7,6 +7,10 @@ import 'katex/dist/katex.min.css'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 
+// 引入 vue3-video-play 组件
+import vue3videoPlay from 'vue3-video-play'
+import 'vue3-video-play/dist/style.css'
+
 // Set the initial document title from config
 document.title = appConfig.defaultPageTitle
 
@@ -19,6 +23,7 @@ app.config.globalProperties.$appConfig = appConfig
 // Use router
 app.use(router)
 app.use(ElementPlus)
+app.use(vue3videoPlay)
 
 // 在 main.js 顶部插入以下代码，动态引入 public/css/style.css 和 mystical-theme.css
 if (typeof window !== 'undefined') {
