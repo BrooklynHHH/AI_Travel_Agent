@@ -12,7 +12,7 @@
           <form id="fortuneForm" @submit.prevent="submitForm">
             <div class="form-group">
               <label for="name">姓名</label>
-              <input type="text" id="name" name="name" v-model="formData.name" required>
+              <input type="text" id="name" name="name" v-model="formData.name">
             </div>
             <div class="form-group">
               <label for="gender">性别</label>
@@ -30,7 +30,7 @@
             </div>
             <div class="form-group">
               <label for="birth_place">出生地点</label>
-              <input type="text" id="birth_place" name="birth_place" v-model="formData.birth_place" required>
+              <input type="text" id="birth_place" name="birth_place" v-model="formData.birth_place">
             </div>
             <button type="submit" class="btn-submit">开始分析</button>
           </form>
@@ -39,8 +39,8 @@
         <section class="result-section" id="resultSection" v-show="showResults">
           <div class="analysis-cards" id="analysisCards">
             <div class="loading-spinner" id="loadingSpinner" v-show="loading">
-              <i class="fas fa-spinner fa-spin"></i>
-              <p>正在分析命盘，请稍候...</p>
+              <img src="@/assets/wait.svg" class="wait-svg" alt="等待中" />
+              <p class="loading-text">正在分析命盘，请稍候...</p>
             </div>
 
             <div class="cards-grid" id="cardsGrid" v-show="!loading">
@@ -70,7 +70,6 @@
 
               <div class="analysis-card" id="tarotCard" data-type="tarot" @click="showAnalysisDetail('tarot')" :class="{ expanded: expandedCard === 'tarot' }">
                 <div class="card-header">
-                  <img src="/images/mystical-tarot-logo.svg" alt="塔罗牌" class="tarot-logo">
                   <h3>塔罗占卜</h3>
                 </div>
                 <div class="card-preview" v-html="cardPreviews.tarot"></div>
@@ -155,6 +154,8 @@ const detailContent = ref('')
 const chatInput = ref('')
 const chatMessages = ref([])
 const chatMessagesRef = ref(null)
+// 是否已顯示過大師群歡迎信息
+const masterWelcomeShown = ref(false)
 
 // 表單數據
 const formData = reactive({
@@ -182,6 +183,9 @@ const fortuneResults = reactive({
 
 // 會話ID
 let conversationId = ''
+
+// 延遲顯示大師群計時器
+let chatTimer = null
 
 // 2. submitForm 改为调用本地 /api/fortune
 const submitForm = async () => {
@@ -272,21 +276,38 @@ const submitForm = async () => {
 // 顯示分析詳情
 const showAnalysisDetail = (type) => {
   console.log('[showAnalysisDetail] 点击卡片:', type)
+  // 每次點擊卡片先隱藏聊天、清計時器
+  if (chatTimer) {
+    clearTimeout(chatTimer)
+    chatTimer = null
+  }
+  showChat.value = false
+
   expandedCard.value = type
-  
   const typeNames = {
     zodiac: '星座运势',
     bazi: '八字命理',
     astro: '星盘解析',
     tarot: '塔罗占卜'
   }
-  
   detailTitle.value = typeNames[type]
-  
   if (type === 'tarot') {
     detailContent.value = getTarotReadingHTML()
     initTarotDeck()
+    showDetail.value = true
+    // 先清除可能存在的計時器
+    if (chatTimer) {
+      clearTimeout(chatTimer)
+      chatTimer = null
+    }
+    chatTimer = setTimeout(() => {
+      console.log('[showAnalysisDetail] showChat.value = true, startMasterChat()')
+      showChat.value = true
+      startMasterChat()
+    }, 1000)
   } else {
+    // 非塔羅卡片保持群聊隱藏
+    showChat.value = false
     const keyMap = { zodiac: 'xingzuo', bazi: 'bazi', astro: 'xingpan' }
     const key = keyMap[type]
     let content = ''
@@ -294,22 +315,18 @@ const showAnalysisDetail = (type) => {
       content = fortuneResults[key].fenxi || fortuneResults[key].zongjie || '暂无详细分析内容'
     }
     detailContent.value = formatDetailContent(content)
+    showDetail.value = true
   }
-  
-  showDetail.value = true
-  
-  // 延遲顯示聊天界面
-  setTimeout(() => {
-    console.log('[showAnalysisDetail] showChat.value = true, startMasterChat()')
-    showChat.value = true
-    startMasterChat()
-  }, 1000)
 }
 
 // 返回卡片
 const backToCards = () => {
   showDetail.value = false
   expandedCard.value = ''
+  // 返回卡片时，如非塔羅卡片則隱藏聊天
+  if (expandedCard.value !== 'tarot') {
+    showChat.value = false
+  }
 }
 
 // 發送消息
@@ -398,7 +415,11 @@ const sendMessage = async () => {
 // 開始大師聊天
 const startMasterChat = async () => {
   if (!Array.isArray(chatMessages.value)) chatMessages.value = [];
-  addSystemMessage('欢迎来到命理大师群，四位大师已准备好为您解答问题')
+  // 僅首次進入顯示歡迎信息
+  if (!masterWelcomeShown.value) {
+    addSystemMessage('欢迎来到命理大师群，四位大师已准备好为您解答问题')
+    masterWelcomeShown.value = true
+  }
   
   const knowledgeBase = {
     user_info: {
@@ -571,7 +592,8 @@ const initTarotDeck = () => {
   nextTick(() => {
     const deckElement = document.querySelector('.tarot-deck')
     if (!deckElement) return
-    
+    // 先清空牌堆，保證只生成一張
+    deckElement.innerHTML = ''
     const card = document.createElement('div')
     card.className = 'tarot-card'
     
