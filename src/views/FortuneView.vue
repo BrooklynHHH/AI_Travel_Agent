@@ -379,6 +379,21 @@ const sendMessage = async () => {
               if (data.conversation_id) {
                 conversationId = data.conversation_id;
               }
+              // 新格式：单条 master_tag + content
+              if (data.master_tag && data.content) {
+                const masterType = {
+                  'xzdashi': 'zodiac',
+                  'bzdashi': 'bazi',
+                  'xpdashi': 'astro',
+                  'tldashi': 'tarot'
+                }[data.master_tag]
+                if (masterType) {
+                  addMasterMessage(masterType, data.content.trim())
+                }
+                continue
+              }
+
+              // 旧格式：一次性数组
               if (data.metadata && data.metadata.master_messages) {
                 data.metadata.master_messages.forEach((masterMsg, index) => {
                   if (masterMsg.master_tag && masterMsg.content) {
