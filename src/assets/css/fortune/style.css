@@ -337,12 +337,27 @@ input:focus, select:focus {
   justify-content: center;
   width: 100%;
   min-height: 260px; /* 视觉居中高度，可按需调整 */
+  animation: none !important; /* 禁止容器动画 */
 }
 
-.loading-spinner i {
-  font-size: 2rem;
-  color: var(--primary-color);
-  animation: spin 1s linear infinite;
+.loading-spinner *:not(.wait-svg) {
+  animation: none !important; /* 禁止子元素除SVG外的动画 */
+}
+
+/* 等待SVG */
+.wait-svg {
+  width: 64px;
+  height: 64px;
+  display: block;
+  margin: 0 auto;
+  animation: wait-spin 1s linear infinite;
+}
+
+/* 等待文字 */
+.loading-text {
+  margin-top: 8px;
+  color: var(--secondary-color);
+  font-size: 1rem;
 }
 
 .result-header {
@@ -456,4 +471,15 @@ footer {
   .user-input-section, .result-section {
     padding: 20px;
   }
+}
+
+/* 新增SVG旋转动画 */
+@keyframes wait-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.wait-svg-spin {
+  animation: wait-spin 1s linear infinite;
+  display: block;
+  margin: 0 auto;
 } 
