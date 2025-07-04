@@ -379,6 +379,21 @@ const sendMessage = async () => {
               if (data.conversation_id) {
                 conversationId = data.conversation_id;
               }
+              // 新格式：单条 master_tag + content
+              if (data.master_tag && data.content) {
+                const masterType = {
+                  'xzdashi': 'zodiac',
+                  'bzdashi': 'bazi',
+                  'xpdashi': 'astro',
+                  'tldashi': 'tarot'
+                }[data.master_tag]
+                if (masterType) {
+                  addMasterMessage(masterType, data.content.trim())
+                }
+                continue
+              }
+
+              // 旧格式：一次性数组
               if (data.metadata && data.metadata.master_messages) {
                 data.metadata.master_messages.forEach((masterMsg, index) => {
                   if (masterMsg.master_tag && masterMsg.content) {
@@ -581,7 +596,7 @@ const getTarotReadingHTML = () => {
   return `
     <div class="tarot-reading">
       <p>请集中注意力，想着你的问题，然后点击下面的牌开始抽牌...</p>
-      <p><small>点击牌面后，解读将直接显示在牌上</small></p>
+      <!-- 移除"点击牌面后……"提示 -->
       <div class="tarot-deck"></div>
     </div>
   `
@@ -600,10 +615,12 @@ const initTarotDeck = () => {
     const cardInner = document.createElement('div')
     cardInner.className = 'tarot-card-inner'
     
+    /* 創建卡牌背面（初始顯示面）*/
     const cardFront = document.createElement('div')
     cardFront.className = 'tarot-card-front'
-    cardFront.innerHTML = `<img src="/images/mystical-tarot-logo.svg" alt="塔罗牌背面">`
+    cardFront.innerHTML = `<div class="tarot-card-backtext">塔罗牌背面</div>`
     
+    /* 創建卡牌正面（翻轉後顯示面）*/
     const cardBack = document.createElement('div')
     cardBack.className = 'tarot-card-back'
     
@@ -618,68 +635,34 @@ const initTarotDeck = () => {
     card.appendChild(cardInner)
     deckElement.appendChild(card)
     
-    // 添加點擊事件
-    card.addEventListener('click', async function() {
+    /* 點擊翻牌後：隨機抽取一張塔羅牌，顯示牌名並打開大師群。無需再調用後端獲取解讀。 */
+    card.addEventListener('click', function() {
       if (!this.classList.contains('flipped')) {
         this.classList.add('flipped')
         
+        /* 隨機選擇塔羅牌 */
+        const cardNames = [
+          '愚者','魔术师','女祭司','女皇','皇帝','教皇','恋人','战车牌','力量','隐士','轮回','正义','吊人','死神','节制','恶魔','塔','星星','月亮','太阳','审判','世界',
+          '权杖1正位','权杖2正位','权杖3正位','权杖4正位','权杖5正位','权杖6正位','权杖7正位','权杖8正位','权杖9正位','权杖10正位','权杖骑士正位','权杖王后正位','权杖国王正位','权杖侍从正位',
+          '圣杯1正位','圣杯2正位','圣杯3正位','圣杯4正位','圣杯5正位','圣杯6正位','圣杯7正位','圣杯8正位','圣杯9正位','圣杯10正位','圣杯骑士正位','圣杯王后正位','圣杯国王正位','圣杯侍从正位',
+          '宝剑1正位','宝剑2正位','宝剑3正位','宝剑4正位','宝剑5正位','宝剑6正位','宝剑7正位','宝剑8正位','宝剑9正位','宝剑10正位','宝剑骑士正位','宝剑王后正位','宝剑国王正位','宝剑侍从正位',
+          '星币1正位','星币2正位','星币3正位','星币4正位','星币5正位','星币6正位','星币7正位','星币8正位','星币9正位','星币10正位','星币骑士正位','星币王后正位','星币国王正位','星币侍从正位'
+        ]
+        const randomCard = cardNames[Math.floor(Math.random() * cardNames.length)]
+        
+        /* 獲取卡牌背面元素（翻轉後顯示的一面）*/
         const cardBack = this.querySelector('.tarot-card-back')
+        
+        /* 將牌名渲染到卡牌背面（翻開後顯示的面） */
         cardBack.innerHTML = `
           <div class="tarot-card-content">
-            <h4>塔罗牌解读</h4>
-            <div class="tarot-analysis">正在解读中...</div>
+            <h4 class="tarot-card-name">${randomCard}</h4>
           </div>
         `
-        
-        try {
-          const response = await mastersChat({
-            query: '请解读我抽到的塔罗牌，我近期的运势如何？',
-            conversation_id: conversationId,
-            user: localStorage.getItem('user_id') || 'fortune-user',
-            workflow_type: 'tarot'
-          })
-          
-          if (response.ok) {
-            const reader = response.body.getReader()
-            const decoder = new TextDecoder('utf-8')
-            let buffer = ''
-            for (;;) {
-              const { done, value } = await reader.read()
-              if (done) break
-              const chunk = decoder.decode(value, { stream: true })
-              buffer += chunk
-              const lines = buffer.split('\n')
-              buffer = lines.pop() || ''
-              for (const line of lines) {
-                if (line.trim() === '') continue
-                if (line.startsWith('data: ')) {
-                  const jsonStr = line.substring(6).trim()
-                  try {
-                    const data = JSON.parse(jsonStr)
-                    if (data.answer) {
-                      fortuneResults.tarot = data.answer; // 保存塔罗分析结果
-                      cardBack.innerHTML = `
-                        <div class="tarot-card-content">
-                          <h4>塔罗牌解读</h4>
-                          <div class="tarot-analysis">${data.answer}</div>
-                        </div>
-                      `
-                    }
-                  } catch (err) {
-                    console.warn('解析API响应失败:', err)
-                  }
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error('获取塔罗牌解读失败:', error)
-          cardBack.innerHTML = `
-            <div class="tarot-card-content error">
-              <p>解读失败，请重试</p>
-            </div>
-          `
-        }
+
+        /* 顯示大師群並啟動討論 */
+        showChat.value = true
+        startMasterChat()
       }
     })
   })

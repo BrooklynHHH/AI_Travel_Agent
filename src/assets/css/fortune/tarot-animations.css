@@ -97,6 +97,16 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
+/* 塔羅牌背面文字樣式 */
+.tarot-card-backtext {
+  font-size: 1.2rem;
+  color: #ffd700;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  padding: 10px;
+  font-weight: bold;
+}
+
 /* 神秘符号 */
 .tarot-card-back::before {
   content: '✧';
@@ -129,6 +139,20 @@
   margin-bottom: 10px;
   color: #ffd700;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 塔羅牌名稱樣式 */
+.tarot-card-name {
+  font-size: 1.3rem !important;
+  color: #ffd700 !important;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
+  margin: 15px 0 !important;
+  text-align: center;
+  font-weight: bold !important;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px 5px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
 .tarot-card-content p {
