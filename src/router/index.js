@@ -12,6 +12,21 @@ import MultiAgentMixExpertView from '../views/MultiAgentMixExpertView.vue'
 
 export const routes = [ // Add export here
   {
+    path: '/multi-turn-chat',
+    name: '多轮对话',
+    component: () => import('../views/MultiTurnChatView.vue')
+  },
+  {
+    path: '/multi-turn-chat-simple',
+    name: '多轮对话-simple',
+    component: () => import('../views/SimpleChatView.vue')
+  },
+  {
+    path: '/multi-turn-chat_v0',
+    name: '多轮对话_v0',
+    component: () => import('../views/MultiTurnChatView_v0.vue')
+  },
+  {
     path: '/supervisor-agent-fixed',
     name: 'SupervisorAgentFixed',
     component: () => import('../views/SupervisorAgentFixed.vue')
