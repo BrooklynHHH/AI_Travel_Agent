@@ -27,6 +27,7 @@ from content_formatter import format_for_console
 
 # 导入智能体模块
 try:
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     from supervisor_agent import create_multi_turn_chat_supervisor
     from enhanced_stream_api_V1 import run_enhanced_streaming_api
 except ImportError as e:
