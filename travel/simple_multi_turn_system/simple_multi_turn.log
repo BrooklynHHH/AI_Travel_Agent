@@ -1,0 +1,299 @@
+2025-07-11 12:20:50,317 - multi_turn_session - INFO - 会话管理器已初始化
+2025-07-11 12:20:53,197 - simple_multi_turn_api - INFO - Simple Multi-Turn Chat API 服务器启动中...
+2025-07-11 12:20:53,197 - simple_multi_turn_api - INFO - 正在初始化supervisor...
+2025-07-11 12:20:53,225 - simple_multi_turn_api - INFO - Supervisor初始化成功
+2025-07-11 12:20:53,225 - simple_multi_turn_api - INFO - ✅ Supervisor初始化成功
+2025-07-11 12:20:53,225 - simple_multi_turn_api - INFO - 🚀 服务器启动完成
+2025-07-11 12:20:53,225 - simple_multi_turn_api - INFO - 📍 服务地址: http://0.0.0.0:5000
+2025-07-11 12:20:53,225 - simple_multi_turn_api - INFO - 📋 主要接口:
+2025-07-11 12:20:53,225 - simple_multi_turn_api - INFO -   - POST /api/stream - 流式多轮对话
+2025-07-11 12:20:53,226 - simple_multi_turn_api - INFO -   - GET /api/health - 健康检查
+2025-07-11 12:20:53,226 - simple_multi_turn_api - INFO -   - GET /api/sessions - 会话管理
+2025-07-11 12:20:58,514 - multi_turn_session - INFO - 会话管理器已初始化
+2025-07-11 12:21:00,253 - simple_multi_turn_api - INFO - Simple Multi-Turn Chat API 服务器启动中...
+2025-07-11 12:21:00,253 - simple_multi_turn_api - INFO - 正在初始化supervisor...
+2025-07-11 12:21:00,280 - simple_multi_turn_api - INFO - Supervisor初始化成功
+2025-07-11 12:21:00,281 - simple_multi_turn_api - INFO - ✅ Supervisor初始化成功
+2025-07-11 12:21:00,281 - simple_multi_turn_api - INFO - 🚀 服务器启动完成
+2025-07-11 12:21:00,281 - simple_multi_turn_api - INFO - 📍 服务地址: http://0.0.0.0:5000
+2025-07-11 12:21:00,281 - simple_multi_turn_api - INFO - 📋 主要接口:
+2025-07-11 12:21:00,281 - simple_multi_turn_api - INFO -   - POST /api/stream - 流式多轮对话
+2025-07-11 12:21:00,281 - simple_multi_turn_api - INFO -   - GET /api/health - 健康检查
+2025-07-11 12:21:00,281 - simple_multi_turn_api - INFO -   - GET /api/sessions - 会话管理
+2025-07-11 12:21:07,296 - multi_turn_session - INFO - 创建新会话: f0c01e3b-c294-4cf0-b605-ae14fb0d1776
+2025-07-11 12:21:07,296 - multi_turn_session - INFO - 会话管理器: 创建会话 f0c01e3b-c294-4cf0-b605-ae14fb0d1776
+2025-07-11 12:21:07,296 - simple_multi_turn_api - INFO - 💬 [f0c01e3b-c294-4cf0-b605-ae14fb0d1776] 用户输入: 推荐风景
+2025-07-11 12:21:07,297 - simple_multi_turn_api - INFO - 🔄 [f0c01e3b-c294-4cf0-b605-ae14fb0d1776] 用户输入: 输入长度: 4
+2025-07-11 12:21:07,297 - multi_turn_session - INFO - 会话 f0c01e3b-c294-4cf0-b605-ae14fb0d1776: 添加用户输入 (轮次 1): 推荐风景...
+2025-07-11 12:21:07,297 - simple_multi_turn_api - INFO - 会话 f0c01e3b-c294-4cf0-b605-ae14fb0d1776: 构建请求上下文，历史轮数: 1
+2025-07-11 12:22:15,530 - simple_multi_turn_api - INFO - 🔄 [f0c01e3b-c294-4cf0-b605-ae14fb0d1776] 处理完成: 响应长度: 0
+2025-07-11 12:22:15,533 - multi_turn_session - INFO - 创建新会话: 619fdbdd-cbfe-42fc-82fd-84424cd4fbed
+2025-07-11 12:22:15,534 - multi_turn_session - INFO - 会话管理器: 创建会话 619fdbdd-cbfe-42fc-82fd-84424cd4fbed
+2025-07-11 12:22:15,534 - simple_multi_turn_api - INFO - 💬 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 用户输入: 推荐风景
+2025-07-11 12:22:15,534 - simple_multi_turn_api - INFO - 🔄 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 用户输入: 输入长度: 4
+2025-07-11 12:22:15,534 - multi_turn_session - INFO - 会话 619fdbdd-cbfe-42fc-82fd-84424cd4fbed: 添加用户输入 (轮次 1): 推荐风景...
+2025-07-11 12:22:15,534 - simple_multi_turn_api - INFO - 会话 619fdbdd-cbfe-42fc-82fd-84424cd4fbed: 构建请求上下文，历史轮数: 1
+2025-07-11 12:23:22,545 - simple_multi_turn_api - INFO - 🔄 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 处理完成: 响应长度: 0
+2025-07-11 12:23:24,552 - simple_multi_turn_api - INFO - 💬 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 用户输入: 我想去北京旅游
+2025-07-11 12:23:24,553 - simple_multi_turn_api - INFO - 🔄 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 用户输入: 输入长度: 7
+2025-07-11 12:23:24,553 - multi_turn_session - INFO - 会话 619fdbdd-cbfe-42fc-82fd-84424cd4fbed: 添加用户输入 (轮次 2): 我想去北京旅游...
+2025-07-11 12:23:24,553 - simple_multi_turn_api - INFO - 会话 619fdbdd-cbfe-42fc-82fd-84424cd4fbed: 构建请求上下文，历史轮数: 2
+2025-07-11 12:25:05,327 - simple_multi_turn_api - INFO - 🔄 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 处理完成: 响应长度: 0
+2025-07-11 12:25:07,331 - simple_multi_turn_api - INFO - 💬 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 用户输入: 帮我规划3天的行程
+2025-07-11 12:25:07,332 - simple_multi_turn_api - INFO - 🔄 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 用户输入: 输入长度: 9
+2025-07-11 12:25:07,332 - multi_turn_session - INFO - 会话 619fdbdd-cbfe-42fc-82fd-84424cd4fbed: 添加用户输入 (轮次 3): 帮我规划3天的行程...
+2025-07-11 12:25:07,332 - simple_multi_turn_api - INFO - 会话 619fdbdd-cbfe-42fc-82fd-84424cd4fbed: 构建请求上下文，历史轮数: 3
+2025-07-11 12:31:16,568 - simple_multi_turn_api - INFO - 🔄 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 处理完成: 响应长度: 0
+2025-07-11 12:31:18,580 - simple_multi_turn_api - INFO - 💬 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 用户输入: 推荐一些当地美食
+2025-07-11 12:31:18,580 - simple_multi_turn_api - INFO - 🔄 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 用户输入: 输入长度: 8
+2025-07-11 12:31:18,580 - multi_turn_session - INFO - 会话 619fdbdd-cbfe-42fc-82fd-84424cd4fbed: 添加用户输入 (轮次 4): 推荐一些当地美食...
+2025-07-11 12:31:18,581 - simple_multi_turn_api - INFO - 会话 619fdbdd-cbfe-42fc-82fd-84424cd4fbed: 构建请求上下文，历史轮数: 4
+2025-07-11 12:31:56,142 - simple_multi_turn_api - INFO - 🔄 [619fdbdd-cbfe-42fc-82fd-84424cd4fbed] 处理完成: 响应长度: 0
+2025-07-11 13:52:00,009 - multi_turn_session - INFO - 会话管理器已初始化
+2025-07-11 13:52:02,135 - simple_multi_turn_api - INFO - Simple Multi-Turn Chat API 服务器启动中...
+2025-07-11 13:52:02,135 - simple_multi_turn_api - INFO - 正在初始化supervisor...
+2025-07-11 13:52:02,163 - simple_multi_turn_api - INFO - Supervisor初始化成功
+2025-07-11 13:52:02,164 - simple_multi_turn_api - INFO - ✅ Supervisor初始化成功
+2025-07-11 13:52:02,164 - simple_multi_turn_api - INFO - 🚀 服务器启动完成
+2025-07-11 13:52:02,164 - simple_multi_turn_api - INFO - 📍 服务地址: http://0.0.0.0:5000
+2025-07-11 13:52:02,164 - simple_multi_turn_api - INFO - 📋 主要接口:
+2025-07-11 13:52:02,164 - simple_multi_turn_api - INFO -   - POST /api/stream - 流式多轮对话
+2025-07-11 13:52:02,164 - simple_multi_turn_api - INFO -   - GET /api/health - 健康检查
+2025-07-11 13:52:02,164 - simple_multi_turn_api - INFO -   - GET /api/sessions - 会话管理
+2025-07-11 14:43:25,026 - multi_turn_session - INFO - 会话管理器已初始化
+2025-07-11 14:43:27,192 - simple_multi_turn_api - INFO - Simple Multi-Turn Chat API 服务器启动中...
+2025-07-11 14:43:27,192 - simple_multi_turn_api - INFO - 正在初始化supervisor...
+2025-07-11 14:43:27,219 - simple_multi_turn_api - INFO - Supervisor初始化成功
+2025-07-11 14:43:27,219 - simple_multi_turn_api - INFO - ✅ Supervisor初始化成功
+2025-07-11 14:43:27,219 - simple_multi_turn_api - INFO - 🚀 服务器启动完成
+2025-07-11 14:43:27,219 - simple_multi_turn_api - INFO - 📍 服务地址: http://0.0.0.0:5000
+2025-07-11 14:43:27,219 - simple_multi_turn_api - INFO - 📋 主要接口:
+2025-07-11 14:43:27,219 - simple_multi_turn_api - INFO -   - POST /api/stream - 流式多轮对话
+2025-07-11 14:43:27,220 - simple_multi_turn_api - INFO -   - GET /api/health - 健康检查
+2025-07-11 14:43:27,220 - simple_multi_turn_api - INFO -   - GET /api/sessions - 会话管理
+2025-07-11 14:43:32,492 - multi_turn_session - INFO - 会话管理器已初始化
+2025-07-11 14:43:34,107 - simple_multi_turn_api - INFO - Simple Multi-Turn Chat API 服务器启动中...
+2025-07-11 14:43:34,107 - simple_multi_turn_api - INFO - 正在初始化supervisor...
+2025-07-11 14:43:34,134 - simple_multi_turn_api - INFO - Supervisor初始化成功
+2025-07-11 14:43:34,135 - simple_multi_turn_api - INFO - ✅ Supervisor初始化成功
+2025-07-11 14:43:34,135 - simple_multi_turn_api - INFO - 🚀 服务器启动完成
+2025-07-11 14:43:34,135 - simple_multi_turn_api - INFO - 📍 服务地址: http://0.0.0.0:5000
+2025-07-11 14:43:34,135 - simple_multi_turn_api - INFO - 📋 主要接口:
+2025-07-11 14:43:34,135 - simple_multi_turn_api - INFO -   - POST /api/stream - 流式多轮对话
+2025-07-11 14:43:34,135 - simple_multi_turn_api - INFO -   - GET /api/health - 健康检查
+2025-07-11 14:43:34,135 - simple_multi_turn_api - INFO -   - GET /api/sessions - 会话管理
+2025-07-11 14:51:35,219 - multi_turn_session - INFO - 创建新会话: 6cb35696-b535-4ea4-9df1-9729a4976c9a
+2025-07-11 14:51:35,221 - multi_turn_session - INFO - 会话管理器: 创建会话 6cb35696-b535-4ea4-9df1-9729a4976c9a
+2025-07-11 14:51:35,222 - simple_multi_turn_api - INFO - 💬 [6cb35696-b535-4ea4-9df1-9729a4976c9a] 用户输入: 你好
+2025-07-11 14:51:35,223 - simple_multi_turn_api - INFO - 🔄 [6cb35696-b535-4ea4-9df1-9729a4976c9a] 用户输入: 输入长度: 2
+2025-07-11 14:51:35,223 - multi_turn_session - INFO - 会话 6cb35696-b535-4ea4-9df1-9729a4976c9a: 添加用户输入 (轮次 1): 你好...
+2025-07-11 14:51:35,224 - simple_multi_turn_api - INFO - 会话 6cb35696-b535-4ea4-9df1-9729a4976c9a: 构建请求上下文，历史轮数: 1
+2025-07-11 14:51:43,598 - simple_multi_turn_api - INFO - 🔄 [6cb35696-b535-4ea4-9df1-9729a4976c9a] 处理完成: 响应长度: 0
+2025-07-11 14:51:52,747 - simple_multi_turn_api - INFO - 💬 [6cb35696-b535-4ea4-9df1-9729a4976c9a] 用户输入: 你好
+2025-07-11 14:51:52,747 - simple_multi_turn_api - INFO - 🔄 [6cb35696-b535-4ea4-9df1-9729a4976c9a] 用户输入: 输入长度: 2
+2025-07-11 14:51:52,748 - multi_turn_session - INFO - 会话 6cb35696-b535-4ea4-9df1-9729a4976c9a: 添加用户输入 (轮次 2): 你好...
+2025-07-11 14:51:52,748 - simple_multi_turn_api - INFO - 会话 6cb35696-b535-4ea4-9df1-9729a4976c9a: 构建请求上下文，历史轮数: 2
+2025-07-11 14:52:13,485 - simple_multi_turn_api - INFO - 🔄 [6cb35696-b535-4ea4-9df1-9729a4976c9a] 处理完成: 响应长度: 0
+2025-07-11 14:52:56,563 - multi_turn_session - INFO - 创建新会话: 741368aa-dbec-4707-b178-3d121c2c3fdd
+2025-07-11 14:52:56,564 - multi_turn_session - INFO - 会话管理器: 创建会话 741368aa-dbec-4707-b178-3d121c2c3fdd
+2025-07-11 14:52:56,564 - simple_multi_turn_api - INFO - 💬 [741368aa-dbec-4707-b178-3d121c2c3fdd] 用户输入: 你好
+2025-07-11 14:52:56,565 - simple_multi_turn_api - INFO - 🔄 [741368aa-dbec-4707-b178-3d121c2c3fdd] 用户输入: 输入长度: 2
+2025-07-11 14:52:56,565 - multi_turn_session - INFO - 会话 741368aa-dbec-4707-b178-3d121c2c3fdd: 添加用户输入 (轮次 1): 你好...
+2025-07-11 14:52:56,565 - simple_multi_turn_api - INFO - 会话 741368aa-dbec-4707-b178-3d121c2c3fdd: 构建请求上下文，历史轮数: 1
+2025-07-11 14:53:15,842 - simple_multi_turn_api - INFO - 🔄 [741368aa-dbec-4707-b178-3d121c2c3fdd] 处理完成: 响应长度: 0
+2025-07-11 15:01:34,455 - multi_turn_session - INFO - 创建新会话: c45a8c68-5ef2-49a5-afdc-e36e2d283d68
+2025-07-11 15:01:34,456 - multi_turn_session - INFO - 会话管理器: 创建会话 c45a8c68-5ef2-49a5-afdc-e36e2d283d68
+2025-07-11 15:01:34,456 - simple_multi_turn_api - INFO - 💬 [c45a8c68-5ef2-49a5-afdc-e36e2d283d68] 用户输入: 你好
+2025-07-11 15:01:34,457 - simple_multi_turn_api - INFO - 🔄 [c45a8c68-5ef2-49a5-afdc-e36e2d283d68] 用户输入: 输入长度: 2
+2025-07-11 15:01:34,457 - multi_turn_session - INFO - 会话 c45a8c68-5ef2-49a5-afdc-e36e2d283d68: 添加用户输入 (轮次 1): 你好...
+2025-07-11 15:01:34,457 - simple_multi_turn_api - INFO - 会话 c45a8c68-5ef2-49a5-afdc-e36e2d283d68: 构建请求上下文，历史轮数: 1
+2025-07-11 15:01:48,879 - simple_multi_turn_api - INFO - 🔄 [c45a8c68-5ef2-49a5-afdc-e36e2d283d68] 处理完成: 响应长度: 0
+2025-07-11 15:02:57,839 - simple_multi_turn_api - INFO - 💬 [c45a8c68-5ef2-49a5-afdc-e36e2d283d68] 用户输入: 我想出去转转
+2025-07-11 15:02:57,840 - simple_multi_turn_api - INFO - 🔄 [c45a8c68-5ef2-49a5-afdc-e36e2d283d68] 用户输入: 输入长度: 6
+2025-07-11 15:02:57,840 - multi_turn_session - INFO - 会话 c45a8c68-5ef2-49a5-afdc-e36e2d283d68: 添加用户输入 (轮次 2): 我想出去转转...
+2025-07-11 15:02:57,840 - simple_multi_turn_api - INFO - 会话 c45a8c68-5ef2-49a5-afdc-e36e2d283d68: 构建请求上下文，历史轮数: 2
+2025-07-11 15:04:26,055 - simple_multi_turn_api - INFO - 🔄 [c45a8c68-5ef2-49a5-afdc-e36e2d283d68] 处理完成: 响应长度: 0
+2025-07-11 15:04:35,902 - multi_turn_session - INFO - 创建新会话: f63a719c-7b42-44a9-9f10-b7d77616f4f4
+2025-07-11 15:04:35,902 - multi_turn_session - INFO - 会话管理器: 创建会话 f63a719c-7b42-44a9-9f10-b7d77616f4f4
+2025-07-11 15:04:35,903 - simple_multi_turn_api - INFO - 💬 [f63a719c-7b42-44a9-9f10-b7d77616f4f4] 用户输入: 你好
+2025-07-11 15:04:35,903 - simple_multi_turn_api - INFO - 🔄 [f63a719c-7b42-44a9-9f10-b7d77616f4f4] 用户输入: 输入长度: 2
+2025-07-11 15:04:35,903 - multi_turn_session - INFO - 会话 f63a719c-7b42-44a9-9f10-b7d77616f4f4: 添加用户输入 (轮次 1): 你好...
+2025-07-11 15:04:35,904 - simple_multi_turn_api - INFO - 会话 f63a719c-7b42-44a9-9f10-b7d77616f4f4: 构建请求上下文，历史轮数: 1
+2025-07-11 15:04:45,423 - simple_multi_turn_api - INFO - 🔄 [f63a719c-7b42-44a9-9f10-b7d77616f4f4] 处理完成: 响应长度: 0
+2025-07-11 15:05:09,209 - multi_turn_session - INFO - 创建新会话: 83e4ad35-3f56-49c9-a5fe-138f84fff18c
+2025-07-11 15:05:09,210 - multi_turn_session - INFO - 会话管理器: 创建会话 83e4ad35-3f56-49c9-a5fe-138f84fff18c
+2025-07-11 15:05:09,211 - simple_multi_turn_api - INFO - 💬 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 用户输入: 你好
+2025-07-11 15:05:09,211 - simple_multi_turn_api - INFO - 🔄 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 用户输入: 输入长度: 2
+2025-07-11 15:05:09,212 - multi_turn_session - INFO - 会话 83e4ad35-3f56-49c9-a5fe-138f84fff18c: 添加用户输入 (轮次 1): 你好...
+2025-07-11 15:05:09,213 - simple_multi_turn_api - INFO - 会话 83e4ad35-3f56-49c9-a5fe-138f84fff18c: 构建请求上下文，历史轮数: 1
+2025-07-11 15:05:18,422 - simple_multi_turn_api - INFO - 🔄 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 处理完成: 响应长度: 0
+2025-07-11 15:07:30,074 - simple_multi_turn_api - INFO - 💬 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 用户输入: 想去转转
+2025-07-11 15:07:30,075 - simple_multi_turn_api - INFO - 🔄 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 用户输入: 输入长度: 4
+2025-07-11 15:07:30,076 - multi_turn_session - INFO - 会话 83e4ad35-3f56-49c9-a5fe-138f84fff18c: 添加用户输入 (轮次 2): 想去转转...
+2025-07-11 15:07:30,077 - simple_multi_turn_api - INFO - 会话 83e4ad35-3f56-49c9-a5fe-138f84fff18c: 构建请求上下文，历史轮数: 2
+2025-07-11 15:07:53,838 - simple_multi_turn_api - INFO - 🔄 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 处理完成: 响应长度: 0
+2025-07-11 15:08:15,690 - simple_multi_turn_api - INFO - 💬 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 用户输入: 推荐几个景点
+2025-07-11 15:08:15,691 - simple_multi_turn_api - INFO - 🔄 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 用户输入: 输入长度: 6
+2025-07-11 15:08:15,692 - multi_turn_session - INFO - 会话 83e4ad35-3f56-49c9-a5fe-138f84fff18c: 添加用户输入 (轮次 3): 推荐几个景点...
+2025-07-11 15:08:15,692 - simple_multi_turn_api - INFO - 会话 83e4ad35-3f56-49c9-a5fe-138f84fff18c: 构建请求上下文，历史轮数: 3
+2025-07-11 15:09:26,253 - simple_multi_turn_api - INFO - 🔄 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 处理完成: 响应长度: 0
+2025-07-11 15:09:41,110 - simple_multi_turn_api - INFO - 💬 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 用户输入: 自然风光
+2025-07-11 15:09:41,111 - simple_multi_turn_api - INFO - 🔄 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 用户输入: 输入长度: 4
+2025-07-11 15:09:41,114 - multi_turn_session - INFO - 会话 83e4ad35-3f56-49c9-a5fe-138f84fff18c: 添加用户输入 (轮次 4): 自然风光...
+2025-07-11 15:09:41,115 - simple_multi_turn_api - INFO - 会话 83e4ad35-3f56-49c9-a5fe-138f84fff18c: 构建请求上下文，历史轮数: 4
+2025-07-11 15:11:30,287 - simple_multi_turn_api - INFO - 🔄 [83e4ad35-3f56-49c9-a5fe-138f84fff18c] 处理完成: 响应长度: 0
+2025-07-11 15:15:13,228 - multi_turn_session - INFO - 创建新会话: 7b11958f-6b5c-4fc3-aa00-74c9d0b46d45
+2025-07-11 15:15:13,229 - multi_turn_session - INFO - 会话管理器: 创建会话 7b11958f-6b5c-4fc3-aa00-74c9d0b46d45
+2025-07-11 15:15:13,229 - simple_multi_turn_api - INFO - 💬 [7b11958f-6b5c-4fc3-aa00-74c9d0b46d45] 用户输入: 你好
+2025-07-11 15:15:13,229 - simple_multi_turn_api - INFO - 🔄 [7b11958f-6b5c-4fc3-aa00-74c9d0b46d45] 用户输入: 输入长度: 2
+2025-07-11 15:15:13,229 - multi_turn_session - INFO - 会话 7b11958f-6b5c-4fc3-aa00-74c9d0b46d45: 添加用户输入 (轮次 1): 你好...
+2025-07-11 15:15:13,229 - simple_multi_turn_api - INFO - 会话 7b11958f-6b5c-4fc3-aa00-74c9d0b46d45: 构建请求上下文，历史轮数: 1
+2025-07-11 15:15:22,642 - simple_multi_turn_api - INFO - 🔄 [7b11958f-6b5c-4fc3-aa00-74c9d0b46d45] 处理完成: 响应长度: 0
+2025-07-11 15:15:52,773 - multi_turn_session - INFO - 创建新会话: 5158a2c1-7cdb-4719-9f72-c877d0e231e5
+2025-07-11 15:15:52,773 - multi_turn_session - INFO - 会话管理器: 创建会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5
+2025-07-11 15:15:52,774 - simple_multi_turn_api - INFO - 💬 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 你好
+2025-07-11 15:15:52,774 - simple_multi_turn_api - INFO - 🔄 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 输入长度: 2
+2025-07-11 15:15:52,775 - multi_turn_session - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 添加用户输入 (轮次 1): 你好...
+2025-07-11 15:15:52,775 - simple_multi_turn_api - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 构建请求上下文，历史轮数: 1
+2025-07-11 15:16:01,736 - simple_multi_turn_api - INFO - 🔄 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 处理完成: 响应长度: 0
+2025-07-11 15:16:15,435 - simple_multi_turn_api - INFO - 💬 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 我想要去北京旅游
+2025-07-11 15:16:15,435 - simple_multi_turn_api - INFO - 🔄 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 输入长度: 8
+2025-07-11 15:16:15,435 - multi_turn_session - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 添加用户输入 (轮次 2): 我想要去北京旅游...
+2025-07-11 15:16:15,436 - simple_multi_turn_api - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 构建请求上下文，历史轮数: 2
+2025-07-11 15:17:34,122 - simple_multi_turn_api - INFO - 🔄 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 处理完成: 响应长度: 0
+2025-07-11 15:17:46,932 - simple_multi_turn_api - INFO - 💬 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 呆三天
+2025-07-11 15:17:46,932 - simple_multi_turn_api - INFO - 🔄 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 输入长度: 3
+2025-07-11 15:17:46,932 - multi_turn_session - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 添加用户输入 (轮次 3): 呆三天...
+2025-07-11 15:17:46,932 - simple_multi_turn_api - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 构建请求上下文，历史轮数: 3
+2025-07-11 15:23:48,325 - simple_multi_turn_api - INFO - 🔄 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 处理完成: 响应长度: 0
+2025-07-11 15:49:24,346 - simple_multi_turn_api - INFO - 💬 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 你好
+2025-07-11 15:49:24,349 - simple_multi_turn_api - INFO - 🔄 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 输入长度: 2
+2025-07-11 15:49:24,349 - multi_turn_session - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 添加用户输入 (轮次 4): 你好...
+2025-07-11 15:49:24,350 - simple_multi_turn_api - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 构建请求上下文，历史轮数: 4
+2025-07-11 15:50:46,306 - simple_multi_turn_api - INFO - 🔄 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 处理完成: 响应长度: 0
+2025-07-11 15:52:09,341 - multi_turn_session - INFO - 会话管理器已初始化
+2025-07-11 15:52:12,120 - simple_multi_turn_api - INFO - Simple Multi-Turn Chat API 服务器启动中...
+2025-07-11 15:52:12,121 - simple_multi_turn_api - INFO - 正在初始化supervisor...
+2025-07-11 15:52:12,146 - simple_multi_turn_api - INFO - Supervisor初始化成功
+2025-07-11 15:52:12,146 - simple_multi_turn_api - INFO - ✅ Supervisor初始化成功
+2025-07-11 15:52:12,146 - simple_multi_turn_api - INFO - 🚀 服务器启动完成
+2025-07-11 15:52:12,146 - simple_multi_turn_api - INFO - 📍 服务地址: http://0.0.0.0:5000
+2025-07-11 15:52:12,146 - simple_multi_turn_api - INFO - 📋 主要接口:
+2025-07-11 15:52:12,146 - simple_multi_turn_api - INFO -   - POST /api/stream - 流式多轮对话
+2025-07-11 15:52:12,146 - simple_multi_turn_api - INFO -   - GET /api/health - 健康检查
+2025-07-11 15:52:12,146 - simple_multi_turn_api - INFO -   - GET /api/sessions - 会话管理
+2025-07-11 15:52:57,074 - multi_turn_session - INFO - 会话管理器已初始化
+2025-07-11 15:52:59,072 - simple_multi_turn_api - INFO - Simple Multi-Turn Chat API 服务器启动中...
+2025-07-11 15:52:59,073 - simple_multi_turn_api - INFO - 正在初始化supervisor...
+2025-07-11 15:52:59,112 - simple_multi_turn_api - INFO - Supervisor初始化成功
+2025-07-11 15:52:59,113 - simple_multi_turn_api - INFO - ✅ Supervisor初始化成功
+2025-07-11 15:52:59,113 - simple_multi_turn_api - INFO - 🚀 服务器启动完成
+2025-07-11 15:52:59,113 - simple_multi_turn_api - INFO - 📍 服务地址: http://0.0.0.0:5000
+2025-07-11 15:52:59,113 - simple_multi_turn_api - INFO - 📋 主要接口:
+2025-07-11 15:52:59,113 - simple_multi_turn_api - INFO -   - POST /api/stream - 流式多轮对话
+2025-07-11 15:52:59,113 - simple_multi_turn_api - INFO -   - GET /api/health - 健康检查
+2025-07-11 15:52:59,113 - simple_multi_turn_api - INFO -   - GET /api/sessions - 会话管理
+2025-07-11 15:53:09,804 - multi_turn_session - INFO - 会话管理器已初始化
+2025-07-11 15:53:11,900 - simple_multi_turn_api - INFO - Simple Multi-Turn Chat API 服务器启动中...
+2025-07-11 15:53:11,900 - simple_multi_turn_api - INFO - 正在初始化supervisor...
+2025-07-11 15:53:11,926 - simple_multi_turn_api - INFO - Supervisor初始化成功
+2025-07-11 15:53:11,926 - simple_multi_turn_api - INFO - ✅ Supervisor初始化成功
+2025-07-11 15:53:11,926 - simple_multi_turn_api - INFO - 🚀 服务器启动完成
+2025-07-11 15:53:11,926 - simple_multi_turn_api - INFO - 📍 服务地址: http://0.0.0.0:5000
+2025-07-11 15:53:11,927 - simple_multi_turn_api - INFO - 📋 主要接口:
+2025-07-11 15:53:11,927 - simple_multi_turn_api - INFO -   - POST /api/stream - 流式多轮对话
+2025-07-11 15:53:11,927 - simple_multi_turn_api - INFO -   - GET /api/health - 健康检查
+2025-07-11 15:53:11,927 - simple_multi_turn_api - INFO -   - GET /api/sessions - 会话管理
+2025-07-11 16:02:51,723 - multi_turn_session - INFO - 会话管理器已初始化
+2025-07-11 16:02:53,998 - simple_multi_turn_api - INFO - Simple Multi-Turn Chat API 服务器启动中...
+2025-07-11 16:02:53,998 - simple_multi_turn_api - INFO - 正在初始化supervisor...
+2025-07-11 16:02:54,025 - simple_multi_turn_api - INFO - Supervisor初始化成功
+2025-07-11 16:02:54,025 - simple_multi_turn_api - INFO - ✅ Supervisor初始化成功
+2025-07-11 16:02:54,025 - simple_multi_turn_api - INFO - 🚀 服务器启动完成
+2025-07-11 16:02:54,026 - simple_multi_turn_api - INFO - 📍 服务地址: http://0.0.0.0:5000
+2025-07-11 16:02:54,026 - simple_multi_turn_api - INFO - 📋 主要接口:
+2025-07-11 16:02:54,026 - simple_multi_turn_api - INFO -   - POST /api/stream - 流式多轮对话
+2025-07-11 16:02:54,026 - simple_multi_turn_api - INFO -   - GET /api/health - 健康检查
+2025-07-11 16:02:54,026 - simple_multi_turn_api - INFO -   - GET /api/sessions - 会话管理
+2025-07-11 16:02:59,395 - multi_turn_session - INFO - 会话管理器已初始化
+2025-07-11 16:03:02,023 - simple_multi_turn_api - INFO - Simple Multi-Turn Chat API 服务器启动中...
+2025-07-11 16:03:02,023 - simple_multi_turn_api - INFO - 正在初始化supervisor...
+2025-07-11 16:03:02,046 - simple_multi_turn_api - INFO - Supervisor初始化成功
+2025-07-11 16:03:02,046 - simple_multi_turn_api - INFO - ✅ Supervisor初始化成功
+2025-07-11 16:03:02,047 - simple_multi_turn_api - INFO - 🚀 服务器启动完成
+2025-07-11 16:03:02,047 - simple_multi_turn_api - INFO - 📍 服务地址: http://0.0.0.0:5000
+2025-07-11 16:03:02,047 - simple_multi_turn_api - INFO - 📋 主要接口:
+2025-07-11 16:03:02,047 - simple_multi_turn_api - INFO -   - POST /api/stream - 流式多轮对话
+2025-07-11 16:03:02,047 - simple_multi_turn_api - INFO -   - GET /api/health - 健康检查
+2025-07-11 16:03:02,047 - simple_multi_turn_api - INFO -   - GET /api/sessions - 会话管理
+2025-07-11 16:03:05,963 - multi_turn_session - INFO - 创建新会话: 5158a2c1-7cdb-4719-9f72-c877d0e231e5
+2025-07-11 16:03:05,963 - multi_turn_session - INFO - 会话管理器: 创建会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5
+2025-07-11 16:03:05,963 - simple_multi_turn_api - INFO - 💬 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 你好
+2025-07-11 16:03:05,964 - simple_multi_turn_api - INFO - 🔄 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 输入长度: 2
+2025-07-11 16:03:05,964 - multi_turn_session - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 添加用户输入 (轮次 1): 你好...
+2025-07-11 16:03:05,964 - simple_multi_turn_api - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 构建请求上下文，历史轮数: 1
+2025-07-11 16:03:14,715 - simple_multi_turn_api - INFO - 🔄 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 处理完成: 响应长度: 0
+2025-07-11 16:03:42,202 - simple_multi_turn_api - INFO - 💬 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 推荐一些景点
+2025-07-11 16:03:42,203 - simple_multi_turn_api - INFO - 🔄 [5158a2c1-7cdb-4719-9f72-c877d0e231e5] 用户输入: 输入长度: 6
+2025-07-11 16:03:42,203 - multi_turn_session - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 添加用户输入 (轮次 2): 推荐一些景点...
+2025-07-11 16:03:42,204 - simple_multi_turn_api - INFO - 会话 5158a2c1-7cdb-4719-9f72-c877d0e231e5: 构建请求上下文，历史轮数: 2
+2025-07-11 16:05:00,139 - multi_turn_session - INFO - 创建新会话: f24f449c-7dd8-4906-8a0e-233698c1f546
+2025-07-11 16:05:00,140 - multi_turn_session - INFO - 会话管理器: 创建会话 f24f449c-7dd8-4906-8a0e-233698c1f546
+2025-07-11 16:05:00,140 - simple_multi_turn_api - INFO - 💬 [f24f449c-7dd8-4906-8a0e-233698c1f546] 用户输入: 你好
+2025-07-11 16:05:00,140 - simple_multi_turn_api - INFO - 🔄 [f24f449c-7dd8-4906-8a0e-233698c1f546] 用户输入: 输入长度: 2
+2025-07-11 16:05:00,140 - multi_turn_session - INFO - 会话 f24f449c-7dd8-4906-8a0e-233698c1f546: 添加用户输入 (轮次 1): 你好...
+2025-07-11 16:05:00,141 - simple_multi_turn_api - INFO - 会话 f24f449c-7dd8-4906-8a0e-233698c1f546: 构建请求上下文，历史轮数: 1
+2025-07-11 16:05:09,034 - simple_multi_turn_api - INFO - 🔄 [f24f449c-7dd8-4906-8a0e-233698c1f546] 处理完成: 响应长度: 0
+2025-07-11 16:35:08,725 - multi_turn_session - INFO - 创建新会话: 0b19d34f-df3a-459c-a123-0cf5c8e04fe9
+2025-07-11 16:35:08,730 - multi_turn_session - INFO - 会话管理器: 创建会话 0b19d34f-df3a-459c-a123-0cf5c8e04fe9
+2025-07-11 16:35:08,731 - simple_multi_turn_api - INFO - 💬 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 用户输入: 你好
+2025-07-11 16:35:08,734 - simple_multi_turn_api - INFO - 🔄 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 用户输入: 输入长度: 2
+2025-07-11 16:35:08,735 - multi_turn_session - INFO - 会话 0b19d34f-df3a-459c-a123-0cf5c8e04fe9: 添加用户输入 (轮次 1): 你好...
+2025-07-11 16:35:08,735 - simple_multi_turn_api - INFO - 会话 0b19d34f-df3a-459c-a123-0cf5c8e04fe9: 构建请求上下文，历史轮数: 1
+2025-07-11 16:35:17,943 - simple_multi_turn_api - INFO - 🔄 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 处理完成: 响应长度: 0
+2025-07-11 16:35:44,135 - simple_multi_turn_api - INFO - 💬 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 用户输入: 我想出去转转
+2025-07-11 16:35:44,136 - simple_multi_turn_api - INFO - 🔄 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 用户输入: 输入长度: 6
+2025-07-11 16:35:44,136 - multi_turn_session - INFO - 会话 0b19d34f-df3a-459c-a123-0cf5c8e04fe9: 添加用户输入 (轮次 2): 我想出去转转...
+2025-07-11 16:35:44,136 - simple_multi_turn_api - INFO - 会话 0b19d34f-df3a-459c-a123-0cf5c8e04fe9: 构建请求上下文，历史轮数: 2
+2025-07-11 16:37:19,196 - simple_multi_turn_api - INFO - 🔄 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 处理完成: 响应长度: 0
+2025-07-11 16:37:51,067 - simple_multi_turn_api - INFO - 💬 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 用户输入: 去上海吧
+2025-07-11 16:37:51,068 - simple_multi_turn_api - INFO - 🔄 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 用户输入: 输入长度: 4
+2025-07-11 16:37:51,068 - multi_turn_session - INFO - 会话 0b19d34f-df3a-459c-a123-0cf5c8e04fe9: 添加用户输入 (轮次 3): 去上海吧...
+2025-07-11 16:37:51,068 - simple_multi_turn_api - INFO - 会话 0b19d34f-df3a-459c-a123-0cf5c8e04fe9: 构建请求上下文，历史轮数: 3
+2025-07-11 16:39:57,729 - simple_multi_turn_api - INFO - 🔄 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 处理完成: 响应长度: 0
+2025-07-11 16:40:13,677 - simple_multi_turn_api - INFO - 💬 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 用户输入: 七天
+2025-07-11 16:40:13,677 - simple_multi_turn_api - INFO - 🔄 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 用户输入: 输入长度: 2
+2025-07-11 16:40:13,677 - multi_turn_session - INFO - 会话 0b19d34f-df3a-459c-a123-0cf5c8e04fe9: 添加用户输入 (轮次 4): 七天...
+2025-07-11 16:40:13,678 - simple_multi_turn_api - INFO - 会话 0b19d34f-df3a-459c-a123-0cf5c8e04fe9: 构建请求上下文，历史轮数: 4
+2025-07-11 16:46:55,093 - simple_multi_turn_api - INFO - 🔄 [0b19d34f-df3a-459c-a123-0cf5c8e04fe9] 处理完成: 响应长度: 0
+2025-07-11 17:16:26,708 - multi_turn_session - INFO - 创建新会话: c7f59148-db4b-458a-b6b7-51f3d74b7359
+2025-07-11 17:16:26,709 - multi_turn_session - INFO - 会话管理器: 创建会话 c7f59148-db4b-458a-b6b7-51f3d74b7359
+2025-07-11 17:16:26,709 - simple_multi_turn_api - INFO - 💬 [c7f59148-db4b-458a-b6b7-51f3d74b7359] 用户输入: 推荐热门景点
+2025-07-11 17:16:26,710 - simple_multi_turn_api - INFO - 🔄 [c7f59148-db4b-458a-b6b7-51f3d74b7359] 用户输入: 输入长度: 6
+2025-07-11 17:16:26,710 - multi_turn_session - INFO - 会话 c7f59148-db4b-458a-b6b7-51f3d74b7359: 添加用户输入 (轮次 1): 推荐热门景点...
+2025-07-11 17:16:26,711 - simple_multi_turn_api - INFO - 会话 c7f59148-db4b-458a-b6b7-51f3d74b7359: 构建请求上下文，历史轮数: 1
+2025-07-11 17:17:49,043 - simple_multi_turn_api - INFO - 🔄 [c7f59148-db4b-458a-b6b7-51f3d74b7359] 处理完成: 响应长度: 0
+2025-07-11 17:28:33,445 - multi_turn_session - INFO - 创建新会话: 73108cb7-70a4-4226-ade7-202b716009c2
+2025-07-11 17:28:33,446 - multi_turn_session - INFO - 会话管理器: 创建会话 73108cb7-70a4-4226-ade7-202b716009c2
+2025-07-11 17:28:33,446 - simple_multi_turn_api - INFO - 💬 [73108cb7-70a4-4226-ade7-202b716009c2] 用户输入: 推荐一些景点
+2025-07-11 17:28:33,447 - simple_multi_turn_api - INFO - 🔄 [73108cb7-70a4-4226-ade7-202b716009c2] 用户输入: 输入长度: 6
+2025-07-11 17:28:33,447 - multi_turn_session - INFO - 会话 73108cb7-70a4-4226-ade7-202b716009c2: 添加用户输入 (轮次 1): 推荐一些景点...
+2025-07-11 17:28:33,448 - simple_multi_turn_api - INFO - 会话 73108cb7-70a4-4226-ade7-202b716009c2: 构建请求上下文，历史轮数: 1
+2025-07-11 17:28:57,634 - simple_multi_turn_api - INFO - 🔄 [73108cb7-70a4-4226-ade7-202b716009c2] 处理完成: 响应长度: 0
+2025-07-11 17:29:46,825 - simple_multi_turn_api - INFO - 💬 [73108cb7-70a4-4226-ade7-202b716009c2] 用户输入: 推荐一些景点
+2025-07-11 17:29:46,826 - simple_multi_turn_api - INFO - 🔄 [73108cb7-70a4-4226-ade7-202b716009c2] 用户输入: 输入长度: 6
+2025-07-11 17:29:46,826 - multi_turn_session - INFO - 会话 73108cb7-70a4-4226-ade7-202b716009c2: 添加用户输入 (轮次 2): 推荐一些景点...
+2025-07-11 17:29:46,827 - simple_multi_turn_api - INFO - 会话 73108cb7-70a4-4226-ade7-202b716009c2: 构建请求上下文，历史轮数: 2
+2025-07-11 17:31:08,340 - simple_multi_turn_api - INFO - 🔄 [73108cb7-70a4-4226-ade7-202b716009c2] 处理完成: 响应长度: 0
+2025-07-11 17:32:15,522 - multi_turn_session - INFO - 创建新会话: 1b49b4c2-2154-4293-a258-9cea9091b5ce
+2025-07-11 17:32:15,524 - multi_turn_session - INFO - 会话管理器: 创建会话 1b49b4c2-2154-4293-a258-9cea9091b5ce
+2025-07-11 17:32:15,524 - simple_multi_turn_api - INFO - 💬 [1b49b4c2-2154-4293-a258-9cea9091b5ce] 用户输入: 你好
+2025-07-11 17:32:15,524 - simple_multi_turn_api - INFO - 🔄 [1b49b4c2-2154-4293-a258-9cea9091b5ce] 用户输入: 输入长度: 2
+2025-07-11 17:32:15,525 - multi_turn_session - INFO - 会话 1b49b4c2-2154-4293-a258-9cea9091b5ce: 添加用户输入 (轮次 1): 你好...
+2025-07-11 17:32:15,525 - simple_multi_turn_api - INFO - 会话 1b49b4c2-2154-4293-a258-9cea9091b5ce: 构建请求上下文，历史轮数: 1
+2025-07-11 17:32:25,255 - simple_multi_turn_api - INFO - 🔄 [1b49b4c2-2154-4293-a258-9cea9091b5ce] 处理完成: 响应长度: 0
+2025-07-11 17:32:37,279 - simple_multi_turn_api - INFO - 💬 [1b49b4c2-2154-4293-a258-9cea9091b5ce] 用户输入: 推荐一些景点
+2025-07-11 17:32:37,279 - simple_multi_turn_api - INFO - 🔄 [1b49b4c2-2154-4293-a258-9cea9091b5ce] 用户输入: 输入长度: 6
+2025-07-11 17:32:37,280 - multi_turn_session - INFO - 会话 1b49b4c2-2154-4293-a258-9cea9091b5ce: 添加用户输入 (轮次 2): 推荐一些景点...
+2025-07-11 17:32:37,280 - simple_multi_turn_api - INFO - 会话 1b49b4c2-2154-4293-a258-9cea9091b5ce: 构建请求上下文，历史轮数: 2
+2025-07-11 17:33:54,475 - simple_multi_turn_api - INFO - 🔄 [1b49b4c2-2154-4293-a258-9cea9091b5ce] 处理完成: 响应长度: 0
