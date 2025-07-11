@@ -19,7 +19,7 @@ export const routes = [ // Add export here
   {
     path: '/multi-turn-chat-simple',
     name: '多轮对话-simple',
-    component: () => import('../views/SimpleChatView.vue')
+    component: () => import('../views/NewMultiTurnChatView_V1.vue')
   },
   {
     path: '/multi-turn-chat_v0',
