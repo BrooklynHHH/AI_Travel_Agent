@@ -131,7 +131,7 @@ def run_original_streaming():
         print("-" * 30)
 
 
-def run_enhanced_streaming():
+def run_enhanced_streaming(user_input):
     """运行增强型流式输出"""
     print("✨ 运行增强型流式输出:")
     print("=" * 50)
@@ -149,7 +149,7 @@ def run_enhanced_streaming():
         "messages": [
             {
                 "role": "user",
-                "content": user_question_round1
+                "content": user_input
             }
         ]
     }
@@ -157,14 +157,16 @@ def run_enhanced_streaming():
     # 使用增强型流式输出执行
     results = []
     for result in stream_manager.stream_supervisor_execution(supervisor, input_data):
-        results.append(result)
         
-        if result.get("error"):
-            print(f"❌ 发生错误: {result['error']}")
-            break
+        print(result)
+        # results.append(result)
+        
+        # if result.get("error"):
+        #     print(f"❌ 发生错误: {result['error']}")
+        #     break
     
-    print(f"\n📊 总共处理了 {len(results)} 个流式数据块")
-    return results
+    # print(f"\n📊 总共处理了 {len(results)} 个流式数据块")
+    # return results
 
 
 if __name__ == "__main__":
@@ -172,10 +174,6 @@ if __name__ == "__main__":
     
     print(f"👤 用户输入: {user_question_round1}")
     print()
-    
-    if len(sys.argv) > 1 and sys.argv[1] == "original":
-        # 运行原始版本
-        run_original_streaming()
-    else:
-        # 默认运行增强版本
-        run_enhanced_streaming()
+
+    # 默认运行增强版本
+    run_enhanced_streaming(user_question_round1)
