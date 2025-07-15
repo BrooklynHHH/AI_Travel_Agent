@@ -33,7 +33,7 @@ function imageToDataUrl(file) {
  * @throws {Error} If the API request fails or if image conversion fails.
  */
 export async function generateVideo(text, resolution, duration, cameraFixed, imageFile) {
-  const apiUrl = 'http://10.7.11.18:5001/ge-video';
+  const apiUrl = 'http://staging-llm.search.miui.srv/agent-staging/ge-video';
 
   try {
     const imageUrl = await imageToDataUrl(imageFile);
@@ -89,7 +89,7 @@ export async function checkVideoGenerationStatus(taskId) {
     throw new Error('任务ID不能为空');
   }
 
-  const apiUrl = `http://10.7.11.18:5001/gen_task?task_id=${encodeURIComponent(taskId)}`;
+  const apiUrl = `http://staging-llm.search.miui.srv/agent-staging/gen_task?task_id=${encodeURIComponent(taskId)}`;
 
   try {
     const response = await fetch(apiUrl, {
