@@ -27,10 +27,10 @@
         <!-- 用户消息 -->
         <div v-if="message.role === 'user'" class="message-container user-message">
           <div class="message-bubble">
-            <div v-if="message.image" class="user-image-container card bg-base-100 shadow-sm theme-light" :data-task-id="message.taskId" style="max-width: 320px;">
+            <div class="user-image-container card bg-base-100 shadow-sm theme-light" :data-task-id="message.taskId" style="max-width: 320px;">
               <figure>
                 <div style="position: relative; display: inline-block;">
-                  <img :src="message.image" :ref="el => { if(message.hasOcr) ocrImage = el }" style="max-width: 320px; max-height: 300px; object-fit: contain;" />
+                  <img :src="message.image || require('@/assets/video-default.jpg')" :ref="el => { if(message.hasOcr) ocrImage = el }" style="max-width: 320px; max-height: 300px; object-fit: contain;" />
                   <canvas
                     v-if="message.hasOcr"
                     width="320"
@@ -598,6 +598,9 @@ const sendMessage = async () => {
         if (isFullScreenImageVisible.value && fullScreenImageUrl.value === message.image) {
           hideFullScreenImage();
         }
+      } else {
+        // 如果没有图片，则imageFile传空
+        imageFile = null;
       }
       
       // 调用generateVideo函数

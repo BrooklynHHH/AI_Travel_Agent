@@ -33,19 +33,22 @@ function imageToDataUrl(file) {
  * @throws {Error} If the API request fails or if image conversion fails.
  */
 export async function generateVideo(text, resolution, duration, cameraFixed, imageFile) {
-  const apiUrl = 'http://staging-llm.search.miui.srv/agent-staging/ge-video';
+  const apiUrl = 'http://10.192.165.198:5001/agent-staging/ge-video';
 
   try {
-    const imageUrl = await imageToDataUrl(imageFile);
-
     // 构建请求体，按照新的格式
     const requestBody = {
       text: text,
       resolution: resolution,
       duration: String(duration), // 转换为字符串
-      camerafixed: String(cameraFixed).toLowerCase(), // 转换为小写的字符串
-      image_base64: imageUrl // 直接使用 Data URL
+      camerafixed: String(cameraFixed).toLowerCase() // 转换为小写的字符串
     };
+
+    // 只有当 imageFile 存在时才处理图片并添加到请求体中
+    if (imageFile) {
+      const imageUrl = await imageToDataUrl(imageFile);
+      requestBody.image_base64 = imageUrl; // 直接使用 Data URL
+    }
 
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -89,7 +92,7 @@ export async function checkVideoGenerationStatus(taskId) {
     throw new Error('任务ID不能为空');
   }
 
-  const apiUrl = `http://staging-llm.search.miui.srv/agent-staging/gen_task?task_id=${encodeURIComponent(taskId)}`;
+  const apiUrl = `http://10.192.165.198:5001/agent-staging/gen_task?task_id=${encodeURIComponent(taskId)}`;
 
   try {
     const response = await fetch(apiUrl, {
