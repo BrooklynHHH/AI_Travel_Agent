@@ -1,7 +1,0 @@
-2025-06-30 16:48:21.372 [ERROR] [optimization] [SESSION:873a2d59-5346-4a9c-beb9-22b9bd781834] [ERROR] 流式方案优化错误 (耗时: 0.121ms): 404: 会话不存在
-Traceback (most recent call last):
-  File "/Users/lizy/Desktop/GoodStudy/agent_mi_V2/agent-mi/travel/api_server.py", line 603, in optimize_travel_stream
-    session = get_session(session_id)
-  File "/Users/lizy/Desktop/GoodStudy/agent_mi_V2/agent-mi/travel/api_server.py", line 211, in get_session
-    raise HTTPException(status_code=404, detail="会话不存在")
-fastapi.exceptions.HTTPException: 404: 会话不存在

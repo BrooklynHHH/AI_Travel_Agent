@@ -186,6 +186,7 @@
 <script>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import MarkdownIt from 'markdown-it'
+import { API_CONFIG } from '@/config/api.config.js'
 
 // 初始化 Markdown 渲染器
 const md = new MarkdownIt({
@@ -217,7 +218,7 @@ export default {
     const currentStepIndex = ref(0)
 
     // API 配置
-    const API_BASE_URL = 'http://localhost:5000'
+    const API_BASE_URL = API_CONFIG.BASE_URL
 
     // 智能体配置
     const agentConfig = {

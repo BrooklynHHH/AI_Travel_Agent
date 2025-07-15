@@ -40,7 +40,12 @@ logger = setup_logger("simple_multi_turn_api")
 
 # 创建Flask应用
 app = Flask(__name__)
-CORS(app)  # 启用跨域支持
+# 配置CORS，明确支持OPTIONS方法和所需的头部
+CORS(app, 
+     origins=['*'],  # 允许所有来源
+     methods=['GET', 'POST', 'OPTIONS'],  # 明确允许OPTIONS方法
+     allow_headers=['Content-Type', 'Authorization'],  # 允许的头部
+     supports_credentials=False)
 
 # 全局变量：supervisor实例
 supervisor = None
