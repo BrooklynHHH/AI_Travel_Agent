@@ -506,7 +506,7 @@ export default {
 
       return new Promise((resolve, reject) => {
         // 使用 fetch 进行流式请求
-        fetch(`${API_BASE_URL}/api/stream`, {
+        fetch(`${API_BASE_URL}/agent-api/stream`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -625,7 +625,7 @@ export default {
       try {
         // 如果有会话ID，尝试清空服务器端会话
         if (sessionId.value) {
-          await fetch(`${API_BASE_URL}/api/sessions/${sessionId.value}/clear`, {
+          await fetch(`${API_BASE_URL}/agent-api/sessions/${sessionId.value}/clear`, {
             method: 'POST'
           })
         }

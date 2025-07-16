@@ -25,10 +25,10 @@ export const API_CONFIG = {
   
   // API端点
   ENDPOINTS: {
-    STREAM: '/api/stream',
-    HEALTH: '/api/health',
-    SESSIONS: '/api/sessions',
-    STATUS: '/api/status'
+    STREAM: '/agent-api/stream',
+    HEALTH: '/agent-api/health',
+    SESSIONS: '/agent-api/sessions',
+    STATUS: '/agent-api/status'
   },
   
   // 请求超时时间（毫秒）
