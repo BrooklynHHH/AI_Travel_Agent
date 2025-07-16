@@ -83,29 +83,23 @@
                 <!-- 滑动区 -->
                 <div v-if="message.roleCards && message.roleCards.length" class="expert-swiper-container">
                   <div class="expert-swiper" :ref="el => setExpertSwiper(el, index)">
-                    <div class="expert-card expert-slide" v-for="(roleObj, idx) in message.roleCards" :key="idx">
-                      <!-- 专家身份区 -->
-                      <div class="expert-header">
-                        <i class="expert-icon">👤</i>
+                    <div
+                      class="expert-card expert-slide"
+                      v-for="(roleObj, idx) in message.roleCards"
+                      :key="idx"
+                    >
+                      <!-- 专家身份区，增加折叠按钮 -->
+                      <div class="expert-header" @click="roleObj.showSearch = !roleObj.showSearch">
+                        <i class="expert-icon">💡</i>
                         <span class="expert-title">{{ roleObj.role }}</span>
+                        <span class="toggle-icon" style="margin-left:8px;cursor:pointer;">{{ roleObj.showSearch ? '▼' : '▶' }}</span>
                       </div>
-                      <!-- 新增：引用资料折叠区 -->
-                      <div v-if="roleObj.searchResults && roleObj.searchResults.length" class="expert-ref-toggle-block">
-                        <div class="ref-toggle-header" @click="roleObj.showRefs = !roleObj.showRefs">
-                          <span class="ref-toggle-text">引用{{roleObj.searchResults.reduce((sum, s) => sum +
-                            (s.search_result ? s.search_result.length : 0), 0) }}篇资料</span>
-                          <span class="ref-toggle-btn">{{ roleObj.showRefs ? '▼' : '▶' }}</span>
-                        </div>
-                        <div v-show="roleObj.showRefs" class="expert-ref-list">
-                          <div v-for="(result, idx2) in roleObj.searchResults" :key="idx2" class="search-item">
-                            <div class="search-query" v-if="result.search_item"
-                              style="font-weight: bold; color: #1976d2; margin-bottom: 4px;">
-                              {{ result.search_item }}
-                            </div>
-                            <div class="search-content">
-                              <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
-                                <a class="result-link" :href="item.url">{{ item.title }}</a>
-                              </div>
+                      <!-- 折叠内容：专家搜索结果 -->
+                      <div v-show="roleObj.showSearch" class="expert-search-block">
+                        <div v-for="(result, idx2) in roleObj.searchResults" :key="idx2" class="search-item">
+                          <div class="search-content">
+                            <div v-for="(item, i) in result.search_result" :key="i" class="result-item">
+                              <a class="result-link" :href="item.url">{{ item.title }}</a>
                             </div>
                           </div>
                         </div>
@@ -148,12 +142,9 @@
                   </div>
                 </div>
                 <!-- 专家卡片下方渲染总结 -->
-                <ThinkingView 
-                  v-if="message.thinkingText || message.normalText"
-                  :thinkingText="message.thinkingText"
-                  :normalText="message.normalText"
-                  :uniqueIdSuffix="index"
-                />
+                <div v-if="message.summaryText" class="summary-block">
+                  <div class="summary-content" v-html="renderMarkdown(message.summaryText)"></div>
+                </div>
               </div>
             </div>
           </template>
@@ -198,7 +189,6 @@
 <script setup>
 import { ref, onMounted, nextTick, onUpdated } from 'vue';
 import MarkdownIt from 'markdown-it';
-import ThinkingView from '@/base/views/ThinkingView.vue';
 
 
 // Quick action buttons - loaded from config

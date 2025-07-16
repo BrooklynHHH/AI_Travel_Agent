@@ -1,0 +1,13 @@
+flask
+flask-cors
+langchain
+langchain-core
+langgraph
+langchain-openai
+python-dotenv
+requests
+colorama
+rich
+json-repair
+langchain-community
+langgraph_supervisor

@@ -22,6 +22,9 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
+**/__pycache__/*
+**/*.log
+travel/simple_multi_turn_system/simple_multi_turn.log
 src/scripts/podcast/output/*.mp3
 # Python
 *.pyc

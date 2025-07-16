@@ -1,6 +1,6 @@
 <template>
   <div class="travel-container">
-    <!-- 浮层组件11111222222333333333444444-->
+    <!-- 浮层组件222222222222222233333333333-->
     <ImageViewer
       v-model:show="showImageViewer"
       :images="viewerImages"
@@ -274,7 +274,7 @@
         <p>告诉我您的旅行偏好,我将为您量身定制完美行程。</p>
         <div class="suggestion-chips">
           <button class="suggestion-chip" @click="useSearchSuggestion('南京三日游之特种兵版')">南京三日游之特种兵版</button>
-          <button class="suggestion-chip" @click="useSearchSuggestion('杭州亲子游')">杭州亲子游</button>
+          <button class="suggestion-chip" @click="useSearchSuggestion('从北京去拉萨，怎么玩')">从北京去拉萨，怎么玩</button>
           <button class="suggestion-chip" @click="useSearchSuggestion('北京五日游')">北京五日游</button>
           <button class="suggestion-chip" @click="useSearchSuggestion('云南七日游')">云南七日游</button>
         </div>
@@ -358,7 +358,9 @@
 </template>
 
 <script setup>
+/* eslint-disable no-unused-vars */
 import { ref, onMounted, nextTick, computed, watch, onBeforeUnmount } from 'vue';
+/* eslint-enable no-unused-vars */
 import ImageViewer from '../components/modals/ImageViewer.vue';
 import ProductWindow from '../components/modals/ProductWindow.vue';
 import SettingsModal from '../components/modals/SettingsModal.vue';
@@ -711,6 +713,7 @@ const headerTitle = ref('旅行规划助手');
 const dayPlan = ref(null);
 const siteDetails = ref([]);
 const sitePhotos = ref([]);
+const from_to_result = ref(null); // 添加from_to_result变量
 
 // Product window state
 const showProductWindow = ref(false);
@@ -745,7 +748,7 @@ const openSettingsModal = () => {
     apiKeyInput.value = savedApiKey;
   } else {
     // Set default API key if none is saved
-    apiKeyInput.value = 'app-6dBwf3lXyFG7jNLFJpSA7deK';          
+    apiKeyInput.value = 'app-MYuK63VyRYGBG555eoB0RCTE';          
   }
   showSettingsModal.value = true;
 };
@@ -1006,7 +1009,7 @@ const generateTravelPlan = async () => {
     console.log('开始生成旅行计划，用户输入:', userInput.value);
     
     // Get API key from cookie or use default
-    const savedApiKey = getCookie('api_key') || 'app-6dBwf3lXyFG7jNLFJpSA7deK';
+    const savedApiKey = getCookie('api_key') || 'app-MYuK63VyRYGBG555eoB0RCTE';
     console.log('使用API密钥:', savedApiKey);
     
     // Create client
@@ -1089,9 +1092,12 @@ if (outputs.dayplan) {
 // Process site details if available
 if (outputs.site_detail && Array.isArray(outputs.site_detail)) {
   siteDetails.value = outputs.site_detail;
+  
   console.log('Site details (partial):', siteDetails.value);
   
-  // 不再在这里立即生成景点讲解，而是等待DOM渲染后再生成
+  // 立即生成景点总结
+  tourGuideGenerated.value = false;
+  generateTourGuide(JSON.stringify(outputs.site_detail));
 }
           
 // Process site photos if available
@@ -1112,6 +1118,20 @@ if (outputs.site_photos) {
       console.log('Site photos (converted from object):', sitePhotos.value);
     }
   }
+}
+
+// 处理from_to_result节点的输出
+// 只有当节点完成且tansfer_info参数存在时才赋值
+if (outputs.tansfer_info && partialResponse.event === 'node_finished') {
+  from_to_result.value = {
+    result: outputs.tansfer_info,
+    origin_city: outputs.origin_city,
+    target_city: outputs.target_city
+  };
+  console.log('公交路径规划信息(final):', from_to_result.value);
+  // 立即生成景点总结
+  tourGuideGenerated.value = false;
+  generateTourGuide(JSON.stringify(from_to_result.value));
 }
         }
       }
@@ -1465,12 +1485,14 @@ onBeforeUnmount(() => {
 });
 
 // Methods
+/* eslint-disable no-unused-vars */
 const updateTime = () => {
   const now = new Date();
   const hours = now.getHours();
   const minutes = now.getMinutes().toString().padStart(2, '0');
   currentTime.value = `${hours}:${minutes}`;
 };
+/* eslint-enable no-unused-vars */
 
 const goBack = () => {
   // Handle back navigation
@@ -1550,7 +1572,7 @@ const getSitePhotos = (siteName) => {
   // 如果没有完全匹配，尝试部分匹配
   if (!sitePhoto) {
     sitePhoto = sitePhotos.value.find(photo => 
-      photo.name.includes(siteName) || siteName.includes(photo.name)
+      photo.name && siteName && (photo.name.includes(siteName) || siteName.includes(photo.name))
     );
   }
   
@@ -1638,18 +1660,48 @@ const openImageViewer = (images, index, siteName) => {
   showImageViewer.value = true;
 };
 
-// 监听siteDetails变化，当它有值时，等待DOM渲染后再生成景点总结
-watch(siteDetails, (newVal) => {
-  if (newVal.length > 0 && !tourGuideGenerated.value && !tourGuideLoading.value) {
-    // 使用nextTick确保DOM已经更新
-    nextTick(() => {
-      // 生成景点总结
-      generateTourGuide(JSON.stringify(newVal));
-    });
-  }
-});
+// // 监听siteDetails变化，当它有值时，生成景点总结
+// watch(siteDetails, (newVal) => {
+//   if (newVal.length > 0 && !tourGuideLoading.value) {
+//     console.log("siteDetails有值，生成景点总结");
+//     // 重置生成标志，允许重新生成
+//     tourGuideGenerated.value = false;
+//     // 使用nextTick确保DOM已经更新
+//     nextTick(() => {
+//       // 生成景点总结，传递siteDetails变量
+//       generateTourGuide(JSON.stringify(newVal));
+//     });
+//   }
+// });
 
-// Lifecycle hooks
+// // 监听siteDetails变化，当它有值时，等待DOM渲染后再生成景点总结
+// watch(siteDetails, (newVal) => {
+//   if (newVal.length > 0 && !tourGuideGenerated.value && !tourGuideLoading.value) {
+//     // 使用nextTick确保DOM已经更新
+//     console.log("siteDetails有值，生成景点总结");
+
+//     nextTick(() => {
+//       // 生成景点总结
+//       generateTourGuide(JSON.stringify(newVal));
+//     });
+//   }
+// });
+
+// // 监听from_to_result变化，当它有值时，生成景点总结
+// watch(from_to_result, (newVal) => {
+//   if (newVal && !tourGuideLoading.value) {
+//     console.log("from_to_result有值，生成景点总结", newVal);
+//     // 重置生成标志，允许重新生成
+//     tourGuideGenerated.value = false;
+//     // 使用nextTick确保DOM已经更新
+//     nextTick(() => {
+//       // 生成景点总结，传递from_to_result变量
+//       generateTourGuide(JSON.stringify(newVal));
+//     });
+//   }
+// }, { immediate: true }); // 添加immediate:true确保初始化时也会检查
+
+// 生命周期钩子
 onMounted(() => {
   updateTime();
   setInterval(updateTime, 60000);

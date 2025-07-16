@@ -9,15 +9,29 @@ import PodcastView from '../views/PodcastView.vue'
 import FortuneView from '../views/FortuneView.vue'
 
 import TravelView from '../views/TravelView.vue'
-import RouteLinksView from '../views/RouteLinksView.vue'
 import MultiAgentMixExpertView from '../views/MultiAgentMixExpertView.vue'
 import VideoGenerationView from '@/views/VideoGenerationView.vue'
 
 export const routes = [ // Add export here
   {
-    path: '/route-links',
-    name: '页面索引', // Translated
-    component: RouteLinksView
+    path: '/multi-turn-chat',
+    name: '多轮对话',
+    component: () => import('../views/MultiTurnChatView.vue')
+  },
+  {
+    path: '/multi-turn-chat-simple',
+    name: '多轮对话-simple',
+    component: () => import('../views/NewMultiTurnChatView_V1.vue')
+  },
+  {
+    path: '/multi-turn-chat_v0',
+    name: '多轮对话_v0',
+    component: () => import('../views/MultiTurnChatView_v0.vue')
+  },
+  {
+    path: '/supervisor-agent-fixed',
+    name: 'SupervisorAgentFixed',
+    component: () => import('../views/SupervisorAgentFixed.vue')
   },
   {
     path: '/podcast',
@@ -80,6 +94,11 @@ export const routes = [ // Add export here
     component: FortuneView
   },
   {
+    path: '/route-links',
+    name: 'RouteLinks',
+    component: () => import('../views/RouteLinksView.vue')
+  },
+  {
     path: '/',
     redirect: '/route-links' // Change redirect to the new page
   },
@@ -88,6 +107,7 @@ export const routes = [ // Add export here
     name: 'PodcastDetail',
     component: () => import('../views/PodcastDetailView.vue')
   },
+
 ]
 
 const router = createRouter({
