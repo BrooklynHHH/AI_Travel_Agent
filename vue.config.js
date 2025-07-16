@@ -1,45 +1,34 @@
 module.exports = {
-  transpileDependencies: [],
   devServer: {
     port: 1024,
-    historyApiFallback: true,
     proxy: {
-      '/baidu-proxy': {
-        target: 'https://www.baidu.com',
+      '/api/baidu-search': {
+        target: 'http://staging-llm.search.miui.srv/baidu-search/v3',
+        changeOrigin: true,
+        pathRewrite: { '^/api/baidu-search': '' }
+      },
+      '/api/doubao-chat': {
+        target: 'https://open.feedcoopapi.com/agent_api/agent/chat/completion',
         changeOrigin: true,
         secure: false,
-        selfHandleResponse: false, // 不自己处理响应
-        pathRewrite: {
-          '^/baidu-proxy': ''
-        },
-        // 简单的请求头设置
-        onProxyReq: function(proxyReq, req, res) {
-          // 明确告诉服务器不要发送压缩内容
-          proxyReq.setHeader('Accept-Encoding', 'identity');
-          proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36');
-          proxyReq.setHeader('Referer', 'https://www.baidu.com/');
-        },
-        onProxyRes: function(proxyRes, req, res) {
-          // 移除安全头
-          delete proxyRes.headers['x-frame-options'];
-          delete proxyRes.headers['content-security-policy'];
-          
-          // 打印信息
-          console.log('收到响应:', proxyRes.statusCode, proxyRes.statusMessage);
-          console.log('内容类型:', proxyRes.headers['content-type']);
+        pathRewrite: { '^/api/doubao-chat': '' },
+        onProxyReq: (proxyReq, req, res) => {
+          if (req.headers['authorization']) {
+            proxyReq.setHeader('authorization', req.headers['authorization']);
+          }
         }
       },
-      '/external-proxy': {
-        target: 'http://example.com',
+      '/api/doubao-search': {
+        target: 'https://open.feedcoopapi.com/search_api/web_search',
         changeOrigin: true,
-        router: function(req) {
-          const targetUrl = req.url.replace(/^\/external-proxy\//, '');
-          return targetUrl;
-        },
-        pathRewrite: function(path, req) {
-          return path.replace(/^\/external-proxy\/https?:\/\/[^\/]+/, '');
+        secure: false,
+        pathRewrite: { '^/api/doubao-search': '' },
+        onProxyReq: (proxyReq, req, res) => {
+          if (req.headers['authorization']) {
+            proxyReq.setHeader('authorization', req.headers['authorization']);
+          }
         }
       }
     }
   }
-}
+} 
