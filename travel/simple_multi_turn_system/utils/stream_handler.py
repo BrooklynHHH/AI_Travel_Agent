@@ -59,10 +59,7 @@ class StreamHandler:
             if hasattr(msg, 'content') and msg.content:
                 content = msg.content.strip()
                 # 过滤掉系统转移消息
-                if (content and 
-                    not content.startswith('Successfully transferred') and 
-                    not content.startswith('Transferring back') and 
-                    content != 'Successfully transferred back to supervisor'):
+                if (content):
                     content_parts.append(content)
         
         return "\n".join(content_parts)

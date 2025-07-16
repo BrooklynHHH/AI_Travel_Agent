@@ -12,11 +12,11 @@ const getApiBaseUrl = () => {
   
   // 开发环境默认使用localhost
   if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:5001'
+    return 'http://localhost:5000'
   }
   
   // 生产环境可以配置为实际的服务器地址
-  return 'http://localhost:5001'
+  return 'http://localhost:5000'
 }
 
 export const API_CONFIG = {

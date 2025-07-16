@@ -34,11 +34,11 @@ def check_environment():
     """检查环境配置"""
     print("🔧 检查环境配置...")
     
-    # 检查agent-mi目录
-    agent_mi_path = Path(__file__).parent.parent / "agent-mi" / "travel"
+    # 检查travel目录（上级目录）
+    agent_mi_path = Path(__file__).parent.parent
     if not agent_mi_path.exists():
-        print(f"❌ 找不到agent-mi目录: {agent_mi_path}")
-        print("请确保agent-mi/travel目录存在")
+        print(f"❌ 找不到travel目录: {agent_mi_path}")
+        print("请确保travel目录存在")
         return False
     
     # 检查关键文件

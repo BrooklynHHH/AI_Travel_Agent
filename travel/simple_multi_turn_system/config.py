@@ -8,7 +8,7 @@ import os
 
 # 路径配置
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-AGENT_MI_PATH = os.path.join(PROJECT_ROOT, '../agent-mi/travel')
+AGENT_MI_PATH = os.path.join(PROJECT_ROOT, '../../')
 
 # API配置
 API_HOST = '0.0.0.0'
