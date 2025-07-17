@@ -89,7 +89,7 @@
       <div class="search-result-list">
         <div
           class="result-card"
-          v-for="item in resultList"
+          v-for="item in resultListMap['AI']"
           :key="item.title + item.source"
           @click="onResultCardClick(item.url)"
           style="cursor: pointer;"
@@ -111,7 +111,353 @@
         </div>
       </div>
     </div>
-    <div v-if="activeTab !== 'AI'">
+    <!-- 其他tab複刻AI區塊，接口待替換 -->
+    <div v-if="activeTab === '百度'">
+      <div class="ai-answer-card">
+        <!-- TODO: 百度接口數據，請在此處替換為百度相關接口 -->
+        <div class="ai-answer-header">
+          <span class="ai-label">AI为你找到参考资料</span>
+          <div style="display: flex; align-items: center;">
+            <span class="source-icons">
+              <template v-for="(icon, idx) in refIcons" :key="idx">
+                <img
+                  v-if="icon"
+                  :src="icon"
+                  class="source-icon"
+                  :style="{ marginLeft: idx === 0 ? '0' : '-8px', zIndex: 10 - idx }"
+                />
+              </template>
+            </span>
+            <span style="margin-left: 2px;" class="source-count">{{ refList.length }}个来源</span>
+          </div>
+        </div>
+        <div v-if="thinkingList.length" class="ai-thinking-bar" @click="toggleThinkingExpand">
+          <div v-if="!thinkingEnd" class="marquee">
+            <span>{{ thinkingDisplay }}</span>
+          </div>
+          <div v-else class="thinking-finished">
+            已完成思考（耗时{{ thinkingDuration }}秒）
+          </div>
+        </div>
+        <div v-if="thinkingExpand && thinkingList.length" class="ai-thinking-detail">
+          <pre v-html="thinkingMarkdown"></pre>
+        </div>
+        <div class="ai-answer-content markdown-body" v-html="renderedAnswer"></div>
+        <div class="ai-answer-actions">
+          <div class="action-group">
+            <span class="action-btn" title="点赞">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 10V21a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-7"></path>
+                <path d="M14 9V5a3 3 0 0 0-6 0v5"></path>
+                <path d="M2 10h5"></path>
+              </svg>
+            </span>
+            <span class="action-btn" title="点踩">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 14V3a2 2 0 0 0-2-2H9A2 2 0 0 0 7 3v7"></path>
+                <path d="M10 15v4a3 3 0 0 0 6 0v-5"></path>
+                <path d="M22 14h-5"></path>
+              </svg>
+            </span>
+            <span class="action-btn" title="复制">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </span>
+          </div>
+          <div class="action-group action-group-right">
+            <span class="action-btn action-btn-refresh" title="刷新">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"></path><path d="M1 14l5.37 5.36A9 9 0 0 0 20.49 15"></path></svg>
+            </span>
+            <span class="action-btn" title="分享">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="search-result-list">
+        <div
+          class="result-card"
+          v-for="item in resultListMap['百度']"
+          :key="item.title + item.source"
+          @click="onResultCardClick(item.url)"
+          style="cursor: pointer;"
+        >
+          <div class="result-title">{{ item.title }}</div>
+          <div class="result-desc">{{ item.desc }}</div>
+          <div class="result-imgs">
+            <div v-if="item.images && item.images.length">
+              <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
+            </div>
+            <div v-else>
+              <div class="img-placeholder result-img" v-for="i in 3" :key="i"></div>
+            </div>
+          </div>
+          <div class="result-source">
+            <img v-if="item.icon" :src="item.icon" class="result-source-icon" />
+            {{ item.source }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-if="activeTab === '百度AI'">
+      <div class="ai-answer-card">
+        <!-- TODO: 百度AI接口數據，請在此處替換為百度AI相關接口 -->
+        <div class="ai-answer-header">
+          <span class="ai-label">AI为你找到参考资料</span>
+          <div style="display: flex; align-items: center;">
+            <span class="source-icons">
+              <template v-for="(icon, idx) in refIcons" :key="idx">
+                <img
+                  v-if="icon"
+                  :src="icon"
+                  class="source-icon"
+                  :style="{ marginLeft: idx === 0 ? '0' : '-8px', zIndex: 10 - idx }"
+                />
+              </template>
+            </span>
+            <span style="margin-left: 2px;" class="source-count">{{ refList.length }}个来源</span>
+          </div>
+        </div>
+        <div v-if="thinkingList.length" class="ai-thinking-bar" @click="toggleThinkingExpand">
+          <div v-if="!thinkingEnd" class="marquee">
+            <span>{{ thinkingDisplay }}</span>
+          </div>
+          <div v-else class="thinking-finished">
+            已完成思考（耗时{{ thinkingDuration }}秒）
+          </div>
+        </div>
+        <div v-if="thinkingExpand && thinkingList.length" class="ai-thinking-detail">
+          <pre v-html="thinkingMarkdown"></pre>
+        </div>
+        <div class="ai-answer-content markdown-body" v-html="renderedAnswer"></div>
+        <div class="ai-answer-actions">
+          <div class="action-group">
+            <span class="action-btn" title="点赞">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 10V21a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-7"></path>
+                <path d="M14 9V5a3 3 0 0 0-6 0v5"></path>
+                <path d="M2 10h5"></path>
+              </svg>
+            </span>
+            <span class="action-btn" title="点踩">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 14V3a2 2 0 0 0-2-2H9A2 2 0 0 0 7 3v7"></path>
+                <path d="M10 15v4a3 3 0 0 0 6 0v-5"></path>
+                <path d="M22 14h-5"></path>
+              </svg>
+            </span>
+            <span class="action-btn" title="复制">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </span>
+          </div>
+          <div class="action-group action-group-right">
+            <span class="action-btn action-btn-refresh" title="刷新">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"></path><path d="M1 14l5.37 5.36A9 9 0 0 0 20.49 15"></path></svg>
+            </span>
+            <span class="action-btn" title="分享">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="search-result-list">
+        <div
+          class="result-card"
+          v-for="item in resultListMap['百度AI']"
+          :key="item.title + item.source"
+          @click="onResultCardClick(item.url)"
+          style="cursor: pointer;"
+        >
+          <div class="result-title">{{ item.title }}</div>
+          <div class="result-desc">{{ item.desc }}</div>
+          <div class="result-imgs">
+            <div v-if="item.images && item.images.length">
+              <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
+            </div>
+            <div v-else>
+              <div class="img-placeholder result-img" v-for="i in 3" :key="i"></div>
+            </div>
+          </div>
+          <div class="result-source">
+            <img v-if="item.icon" :src="item.icon" class="result-source-icon" />
+            {{ item.source }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-if="activeTab === '豆包'">
+      <div class="ai-answer-card">
+        <!-- TODO: 豆包接口數據，請在此處替換為豆包相關接口 -->
+        <div class="ai-answer-header">
+          <span class="ai-label">AI为你找到参考资料</span>
+          <div style="display: flex; align-items: center;">
+            <span class="source-icons">
+              <template v-for="(icon, idx) in refIcons" :key="idx">
+                <img
+                  v-if="icon"
+                  :src="icon"
+                  class="source-icon"
+                  :style="{ marginLeft: idx === 0 ? '0' : '-8px', zIndex: 10 - idx }"
+                />
+              </template>
+            </span>
+            <span style="margin-left: 2px;" class="source-count">{{ refList.length }}个来源</span>
+          </div>
+        </div>
+        <div v-if="thinkingList.length" class="ai-thinking-bar" @click="toggleThinkingExpand">
+          <div v-if="!thinkingEnd" class="marquee">
+            <span>{{ thinkingDisplay }}</span>
+          </div>
+          <div v-else class="thinking-finished">
+            已完成思考（耗时{{ thinkingDuration }}秒）
+          </div>
+        </div>
+        <div v-if="thinkingExpand && thinkingList.length" class="ai-thinking-detail">
+          <pre v-html="thinkingMarkdown"></pre>
+        </div>
+        <div class="ai-answer-content markdown-body" v-html="renderedAnswer"></div>
+        <div class="ai-answer-actions">
+          <div class="action-group">
+            <span class="action-btn" title="点赞">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 10V21a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-7"></path>
+                <path d="M14 9V5a3 3 0 0 0-6 0v5"></path>
+                <path d="M2 10h5"></path>
+              </svg>
+            </span>
+            <span class="action-btn" title="点踩">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 14V3a2 2 0 0 0-2-2H9A2 2 0 0 0 7 3v7"></path>
+                <path d="M10 15v4a3 3 0 0 0 6 0v-5"></path>
+                <path d="M22 14h-5"></path>
+              </svg>
+            </span>
+            <span class="action-btn" title="复制">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </span>
+          </div>
+          <div class="action-group action-group-right">
+            <span class="action-btn action-btn-refresh" title="刷新">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"></path><path d="M1 14l5.37 5.36A9 9 0 0 0 20.49 15"></path></svg>
+            </span>
+            <span class="action-btn" title="分享">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="search-result-list">
+        <div
+          class="result-card"
+          v-for="item in resultListMap['豆包']"
+          :key="item.title + item.source"
+          @click="onResultCardClick(item.url)"
+          style="cursor: pointer;"
+        >
+          <div class="result-title">{{ item.title }}</div>
+          <div class="result-desc">{{ item.desc }}</div>
+          <div class="result-imgs">
+            <div v-if="item.images && item.images.length">
+              <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
+            </div>
+            <div v-else>
+              <div class="img-placeholder result-img" v-for="i in 3" :key="i"></div>
+            </div>
+          </div>
+          <div class="result-source">
+            <img v-if="item.icon" :src="item.icon" class="result-source-icon" />
+            {{ item.source }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-if="activeTab === '今日头条'">
+      <div class="ai-answer-card">
+        <!-- TODO: 今日头条接口數據，請在此處替換為今日头条相關接口 -->
+        <div class="ai-answer-header">
+          <span class="ai-label">AI为你找到参考资料</span>
+          <div style="display: flex; align-items: center;">
+            <span class="source-icons">
+              <template v-for="(icon, idx) in refIcons" :key="idx">
+                <img
+                  v-if="icon"
+                  :src="icon"
+                  class="source-icon"
+                  :style="{ marginLeft: idx === 0 ? '0' : '-8px', zIndex: 10 - idx }"
+                />
+              </template>
+            </span>
+            <span style="margin-left: 2px;" class="source-count">{{ refList.length }}个来源</span>
+          </div>
+        </div>
+        <div v-if="thinkingList.length" class="ai-thinking-bar" @click="toggleThinkingExpand">
+          <div v-if="!thinkingEnd" class="marquee">
+            <span>{{ thinkingDisplay }}</span>
+          </div>
+          <div v-else class="thinking-finished">
+            已完成思考（耗时{{ thinkingDuration }}秒）
+          </div>
+        </div>
+        <div v-if="thinkingExpand && thinkingList.length" class="ai-thinking-detail">
+          <pre v-html="thinkingMarkdown"></pre>
+        </div>
+        <div class="ai-answer-content markdown-body" v-html="renderedAnswer"></div>
+        <div class="ai-answer-actions">
+          <div class="action-group">
+            <span class="action-btn" title="点赞">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 10V21a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-7"></path>
+                <path d="M14 9V5a3 3 0 0 0-6 0v5"></path>
+                <path d="M2 10h5"></path>
+              </svg>
+            </span>
+            <span class="action-btn" title="点踩">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 14V3a2 2 0 0 0-2-2H9A2 2 0 0 0 7 3v7"></path>
+                <path d="M10 15v4a3 3 0 0 0 6 0v-5"></path>
+                <path d="M22 14h-5"></path>
+              </svg>
+            </span>
+            <span class="action-btn" title="复制">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </span>
+          </div>
+          <div class="action-group action-group-right">
+            <span class="action-btn action-btn-refresh" title="刷新">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"></path><path d="M1 14l5.37 5.36A9 9 0 0 0 20.49 15"></path></svg>
+            </span>
+            <span class="action-btn" title="分享">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="search-result-list">
+        <div
+          class="result-card"
+          v-for="item in resultListMap['今日头条']"
+          :key="item.title + item.source"
+          @click="onResultCardClick(item.url)"
+          style="cursor: pointer;"
+        >
+          <div class="result-title">{{ item.title }}</div>
+          <div class="result-desc">{{ item.desc }}</div>
+          <div class="result-imgs">
+            <div v-if="item.images && item.images.length">
+              <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
+            </div>
+            <div v-else>
+              <div class="img-placeholder result-img" v-for="i in 3" :key="i"></div>
+            </div>
+          </div>
+          <div class="result-source">
+            <img v-if="item.icon" :src="item.icon" class="result-source-icon" />
+            {{ item.source }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- END: 其他tab複刻AI區塊 -->
+    <div v-if="!['AI','百度','百度AI','豆包','今日头条'].includes(activeTab)">
       <div class="deving-block">
         <div class="deving-content">开发中</div>
       </div>
@@ -120,7 +466,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, watchEffect, computed, onMounted } from 'vue'; // 引入 onMounted
+import { ref, nextTick, watchEffect, computed, onMounted, watch } from 'vue'; // 引入 watch
 import { useRoute } from 'vue-router'; // 引入 useRoute
 import { marked } from 'marked';
 
@@ -130,12 +476,12 @@ const searchInput = ref(''); // 删除默认文字
 const tabs = [
   { name: 'AI', icon: '🤖' },
   { name: '百度', icon: '🌐' },
-  { name: '搜狗', icon: '🦊' },
-  { name: '360', icon: '🟢' },
+  { name: '百度AI', icon: '🦊' }, // 原搜狗tab改名
+  { name: '豆包', icon: '🟢' }, // 原360改為豆包
   { name: '今日头条', icon: '📰' }
 ];
 const activeTab = ref('AI');
-const resultList = ref([]);
+// const resultList = ref([]); // 已不再使用，移除
 
 const answer = ref('');
 const refList = ref([]);
@@ -177,57 +523,23 @@ function onResultCardClick(url) {
   }
 }
 
-async function onSearch() {
-  answer.value = '';
-  refList.value = [];
-  thinkingList.value = [];
-  thinkingStart.value = 0;
-  thinkingEnd.value = false;
-  thinkingExpand.value = false;
-
-  // 1. 先调用原有AI接口
-  const body = {
-    content: searchInput.value,
-    oaid: "014764227945ac18",
-    chatType: "SUMMARY",
-    searchId: "MTk0NzA4MzI3Mw==1735626267349",
-    miId: "M2U0N2Y5ODRmMzg3OTE5ZjQ5NDYxMjcxMTk2YTA3MjA=",
-    tzData: "566f419916348dcc",
-    tzResultData: "eyJoYXNoIjoiMTEzZDUxYTE4MzBhNjliYzc2NTJlYTBmNmEzMmYyNTE5OTk3Njc2NyIsInBhY2thZ2VOYW1lIjoiY29tLmFuZHJvaWQuYnJvd3Nlci5kZWJ1ZyIsImFwcFNpZ24iOiI4RkNCQTVENDBFQzlGMkU5NjJEMDREMjJGMTcyOTAzNjdEQTgyNTZCIiwibm9uY2UiOiJlZGtQTnN0Vm1xb0J1V1J5IiwidHpUb2tlbiI6Imw5RnFHV1NpREMwelBkUnRtK3NWXC9NcjBPTDRrVnF3Skp6ZUZWa2FCeW5KeWxKN0V1cU1vRG1ueVhIcHQ1VlF5Zm95d3UxR1FkSVpZTXpsRkJSUklKejB5SjV1d0huVHpZSjBHMU9YQndBMFBqNElnQnlXYXVWMldtZlNOSGVRUDJOeHE5enEwK3h1dXFQXC80VXN5UlBwTmhIbjlJWHF0N1hDV1Z2akZHY1pROUNjQkJiamRMSXlxQnMzMHlHSUN6VkJ1NE95S1BhMk5CVGREODR2bG1wMXVHRDBTUDBMTTVyVW5yXC91XC9wUTZvTHZoK1FoT2FIQXNXUkNDMnNGVXRWdFBUK25CbXF5YXZob2haSWExb3BmZ29nR0hlcGdFbmVlMkZaang5YUlybFZzZkd0aUV6V08wVGttVE9GMFVJaUUzaHV4Wis3TnZ2djZuRjJWNWNMaDNMMnM1SjI5XC84UHp0MjgrdUFuQlNpTnYyc0hXTUE2aUhVNWMyN3Z6NG5SMHV0dVc1WTJjXC9aMjNYWU9NOXlCR1ora3c0cVRBc0lTWWh1c3lYYVVNa1JzbW5xWFwvN0sxUGlhN1hlVlljZXNpaDd1WW5sOE9KY0RkVW04OGlGb2p2VmxST0RGa1pnMjhzOGFZWU50SkRHTEZiOHo0TmY0cHEzWFNENDVkOE9VYVwvNWtzY0tXZG9veitIV0c5aHEyUXRzM0U1N3llXC91TzFVMkRiSXNtK0ZjRnlKdStTSkg5ZDl1TEdScHRsYmxWTXFFeTFzbWVodFJWYUZQem9nVnVPaktcL2dvdUhaUGM1dkowZU5rMDJXYVpwRXpGelFOOHdwTDRqVWk1OGxkSjdXNG1vUHMrQXVyRHhrZk1Fc3Nib2xQQT09IiwidmVyc2lvbiI6InYyIiwic2lnbmF0dXJlIjoiS01yR3l0WlBrMXJqQ2hsQWNzeTNCV0JOaHJEaFVuR01PWWtsaHE4WXJPUDQtbWRqZ3hKYldXSElfV09LRnQ3ZGxwV1kzVW44eTVPSzZUOTI4QWZISkFJekhLRFVEM19lNnFLLTV5ckZ0SVp2N0RWdUtlblN4UHVJeTdHT1NabzJ4a1RoNU5VNG5TM1h6VmVqbXJxRm1GZ0UyUHRBTk0xMzhaaXB4d1U0UkJNPSJ9",
-    tzErrorCode: "2",
-    tzErrorMsg: "不支持Tz验签",
-    rawLastQueryList: [],
-    model: "DOUBAO",
-    isDeepThinking: route.query.isdeep === 'true' // 从路由参数获取 isDeepThinking
-  };
-
-  // 并行调用bochaai接口
-  const bochaaiPromise = fetch('https://api.bochaai.com/v1/web-search', {
+// 定義每個tab對應的網頁卡片接口
+const tabApiMap = {
+  'AI': {
+    url: 'https://api.bochaai.com/v1/web-search',
     method: 'POST',
     headers: {
       'Authorization': 'Bearer sk-bb67b69442e7458cae6e7bca308487dd',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      query: searchInput.value,
-      freshness: 'noLimit',
-      summary: true,
-      count: 20
-    })
-  })
-    .then(res => res.json())
-    .then(data => {
-      // 解析bochaai返回
+    body: (query) => JSON.stringify({ query, freshness: 'noLimit', summary: true, count: 20 }),
+    adapt: (data) => {
       if (data && data.code === 200 && data.data && data.data.webPages && Array.isArray(data.data.webPages.value)) {
         const imagesArr = (data.data.images && Array.isArray(data.data.images.value)) ? data.data.images.value : [];
-        resultList.value = data.data.webPages.value.map(item => {
-          // 匹配图片
+        return data.data.webPages.value.map(item => {
           let images = [];
           if (imagesArr.length && item.url) {
-            images = imagesArr
-              .filter(img => img.hostPageUrl === item.url)
-              .map(img => img.contentUrl)
-              .filter(Boolean);
+            images = imagesArr.filter(img => img.hostPageUrl === item.url).map(img => img.contentUrl).filter(Boolean);
           }
           return {
             title: item.name,
@@ -238,15 +550,140 @@ async function onSearch() {
             url: item.url
           };
         });
-      } else {
-        resultList.value = [];
       }
-    })
-    .catch(() => {
-      resultList.value = [];
-    });
+      return [];
+    }
+  },
+  '百度': {
+    url: '/api/baidu-search', // 本地開發用代理解決CORS
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: (query) => JSON.stringify({ q: query, type: 'base' }), // 百度基礎搜索
+    adapt: (data) => {
+      if (data && Array.isArray(data.references)) {
+        return data.references.map(item => ({
+          title: item.title,
+          desc: item.content,
+          source: item.url ? (new URL(item.url)).hostname : '',
+          icon: item.icon,
+          images: item.image ? [item.image] : [],
+          url: item.url
+        }));
+      }
+      return [];
+    }
+  },
+  '百度AI': {
+    url: '/api/baidu-search', // 代理到百度AI搜索
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: (query) => JSON.stringify({ q: query, type: '' }), // 百度AI搜索 type為空
+    adapt: (data) => {
+      if (data && Array.isArray(data.references)) {
+        return data.references.map(item => ({
+          title: item.title,
+          desc: item.content,
+          source: item.url ? (new URL(item.url)).hostname : '',
+          icon: item.icon,
+          images: item.image ? [item.image] : [],
+          url: item.url
+        }));
+      }
+      return [];
+    }
+  },
+  '豆包': {
+    url: '/api/doubao-search', // 本地代理，防止CORS
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer WQNOssVcH0BaKfvzAnR4vm7RjiXGvA6K',
+      'Content-Type': 'application/json'
+    },
+    body: (query) => JSON.stringify({
+      Query: query,
+      SearchType: 'web', // 或 web_summary
+      Count: 10,
+      Filter: { NeedContent: false, NeedUrl: true },
+      NeedSummary: true,
+      TimeRange: 'OneYear'
+    }),
+    adapt: (data) => {
+      if (data && data.Result && Array.isArray(data.Result.WebResults)) {
+        return data.Result.WebResults.map(item => ({
+          title: item.Title || '',
+          desc: item.Summary || item.Snippet || '',
+          source: item.SiteName || '',
+          icon: item.LogoUrl || '',
+          images: [],
+          url: item.Url || ''
+        }));
+      }
+      return [];
+    }
+  },
+  '今日头条': {
+    url: 'https://api.bochaai.com/v1/web-search',
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer sk-bb67b69442e7458cae6e7bca308487dd',
+      'Content-Type': 'application/json'
+    },
+    body: (query) => JSON.stringify({ query, freshness: 'noLimit', summary: true, count: 20 }),
+    adapt: (data) => {
+      if (data && data.code === 200 && data.data && data.data.webPages && Array.isArray(data.data.webPages.value)) {
+        const imagesArr = (data.data.images && Array.isArray(data.data.images.value)) ? data.data.images.value : [];
+        return data.data.webPages.value.map(item => {
+          let images = [];
+          if (imagesArr.length && item.url) {
+            images = imagesArr.filter(img => img.hostPageUrl === item.url).map(img => img.contentUrl).filter(Boolean);
+          }
+          return {
+            title: item.name,
+            desc: item.summary,
+            source: item.siteName,
+            icon: item.siteIcon,
+            images,
+            url: item.url
+          };
+        });
+      }
+      return [];
+    }
+  }
+};
 
-  // 继续原有AI接口逻辑
+const resultListMap = ref({
+  'AI': [],
+  '百度': [],
+  '百度AI': [],
+  '豆包': [],
+  '今日头条': []
+});
+
+async function onSearch() {
+  answer.value = '';
+  refList.value = [];
+  thinkingList.value = [];
+  thinkingStart.value = 0;
+  thinkingEnd.value = false;
+  thinkingExpand.value = false;
+
+  // AI接口不變，所有tab都保留
+  const body = {
+    content: searchInput.value,
+    oaid: "014764227945ac18",
+    chatType: "SUMMARY",
+    searchId: "MTk0NzA4MzI3Mw==1735626267349",
+    miId: "M2U0N2Y5ODRmMzg3OTE5ZjQ5NDYxMjcxMTk2YTA3MjA=",
+    tzData: "566f419916348dcc",
+    tzResultData: "...",
+    tzErrorCode: "2",
+    tzErrorMsg: "不支持Tz验签",
+    rawLastQueryList: [],
+    model: "DOUBAO",
+    isDeepThinking: route.query.isdeep === 'true'
+  };
+
   fetch('https://ai.search.miui.com/api/llm/query', {
     method: 'POST',
     headers: {
@@ -271,7 +708,6 @@ async function onSearch() {
         for (let line of lines) {
           line = line.trim();
           if (!line) continue;
-          // 处理 data: 前缀
           if (line.startsWith('data:')) {
             line = line.slice(5).trim();
           }
@@ -280,16 +716,12 @@ async function onSearch() {
             const data = JSON.parse(line);
             if (data.code === 200 && data.responseType === 'ANSWER') {
               if (data.answer) {
-                console.log('解析到 answer 片段:', data.answer);
                 answer.value += data.answer;
-                console.log('当前 answer.value:', answer.value);
                 await nextTick();
               }
               if (Array.isArray(data.ref) && data.ref.length) {
-                console.log('解析到 ref:', data.ref);
                 refList.value = data.ref;
               }
-              // 处理thinking
               if (typeof data.thinking === 'string' && data.thinking) {
                 if (!thinkingStart.value) thinkingStart.value = Date.now();
                 thinkingList.value.push(data.thinking);
@@ -298,7 +730,6 @@ async function onSearch() {
                 thinkingEnd.value = Date.now();
               }
               if (data.end === true) {
-                console.log('流式输出结束');
                 done = true;
                 break;
               }
@@ -314,9 +745,40 @@ async function onSearch() {
     refList.value = [];
   });
 
-  // 等待bochaai接口完成
-  await bochaaiPromise;
+  // 每個tab下方的網頁卡片都調用對應接口，並存入resultListMap
+  const tab = activeTab.value;
+  const tabApi = tabApiMap[tab];
+  if (tabApi) {
+    await fetch(tabApi.url, {
+      method: tabApi.method,
+      headers: tabApi.headers,
+      body: tabApi.body(searchInput.value)
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (tab === '百度') {
+          console.log('百度API返回：', data);
+          const adapted = tabApi.adapt(data);
+          console.log('百度API适配后卡片：', adapted);
+          resultListMap.value[tab] = adapted;
+        } else {
+          resultListMap.value[tab] = tabApi.adapt(data);
+        }
+      })
+      .catch(() => {
+        resultListMap.value[tab] = [];
+      });
+  } else {
+    resultListMap.value[tab] = [];
+  }
 }
+
+// 監聽tab切換，自動刷新對應tab的網頁卡片
+watch(activeTab, () => {
+  if (searchInput.value) {
+    onSearch();
+  }
+});
 
 onMounted(() => {
   const queryParam = route.query.query;
