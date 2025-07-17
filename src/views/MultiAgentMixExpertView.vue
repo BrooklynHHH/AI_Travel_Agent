@@ -497,10 +497,10 @@ const sendMessage = async () => {
 
     // 1. 第一个API流式获取专家名和analysis
     console.log('[sendMessage] 开始请求第一个API获取专家名和analysis');
-    const response = await fetch('http://10.18.4.170/v1/chat-messages', {
+    const response = await fetch('https://mify-be.pt.xiaomi.com/api/v1/chat-messages', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer app-bCkBvqZL5WpDnEQqNjb0Buld',
+        'Authorization': 'Bearer app-dg1RYsgaMwSVXqDJgTP7Z6Wo',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -563,10 +563,10 @@ const sendMessage = async () => {
     await Promise.all(
       expertNames.map(async (expert, idx) => {
         console.log(`[sendMessage] 请求专家 ${expert} 的独立总结`);
-        const res2 = await fetch('http://10.18.4.170/v1/chat-messages', {
+        const res2 = await fetch('https://mify-be.pt.xiaomi.com/api/v1/chat-messages', {
           method: 'POST',
           headers: {
-            'Authorization': 'Bearer app-fiDcyif946Bsa9u88xKvMR51',
+            'Authorization': 'Bearer app-zEG8RNfd2naycwPjYrCFayZn',
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -717,7 +717,7 @@ const sendMessage = async () => {
     const summaryRes = await fetch('https://mify-be.pt.xiaomi.com/api/v1/chat-messages', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer app-QFLCZ51CgCHHIweJdSZHEPhx',
+        'Authorization': 'Bearer app-c5JcuZpGMaDGHThJ98QatQ7m',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
