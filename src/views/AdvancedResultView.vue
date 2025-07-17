@@ -471,26 +471,52 @@ const tabApiMap = {
     url: '/api/baidu-search', // 本地開發用代理解決CORS
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: (query) => JSON.stringify({ q: query, type: 'base' }), // 百度基礎搜索
+    body: (query) => JSON.stringify({ q: query, type: 'image:10;web:10;video:10' }),
     adapt: (data) => {
       if (data && Array.isArray(data.references)) {
-        return data.references.map(item => ({
-          title: item.title,
-          desc: item.content,
-          source: item.url ? (new URL(item.url)).hostname : '',
-          icon: item.icon,
-          images: item.image ? [item.image] : [],
-          url: item.url
-        }));
+        return data.references.map(item => {
+          if (item.type === 'image' && item.image) {
+            // 圖片卡片
+            return {
+              title: item.title || '',
+              desc: item.content || '',
+              source: item.url ? (new URL(item.url)).hostname : '',
+              icon: item.icon,
+              images: [item.image],
+              url: item.url
+            };
+          } else if (item.type === 'video' && item.video) {
+            // 視頻卡片（可根據實際字段擴展）
+            return {
+              title: item.title || '',
+              desc: item.content || '',
+              source: item.url ? (new URL(item.url)).hostname : '',
+              icon: item.icon,
+              images: [], // 可根據接口擴展視頻封面
+              url: item.url,
+              video: item.video
+            };
+      } else {
+            // 普通網頁卡片
+            return {
+              title: item.title || '',
+              desc: item.content || '',
+              source: item.url ? (new URL(item.url)).hostname : '',
+              icon: item.icon,
+              images: item.image ? [item.image] : [],
+              url: item.url
+            };
+          }
+        });
       }
       return [];
-    }
+    },
   },
   '百度AI': {
-    url: '/api/baidu-search', // 代理到百度AI搜索
+    url: 'http://localhost:3001/api/baidu-ai',
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: (query) => JSON.stringify({ q: query, type: '' }), // 百度AI搜索 type為空
+    body: (query) => JSON.stringify({ q: query, type: '' }),
     adapt: (data) => {
       if (data && Array.isArray(data.references)) {
         return data.references.map(item => ({
