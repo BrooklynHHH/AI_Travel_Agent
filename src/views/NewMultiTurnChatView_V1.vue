@@ -248,6 +248,14 @@ export default {
 
     const formatMessageContent = (content) => {
       if (!content) return ''
+      
+      // 检查内容是否包含搜索结果卡片
+      if (content.includes('search-ref-section')) {
+        // 如果包含搜索结果卡片，直接返回 HTML，不通过 MarkdownIt 处理
+        return content
+      }
+      
+      // 对于普通内容，使用 MarkdownIt 处理
       return md.render(content)
     }
 
@@ -319,6 +327,87 @@ export default {
         Object.assign(messages.value[messageIndex], updates)
         scrollToBottom()
       }
+    }
+
+    // 渲染搜索引用卡片
+    const renderSearchRefCards = (messageId, searchResults) => {
+      console.log('🎨 [渲染卡片] 开始渲染', searchResults.length, '个搜索结果')
+      
+      // 解析搜索结果数据
+      const cards = searchResults.map(result => {
+        // 检查是否是字符串格式（旧格式）还是对象格式（新格式）
+        if (typeof result === 'string') {
+          // 旧格式：解析字符串
+          const titleMatch = result.match(/title：([^\\n]+)/);
+          const contentMatch = result.match(/content:([^\\n]+)/);
+          const urlMatch = result.match(/url:([^\\n]+)/);
+          
+          let siteName = '未知来源'
+          if (urlMatch) {
+            try {
+              siteName = new URL(urlMatch[1].trim()).hostname
+            } catch (e) {
+              siteName = '未知来源'
+            }
+          }
+          
+          return {
+            title: titleMatch ? titleMatch[1].trim() : '未知标题',
+            content: contentMatch ? contentMatch[1].trim() : '暂无内容',
+            url: urlMatch ? urlMatch[1].trim() : '#',
+            siteName: siteName,
+            pic: null
+          }
+        } else {
+          // 新格式：直接使用对象属性
+          let siteName = result.siteName || '未知来源'
+          if (!siteName || siteName === '未知来源') {
+            try {
+              siteName = new URL(result.url).hostname
+            } catch (e) {
+              siteName = '未知来源'
+            }
+          }
+          
+          return {
+            title: result.title || '未知标题',
+            content: result.content || '暂无内容',
+            url: result.url || '#',
+            siteName: siteName
+          }
+        }
+      })
+
+      // 生成搜索结果卡片的 HTML
+      const cardsHtml = `
+        <div class="search-ref-section">
+          <div class="search-ref-header">
+            <span class="search-ref-icon">🔍</span>
+            <span class="search-ref-title">搜索结果参考</span>
+            <span class="search-ref-count">${cards.length} 个结果</span>
+          </div>
+          <div class="search-ref-cards">
+            ${cards.map(card => `
+              <div class="search-ref-card" onclick="window.open('${card.url}', '_blank')">
+                <div class="card-image">
+                  <img src="${card.pic || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTIwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04NSA0NUg5NVY1NUg4NVY0NVoiIGZpbGw9IiM5Q0EzQUYiLz4KPHA+dGggZD0iTTc1IDY1SDEyNVY3NUg3NVY2NVoiIGZpbGw9IiM5Q0EzQUYiLz4KPHA+dGggZD0iTTg1IDc1SDExNVY4NUg4NVY3NVoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'}" alt="${card.title}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTIwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04NSA0NUg5NVY1NUg4NVY0NVoiIGZpbGw9IiM5Q0EzQUYiLz4KPHA+dGggZD0iTTc1IDY1SDEyNVY3NUg3NVY2NVoiIGZpbGw9IiM5Q0EzQUYiLz4KPHA+dGggZD0iTTg1IDc1SDExNVY4NUg4NVY3NVoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'" />
+                </div>
+                <div class="card-body">
+                  <div class="card-title">${card.title}</div>
+                  <div class="card-content">${card.content.substring(0, 100)}${card.content.length > 100 ? '...' : ''}</div>
+                  <div class="card-site">${card.siteName}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `
+
+      // 更新消息内容，添加搜索结果卡片
+      const currentContent = messages.value.find(msg => msg.id === messageId)?.content || ''
+      updateAssistantMessage(messageId, {
+        content: currentContent + cardsHtml + "\n\n"
+      })
     }
 
     // 打字机效果函数
@@ -452,40 +541,115 @@ export default {
           break
 
         case 'raw_chunk': {
-          // 处理原始数据块 - 修复重复字符问题
+          // 处理原始数据块
           console.log('🔍 [原始数据块]:', data.data)
           
-          let newToken = ''
-          
-          // 方法1: 从 chunk 数组中提取增量内容
-          if (data.data && data.data.chunk && Array.isArray(data.data.chunk)) {
-            data.data.chunk.forEach(item => {
-              if (item && item.content) {
-                // 这里应该是增量内容，不是累积内容
-                newToken = item.content
-              }
-            })
-          }
-          
-          // 方法2: 从 output_messages 中提取增量token
-          if (data.data && data.data.output_messages && Array.isArray(data.data.output_messages)) {
-            data.data.output_messages.forEach(msg => {
-              if (msg.type === 'token_stream' && msg.content && msg.content.token) {
-                // 这里是单个token，不需要累积
-                newToken = msg.content.token
-              }
-            })
-          }
-          
-          if (newToken) {
-            console.log('📝 [新增token]:', newToken.length, '字符:', JSON.stringify(newToken))
-            // 累积更新消息内容 - 只添加新的token
-            const currentContent = currentMessage.content || ''
-            const newContent = currentContent + newToken
+          // 检查是否是 updates 模式
+          if (data.data && data.data.stream_mode === 'updates' && data.data.chunk) {
+            console.log('📊 [Updates模式] 处理chunk数据')
             
-            updateAssistantMessage(currentMessage.id, {
-              content: newContent
+            // 遍历 chunk 中的所有智能体数据
+            Object.keys(data.data.chunk).forEach(agentKey => {
+              const agentData = data.data.chunk[agentKey]
+              console.log(`🤖 [智能体: ${agentKey}]`, agentData)
+              
+              // 检查是否有 messages 数组
+              if (agentData && agentData.messages && Array.isArray(agentData.messages)) {
+                // 查找 type 为 'ai' 且 name 为 'supervisor' 的消息
+                agentData.messages.forEach(msg => {
+                  if (msg.type === 'ai' && msg.name === 'supervisor' && msg.content) {
+                    console.log('📝 [Supervisor消息]:', msg.content.substring(0, 100) + '...')
+                    // 累积更新内容，不覆盖之前的内容
+                    const currentContent = currentMessage.content || ''
+                    updateAssistantMessage(currentMessage.id, {
+                      content: currentContent + msg.content
+                    })
+                  }
+                })
+              }
             })
+          } 
+          // 检查是否是 messages 模式
+          else if (data.data && data.data.stream_mode === 'messages' && data.data.chunk && Array.isArray(data.data.chunk)) {
+            console.log('📨 [Messages模式] 处理chunk数据')
+            
+            // 遍历 chunk 数组中的所有消息
+            data.data.chunk.forEach(msg => {
+              if (msg && msg.type === 'ai' && msg.content) {
+                console.log('📝 [AI消息]:', msg.content.substring(0, 100) + '...')
+                // 累积更新内容，不覆盖之前的内容
+                const currentContent = currentMessage.content || ''
+                updateAssistantMessage(currentMessage.id, {
+                  content: currentContent + msg.content
+                })
+              } else if (msg && msg.type === 'tool' && msg.content) {
+                console.log('🔧 [工具消息]:', msg.content)
+                // 尝试解析工具消息的 JSON 内容
+                try {
+                  let toolContent
+                  
+                  // 首先尝试直接解析 JSON
+                  try {
+                    toolContent = JSON.parse(msg.content)
+                  } catch (jsonError) {
+                    // 如果直接解析失败，尝试处理 Python 字典格式
+                    console.log('🔄 [格式转换] 尝试处理 Python 字典格式')
+                    
+                    // 将 Python 字典格式转换为 JSON 格式
+                    let jsonString = msg.content
+                      .replace(/'/g, '"')  // 将单引号替换为双引号
+                      .replace(/True/g, 'true')  // 处理 Python 布尔值
+                      .replace(/False/g, 'false')
+                      .replace(/None/g, 'null')
+                    
+                    toolContent = JSON.parse(jsonString)
+                  }
+                  
+                  // 检查是否是搜索引用数据
+                  if (toolContent.type === 'search_ref') {
+                    // 支持 data 和 datas 两种字段名
+                    const searchData = toolContent.data || toolContent.datas
+                    if (searchData && Array.isArray(searchData)) {
+                      console.log('🔍 [搜索引用] 找到', searchData.length, '个搜索结果')
+                      // 渲染搜索结果卡片
+                      renderSearchRefCards(currentMessage.id, searchData)
+                    }
+                  }
+                } catch (e) {
+                  console.warn('⚠️ [解析警告] 解析工具消息失败:', e, '原始内容:', msg.content)
+                }
+              }
+            })
+          } else {
+            // 兼容旧的处理方式
+            let newContent = ''
+            
+            // 方法1: 从 chunk 数组中提取增量内容
+            if (data.data && data.data.chunk && Array.isArray(data.data.chunk)) {
+              data.data.chunk.forEach(item => {
+                if (item && item.content) {
+                  newContent = item.content
+                }
+              })
+            }
+            
+            // 方法2: 从 output_messages 中提取增量token
+            if (data.data && data.data.output_messages && Array.isArray(data.data.output_messages)) {
+              data.data.output_messages.forEach(msg => {
+                if (msg.type === 'token_stream' && msg.content && msg.content.token) {
+                  newContent = msg.content.token
+                }
+              })
+            }
+            
+            if (newContent) {
+              console.log('📝 [更新内容]:', newContent.length, '字符')
+              // 累积更新内容，不覆盖之前的内容
+              const currentContent = currentMessage.content || ''
+              updateAssistantMessage(currentMessage.id, {
+                content: currentContent + newContent
+              })
+            }
           }
           break
         }
@@ -542,7 +706,25 @@ export default {
                   try {
                     const jsonStr = trimmedLine.slice(6).trim()
                     if (jsonStr && jsonStr !== '[DONE]') {
-                      const data = JSON.parse(jsonStr)
+                      let data
+                      
+                      // 首先尝试直接解析 JSON
+                      try {
+                        data = JSON.parse(jsonStr)
+                      } catch (jsonError) {
+                        // 如果直接解析失败，尝试处理 Python 字典格式
+                        console.log('🔄 [流式格式转换] 尝试处理 Python 字典格式')
+                        
+                        // 将 Python 字典格式转换为 JSON 格式
+                        let convertedJsonString = jsonStr
+                          .replace(/'/g, '"')  // 将单引号替换为双引号
+                          .replace(/True/g, 'true')  // 处理 Python 布尔值
+                          .replace(/False/g, 'false')
+                          .replace(/None/g, 'null')
+                        
+                        data = JSON.parse(convertedJsonString)
+                      }
+                      
                       processStreamData(data, assistantMessage)
                     }
                   } catch (e) {
@@ -686,6 +868,7 @@ export default {
         timestamp: new Date()
       }
       messages.value.push(welcomeMessage)
+      
       scrollToBottom()
       
       // 设置输入区域高度监听
@@ -1971,7 +2154,184 @@ export default {
   background: #a0aec0;
 }
 
+/* 搜索结果卡片样式 */
+.search-ref-section {
+  margin: 16px 0;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(66, 153, 225, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-ref-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.search-ref-icon {
+  font-size: 16px;
+  color: #4299e1;
+}
+
+.search-ref-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  flex: 1;
+}
+
+.search-ref-count {
+  font-size: 12px;
+  color: #718096;
+  background: rgba(66, 153, 225, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.search-ref-cards {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 15px;
+  overflow-x: auto;
+  padding: 4px 0;
+  scroll-behavior: smooth;
+  white-space: nowrap;
+}
+
+.search-ref-cards::-webkit-scrollbar {
+  height: 6px;
+}
+
+.search-ref-cards::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.search-ref-cards::-webkit-scrollbar-thumb {
+  background: rgba(66, 153, 225, 0.3);
+  border-radius: 3px;
+}
+
+.search-ref-cards::-webkit-scrollbar-thumb:hover {
+  background: rgba(66, 153, 225, 0.5);
+}
+
+.search-ref-card {
+  flex-shrink: 0;
+  width: 280px;
+  background: white;
+  border: 2px solid #d1d5db !important;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  display: flex;
+  flex-direction: column;
+  margin-right: 15px;
+}
+
+.search-ref-card:hover {
+  border-color: #4299e1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.15);
+}
+
+.card-image {
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+  background: #f7fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.search-ref-card:hover .card-image img {
+  transform: scale(1.05);
+}
+
+.card-body {
+  padding: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-content {
+  font-size: 12px;
+  color: #718096;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-site {
+  font-size: 11px;
+  color: #4299e1;
+  font-weight: 500;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* 旧样式保持兼容 */
+.card-header {
+  margin-bottom: 8px;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #4299e1;
+  font-weight: 500;
+}
+
+.card-link-icon {
+  font-size: 12px;
+}
+
+.card-link-text {
+  font-size: 11px;
+}
+
 /* 响应式设计 */
+@media (max-width: 768px) {
+  .search-ref-card {
+    width: 240px;
+  }
+}
+
 @media (max-width: 768px) {
   .chat-header {
     padding: 12px 16px;
