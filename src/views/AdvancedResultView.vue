@@ -348,8 +348,8 @@
       <div class="search-result-list">
         <div
           class="result-card"
-          v-for="item in resultListMap['豆包']"
-          :key="item.title + item.source"
+          v-for="(item, index) in resultListMap['豆包']"
+          :key="item.url || (item.title + item.source + index)"
           @click="onResultCardClick(item.url)"
           style="cursor: pointer;"
         >
@@ -370,94 +370,7 @@
         </div>
       </div>
     </div>
-    <div v-if="activeTab === '今日头条'">
-      <div class="ai-answer-card">
-        <!-- TODO: 今日头条接口數據，請在此處替換為今日头条相關接口 -->
-        <div class="ai-answer-header">
-          <span class="ai-label">AI为你找到参考资料</span>
-          <div style="display: flex; align-items: center;">
-            <span class="source-icons">
-              <template v-for="(icon, idx) in refIcons" :key="idx">
-                <img
-                  v-if="icon"
-                  :src="icon"
-                  class="source-icon"
-                  :style="{ marginLeft: idx === 0 ? '0' : '-8px', zIndex: 10 - idx }"
-                />
-              </template>
-            </span>
-            <span style="margin-left: 2px;" class="source-count">{{ refList.length }}个来源</span>
-          </div>
-        </div>
-        <div v-if="thinkingList.length" class="ai-thinking-bar" @click="toggleThinkingExpand">
-          <div v-if="!thinkingEnd" class="marquee">
-            <span>{{ thinkingDisplay }}</span>
-          </div>
-          <div v-else class="thinking-finished">
-            已完成思考（耗时{{ thinkingDuration }}秒）
-          </div>
-        </div>
-        <div v-if="thinkingExpand && thinkingList.length" class="ai-thinking-detail">
-          <pre v-html="thinkingMarkdown"></pre>
-        </div>
-        <div class="ai-answer-content markdown-body" v-html="renderedAnswer"></div>
-        <div class="ai-answer-actions">
-          <div class="action-group">
-            <span class="action-btn" title="点赞">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M7 10V21a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-7"></path>
-                <path d="M14 9V5a3 3 0 0 0-6 0v5"></path>
-                <path d="M2 10h5"></path>
-              </svg>
-            </span>
-            <span class="action-btn" title="点踩">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 14V3a2 2 0 0 0-2-2H9A2 2 0 0 0 7 3v7"></path>
-                <path d="M10 15v4a3 3 0 0 0 6 0v-5"></path>
-                <path d="M22 14h-5"></path>
-              </svg>
-            </span>
-            <span class="action-btn" title="复制">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            </span>
-          </div>
-          <div class="action-group action-group-right">
-            <span class="action-btn action-btn-refresh" title="刷新">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"></path><path d="M1 14l5.37 5.36A9 9 0 0 0 20.49 15"></path></svg>
-            </span>
-            <span class="action-btn" title="分享">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-            </span>
-          </div>
-        </div>
-      </div>
-      <div class="search-result-list">
-        <div
-          class="result-card"
-          v-for="item in resultListMap['今日头条']"
-          :key="item.title + item.source"
-          @click="onResultCardClick(item.url)"
-          style="cursor: pointer;"
-        >
-          <div class="result-title">{{ item.title }}</div>
-          <div class="result-desc">{{ item.desc }}</div>
-          <div class="result-imgs">
-            <div v-if="item.images && item.images.length">
-              <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
-            </div>
-            <div v-else>
-              <div class="img-placeholder result-img" v-for="i in 3" :key="i"></div>
-            </div>
-          </div>
-          <div class="result-source">
-            <img v-if="item.icon" :src="item.icon" class="result-source-icon" />
-            {{ item.source }}
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- END: 其他tab複刻AI區塊 -->
-    <div v-if="!['AI','百度','百度AI','豆包','今日头条'].includes(activeTab)">
+    <div v-if="!['AI','百度','百度AI','豆包'].includes(activeTab)">
       <div class="deving-block">
         <div class="deving-content">开发中</div>
       </div>
@@ -473,12 +386,12 @@ import { marked } from 'marked';
 const route = useRoute(); // 获取路由实例
 
 const searchInput = ref(''); // 删除默认文字
+const lastSearchQuery = ref(); // 記錄上次搜索詞，避免重複調用AI接口
 const tabs = [
   { name: 'AI', icon: '🤖' },
   { name: '百度', icon: '🌐' },
   { name: '百度AI', icon: '🦊' }, // 原搜狗tab改名
   { name: '豆包', icon: '🟢' }, // 原360改為豆包
-  { name: '今日头条', icon: '📰' }
 ];
 const activeTab = ref('AI');
 // const resultList = ref([]); // 已不再使用，移除
@@ -558,26 +471,52 @@ const tabApiMap = {
     url: '/api/baidu-search', // 本地開發用代理解決CORS
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: (query) => JSON.stringify({ q: query, type: 'base' }), // 百度基礎搜索
+    body: (query) => JSON.stringify({ q: query, type: 'image:10;web:10;video:10' }),
     adapt: (data) => {
       if (data && Array.isArray(data.references)) {
-        return data.references.map(item => ({
-          title: item.title,
-          desc: item.content,
-          source: item.url ? (new URL(item.url)).hostname : '',
-          icon: item.icon,
-          images: item.image ? [item.image] : [],
-          url: item.url
-        }));
+        return data.references.map(item => {
+          if (item.type === 'image' && item.image) {
+            // 圖片卡片
+            return {
+              title: item.title || '',
+              desc: item.content || '',
+              source: item.url ? (new URL(item.url)).hostname : '',
+              icon: item.icon,
+              images: [item.image],
+              url: item.url
+            };
+          } else if (item.type === 'video' && item.video) {
+            // 視頻卡片（可根據實際字段擴展）
+            return {
+              title: item.title || '',
+              desc: item.content || '',
+              source: item.url ? (new URL(item.url)).hostname : '',
+              icon: item.icon,
+              images: [], // 可根據接口擴展視頻封面
+              url: item.url,
+              video: item.video
+            };
+      } else {
+            // 普通網頁卡片
+            return {
+              title: item.title || '',
+              desc: item.content || '',
+              source: item.url ? (new URL(item.url)).hostname : '',
+              icon: item.icon,
+              images: item.image ? [item.image] : [],
+              url: item.url
+            };
+          }
+        });
       }
       return [];
-    }
+    },
   },
   '百度AI': {
-    url: '/api/baidu-search', // 代理到百度AI搜索
+    url: 'http://localhost:3001/api/baidu-ai',
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: (query) => JSON.stringify({ q: query, type: '' }), // 百度AI搜索 type為空
+    body: (query) => JSON.stringify({ q: query, type: '' }),
     adapt: (data) => {
       if (data && Array.isArray(data.references)) {
         return data.references.map(item => ({
@@ -593,61 +532,51 @@ const tabApiMap = {
     }
   },
   '豆包': {
-    url: '/api/doubao-search', // 本地代理，防止CORS
+    url: 'http://localhost:3001/api/doubao-agent', // 使用相對路徑，支持前後端分離和線上部署    url: 'http://localhost:3001/api/doubao-agent', // 使用本地智能體代理
+
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer WQNOssVcH0BaKfvzAnR4vm7RjiXGvA6K',
       'Content-Type': 'application/json'
     },
-    body: (query) => JSON.stringify({
-      Query: query,
-      SearchType: 'web', // 或 web_summary
-      Count: 10,
-      Filter: { NeedContent: false, NeedUrl: true },
-      NeedSummary: true,
-      TimeRange: 'OneYear'
-    }),
+    body: (query) => JSON.stringify({ query }),
     adapt: (data) => {
-      if (data && data.Result && Array.isArray(data.Result.WebResults)) {
-        return data.Result.WebResults.map(item => ({
-          title: item.Title || '',
-          desc: item.Summary || item.Snippet || '',
-          source: item.SiteName || '',
-          icon: item.LogoUrl || '',
-          images: [],
-          url: item.Url || ''
+      // 1. 參考資料卡片（references）
+      let cards = [];
+      if (data && Array.isArray(data.references)) {
+        cards = data.references.map(item => ({
+          title: item.title || '',
+          desc: '',
+          source: item.site_name || '',
+          icon: '',
+          images: item.cover_image && item.cover_image.url ? [item.cover_image.url] : [],
+          url: item.url || ''
         }));
       }
-      return [];
-    }
-  },
-  '今日头条': {
-    url: 'https://api.bochaai.com/v1/web-search',
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer sk-bb67b69442e7458cae6e7bca308487dd',
-      'Content-Type': 'application/json'
-    },
-    body: (query) => JSON.stringify({ query, freshness: 'noLimit', summary: true, count: 20 }),
-    adapt: (data) => {
-      if (data && data.code === 200 && data.data && data.data.webPages && Array.isArray(data.data.webPages.value)) {
-        const imagesArr = (data.data.images && Array.isArray(data.data.images.value)) ? data.data.images.value : [];
-        return data.data.webPages.value.map(item => {
-          let images = [];
-          if (imagesArr.length && item.url) {
-            images = imagesArr.filter(img => img.hostPageUrl === item.url).map(img => img.contentUrl).filter(Boolean);
+      // 2. 多模態卡片（cards）
+      if (data && Array.isArray(data.cards)) {
+        data.cards.forEach(card => {
+          if (card.card_type === 'image' && card.image_card) {
+            cards.push({
+              title: card.image_card.title || '',
+              desc: '',
+              source: card.image_card.site_name || '',
+              icon: '',
+              images: card.image_card.image_url ? [card.image_card.image_url] : [],
+              url: card.image_card.source_image_url || ''
+            });
+          } else if (card.card_type === 'video' && card.video_card) {
+            cards.push({
+              title: card.video_card.title || '',
+              desc: '',
+              source: card.video_card.site_name || '',
+              icon: '',
+              images: card.video_card.cover_image && card.video_card.cover_image.url ? [card.video_card.cover_image.url] : [],
+              url: card.video_card.url || ''
+            });
           }
-          return {
-            title: item.name,
-            desc: item.summary,
-            source: item.siteName,
-            icon: item.siteIcon,
-            images,
-            url: item.url
-          };
         });
       }
-      return [];
+      return cards;
     }
   }
 };
@@ -656,33 +585,37 @@ const resultListMap = ref({
   'AI': [],
   '百度': [],
   '百度AI': [],
-  '豆包': [],
-  '今日头条': []
+  '豆包': []
 });
 
 async function onSearch() {
-  answer.value = '';
-  refList.value = [];
-  thinkingList.value = [];
-  thinkingStart.value = 0;
-  thinkingEnd.value = false;
-  thinkingExpand.value = false;
+  const isFirstSearch = !answer.value && !refList.value.length;
+  const searchQueryChanged = searchInput.value !== lastSearchQuery.value;
+  
+  if (isFirstSearch || searchQueryChanged) {
+    answer.value = '';
+    refList.value = [];
+    thinkingList.value = [];
+    thinkingStart.value = 0;
+    thinkingEnd.value = false;
+    thinkingExpand.value = false;
+    lastSearchQuery.value = searchInput.value;
 
-  // AI接口不變，所有tab都保留
-  const body = {
-    content: searchInput.value,
-    oaid: "014764227945ac18",
-    chatType: "SUMMARY",
-    searchId: "MTk0NzA4MzI3Mw==1735626267349",
-    miId: "M2U0N2Y5ODRmMzg3OTE5ZjQ5NDYxMjcxMTk2YTA3MjA=",
-    tzData: "566f419916348dcc",
-    tzResultData: "...",
-    tzErrorCode: "2",
-    tzErrorMsg: "不支持Tz验签",
-    rawLastQueryList: [],
-    model: "DOUBAO",
-    isDeepThinking: route.query.isdeep === 'true'
-  };
+    // AI接口不變，所有tab都保留
+    const body = {
+      content: searchInput.value,
+      oaid: "014764227945ac18",
+      chatType: "SUMMARY",
+      searchId: "MTk0NzA4MzI3Mw==1735626267349",
+      miId: "M2U0N2Y5ODRmMzg3OTE5ZjQ5NDYxMjcxMTk2YTA3MjA=",
+      tzData: "566f419916348dcc",
+      tzResultData: "...",
+      tzErrorCode: "2",
+      tzErrorMsg: "不支持Tz验签",
+      rawLastQueryList: [],
+      model: "DOUBAO",
+      isDeepThinking: route.query.isdeep === 'true'
+    };
 
   fetch('https://ai.search.miui.com/api/llm/query', {
     method: 'POST',
@@ -744,6 +677,7 @@ async function onSearch() {
     answer.value = '请求失败，请重试';
     refList.value = [];
   });
+  }
 
   // 每個tab下方的網頁卡片都調用對應接口，並存入resultListMap
   const tab = activeTab.value;
@@ -756,7 +690,12 @@ async function onSearch() {
     })
       .then(res => res.json())
       .then(data => {
-        if (tab === '百度') {
+        if (tab === '豆包') {
+          console.log('【豆包API原始返回】', data);
+          const adapted = tabApi.adapt(data);
+          console.log('【豆包API適配後卡片】', adapted);
+          resultListMap.value[tab] = adapted;
+        } else if (tab === '百度') {
           console.log('百度API返回：', data);
           const adapted = tabApi.adapt(data);
           console.log('百度API适配后卡片：', adapted);
@@ -765,7 +704,10 @@ async function onSearch() {
           resultListMap.value[tab] = tabApi.adapt(data);
         }
       })
-      .catch(() => {
+      .catch((e) => {
+        if (tab === '豆包') {
+          console.error('【豆包API請求失敗】', e);
+        }
         resultListMap.value[tab] = [];
       });
   } else {
@@ -773,10 +715,28 @@ async function onSearch() {
   }
 }
 
-// 監聽tab切換，自動刷新對應tab的網頁卡片
+// 監聽tab切換，只更新對應tab的網頁卡片，不重複調用AI接口
 watch(activeTab, () => {
   if (searchInput.value) {
-    onSearch();
+    // 只調用當前tab的網頁卡片接口，不重複調用AI接口
+    const tab = activeTab.value;
+    const tabApi = tabApiMap[tab];
+    if (tabApi) {
+      fetch(tabApi.url, {
+        method: tabApi.method,
+        headers: tabApi.headers,
+        body: tabApi.body(searchInput.value)
+      })
+        .then(res => res.json())
+        .then(data => {
+          resultListMap.value[tab] = tabApi.adapt(data);
+        })
+        .catch(() => {
+          resultListMap.value[tab] = [];
+        });
+    } else {
+      resultListMap.value[tab] = [];
+    }
   }
 });
 
