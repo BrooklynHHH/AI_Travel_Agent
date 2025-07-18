@@ -1,48 +1,4 @@
-ERROR
-[eslint] 
-/Users/lizy/Desktop/GoodStudy/agent_mi_V2/agent-mi/src/views/MultiTurnChatView.vue
-   917:15  error  'processor' is assigned a value but never used  no-unused-vars
-   943:17  error  'agentCardMap' is not defined                   no-undef
-   957:33  error  'currentAgent' is not defined                   no-undef
-   968:58  error  'currentAgent' is not defined                   no-undef
-   969:23  error  'currentAgent' is not defined                   no-undef
-   970:71  error  'currentAgent' is not defined                   no-undef
-   971:49  error  'currentAgent' is not defined                   no-undef
-   974:58  error  'currentAgent' is not defined                   no-undef
-   975:23  error  'agentCardMap' is not defined                   no-undef
-   975:40  error  'currentAgent' is not defined                   no-undef
-   978:38  error  'currentAgent' is not defined                   no-undef
-   984:21  error  'fullResponse' is not defined                   no-undef
-  1019:28  error  'agentCardMap' is not defined                   no-undef
-  1021:25  error  'currentAgent' is not defined                   no-undef
-  1025:25  error  'agentCardMap' is not defined                   no-undef
-  1037:40  error  'agentCardMap' is not defined                   no-undef
-  1058:25  error  'fullResponse' is not defined                   no-undef
-  1065:25  error  'fullResponse' is not defined                   no-undef
-  1065:41  error  'fullResponse' is not defined                   no-undef
-  1090:15  error  'agentCardMap' is not defined                   no-undef
-  1100:20  error  'agentCardMap' is not defined                   no-undef
-  1107:17  error  'agentCardMap' is not defined                   no-undef
-  1114:40  error  'agentCardMap' is not defined                   no-undef
-  1130:20  error  'agentCardMap' is not defined                   no-undef
-  1135:17  error  'agentCardMap' is not defined                   no-undef
-  1138:32  error  'agentCardMap' is not defined                   no-undef
-  1157:58  error  'fullResponse' is not defined                   no-undef
-  1158:17  error  'fullResponse' is not defined                   no-undef
-  1172:19  error  'agentCardMap' is not defined                   no-undef
-  1173:32  error  'agentCardMap' is not defined                   no-undef
-  1183:15  error  'fullResponse' is not defined                   no-undef
-  1183:52  error  'fullResponse' is not defined                   no-undef
-  1191:15  error  'agentCardMap' is not defined                   no-undef
-  1200:19  error  'fullResponse' is not defined                   no-undef
-  1200:35  error  'fullResponse' is not defined                   no-undef
-  1201:41  error  'fullResponse' is not defined                   no-undef
-  1204:23  error  'fullResponse' is not defined                   no-undef
-  1223:21  error  'fullResponse' is not defined                   no-undef
-  1224:43  error  'fullResponse' is not defined                   no-undef
-  1227:25  error  'fullResponse' is not defined                   no-undef
-
-✖ 40 problems (40 errors, 0 warnings)<template>
+<template>
   <div class="message-card-wrapper" :class="messageType">
     <div class="message-card" :class="[messageType, { 'is-streaming': isStreaming, 'is-collapsed': isCollapsed }]">
       <!-- 卡片头部 -->
@@ -256,7 +212,6 @@ export default {
 <style scoped>
 .message-card-wrapper {
   margin-bottom: 16px;
-  animation: fadeInUp 0.4s ease-out;
 }
 
 .message-card-wrapper.user {

@@ -6,8 +6,9 @@
 
 import logging
 import os
+import json
 from datetime import datetime
-from config import LOG_LEVEL, LOG_FORMAT, LOG_FILE, PROJECT_ROOT
+from config import LOG_LEVEL, LOG_FORMAT, LOG_FILE, PROJECT_ROOT, ENABLE_API_OUTPUT_LOG, API_OUTPUT_LOG_DIR
 
 def setup_logger(name: str = "simple_multi_turn", level: str = None) -> logging.Logger:
     """
@@ -72,3 +73,47 @@ def log_error(logger: logging.Logger, error: Exception, context: str = "", sessi
 def log_session_event(logger: logging.Logger, event: str, session_id: str, details: str = ""):
     """记录会话事件"""
     logger.info(f"🔄 [{session_id}] {event}: {details}")
+
+def log_api_output(chunk_data: str, session_id: str = None):
+    """
+    记录API输出数据块到本地文件
+    
+    Args:
+        chunk_data: 输出的数据块内容
+        session_id: 会话ID
+    """
+    if not ENABLE_API_OUTPUT_LOG:
+        return
+    
+    try:
+        # 创建日志目录
+        log_dir = os.path.join(PROJECT_ROOT, API_OUTPUT_LOG_DIR)
+        os.makedirs(log_dir, exist_ok=True)
+        
+        # 生成日志文件名（按日期）
+        today = datetime.now().strftime("%Y%m%d")
+        log_file = os.path.join(log_dir, f"api_output_{today}.log")
+        
+        # 计算数据块大小
+        chunk_size = len(chunk_data.encode('utf-8'))
+        
+        # 格式化日志条目
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        session_info = session_id or "unknown"
+        
+        # 构建日志条目
+        log_entry = {
+            "timestamp": timestamp,
+            "session_id": session_info,
+            "chunk_size": chunk_size,
+            "data": chunk_data.strip()
+        }
+        
+        # 写入日志文件
+        with open(log_file, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
+            
+    except Exception as e:
+        # 如果API输出日志失败，记录到主日志中，但不影响主流程
+        main_logger = logging.getLogger("simple_multi_turn_api")
+        main_logger.error(f"API输出日志记录失败: {str(e)}")

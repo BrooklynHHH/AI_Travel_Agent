@@ -10,6 +10,8 @@ import subprocess
 import time
 from pathlib import Path
 
+
+
 def check_dependencies():
     """检查依赖是否安装"""
     print("🔍 检查依赖...")

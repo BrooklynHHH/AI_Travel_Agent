@@ -42,3 +42,8 @@ CONTENT_TYPES = {
 LOG_LEVEL = 'INFO'
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 LOG_FILE = 'simple_multi_turn.log'
+
+# API输出日志配置
+ENABLE_API_OUTPUT_LOG = True
+API_OUTPUT_LOG_DIR = 'api_output_logs'
+API_OUTPUT_LOG_FORMAT = '%(asctime)s - [%(session_id)s] - %(chunk_size)d bytes - %(message)s'
