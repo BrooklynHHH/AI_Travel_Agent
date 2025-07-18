@@ -513,7 +513,7 @@ const tabApiMap = {
     },
   },
   '百度AI': {
-    url: 'http://localhost:3001/api/baidu-ai',
+    url: 'http://staging-llm.search.miui.srv/agent-api/baidu-ai',
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: (query) => JSON.stringify({ q: query, type: '' }),
@@ -532,7 +532,7 @@ const tabApiMap = {
     }
   },
   '豆包': {
-    url: 'http://localhost:3001/api/doubao-agent', // 使用相對路徑，支持前後端分離和線上部署    url: 'http://localhost:3001/api/doubao-agent', // 使用本地智能體代理
+    url: 'http://staging-llm.search.miui.srv/agent-api/doubao-agent', // 使用相對路徑，支持前後端分離和線上部署    url: 'http://localhost:3001/api/doubao-agent', // 使用本地智能體代理
 
     method: 'POST',
     headers: {
