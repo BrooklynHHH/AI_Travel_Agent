@@ -468,13 +468,14 @@ const tabApiMap = {
     }
   },
   '百度': {
-    url: '/api/baidu-search', // 本地開發用代理解決CORS
+    url: 'api/baidu-search', // 本地開發用代理解決CORS
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: (query) => JSON.stringify({ q: query, type: 'image:10;web:10;video:10' }),
     adapt: (data) => {
+      console.log('百度API原始数据：', data);
       if (data && Array.isArray(data.references)) {
-        return data.references.map(item => {
+        const adaptedData = data.references.map(item => {
           if (item.type === 'image' && item.image) {
             // 圖片卡片
             return {
@@ -496,7 +497,7 @@ const tabApiMap = {
               url: item.url,
               video: item.video
             };
-      } else {
+          } else {
             // 普通網頁卡片
             return {
               title: item.title || '',
@@ -508,7 +509,10 @@ const tabApiMap = {
             };
           }
         });
+        console.log('百度API适配后数据：', adaptedData);
+        return adaptedData;
       }
+      console.log('百度API数据格式不正确或为空');
       return [];
     },
   },
@@ -518,16 +522,20 @@ const tabApiMap = {
     headers: { 'Content-Type': 'application/json' },
     body: (query) => JSON.stringify({ q: query, type: '' }),
     adapt: (data) => {
+      console.log('百度AI API原始数据：', data);
       if (data && Array.isArray(data.references)) {
-        return data.references.map(item => ({
-          title: item.title,
-          desc: item.content,
+        const adaptedData = data.references.map(item => ({
+          title: item.title || '',
+          desc: item.content || '',
           source: item.url ? (new URL(item.url)).hostname : '',
           icon: item.icon,
           images: item.image ? [item.image] : [],
           url: item.url
         }));
+        console.log('百度AI API适配后数据：', adaptedData);
+        return adaptedData;
       }
+      console.log('百度AI API数据格式不正确或为空');
       return [];
     }
   },
@@ -690,19 +698,15 @@ async function onSearch() {
     })
       .then(res => res.json())
       .then(data => {
-        if (tab === '豆包') {
-          console.log('【豆包API原始返回】', data);
-          const adapted = tabApi.adapt(data);
-          console.log('【豆包API適配後卡片】', adapted);
-          resultListMap.value[tab] = adapted;
-        } else if (tab === '百度') {
-          console.log('百度API返回：', data);
-          const adapted = tabApi.adapt(data);
-          console.log('百度API适配后卡片：', adapted);
-          resultListMap.value[tab] = adapted;
-        } else {
-          resultListMap.value[tab] = tabApi.adapt(data);
-        }
+        console.log(`${tab} API返回数据：`, data);
+        const adapted = tabApi.adapt(data);
+        console.log(`${tab} API适配后数据：`, adapted);
+        resultListMap.value[tab] = adapted;
+        
+        // 强制触发响应式更新
+        nextTick(() => {
+          console.log(`${tab} resultListMap更新后：`, resultListMap.value[tab]);
+        });
       })
       .catch((e) => {
         if (tab === '豆包') {
@@ -729,7 +733,15 @@ watch(activeTab, () => {
       })
         .then(res => res.json())
         .then(data => {
-          resultListMap.value[tab] = tabApi.adapt(data);
+          console.log(`切换到${tab} tab，API返回：`, data);
+          const adapted = tabApi.adapt(data);
+          console.log(`切换到${tab} tab，适配后：`, adapted);
+          resultListMap.value[tab] = adapted;
+          
+          // 强制触发响应式更新
+          nextTick(() => {
+            console.log(`切换到${tab} tab，resultListMap更新后：`, resultListMap.value[tab]);
+          });
         })
         .catch(() => {
           resultListMap.value[tab] = [];
