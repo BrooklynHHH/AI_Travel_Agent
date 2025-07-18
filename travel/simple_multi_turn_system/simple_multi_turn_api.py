@@ -21,7 +21,7 @@ sys.path.append(os.path.join(current_dir, '../agent-mi/travel'))
 # 导入本地模块
 from config import API_HOST, API_PORT, DEBUG_MODE, SUPERVISOR_CONFIG
 from multi_turn_session import session_manager
-from utils.logger import setup_logger, log_user_input, log_system_response, log_error, log_session_event
+from utils.logger import setup_logger, log_user_input, log_system_response, log_error, log_session_event, log_api_output
 from utils.stream_handler import StreamHandler, create_error_stream, create_start_stream
 from content_formatter import format_for_console
 
@@ -155,7 +155,10 @@ def stream_endpoint():
                     "user_input_history": user_input_history,
                     "timestamp": datetime.now().isoformat()
                 }
-                yield stream_handler.format_sse_data(start_data)
+                formatted_start = stream_handler.format_sse_data(start_data)
+                # 记录API输出日志
+                # log_api_output(formatted_start, session.session_id)
+                yield formatted_start
                 
                 
                 # 调用智能体系统进行流式处理
@@ -170,6 +173,8 @@ def stream_endpoint():
                     
                     # 使用流式处理器处理数据块
                     for formatted_chunk in stream_handler.process_stream_chunk(chunk, session.session_id):
+                        # 记录API输出日志
+                        # log_api_output(formatted_chunk, session.session_id)
                         yield formatted_chunk
                         
                         # 在控制台显示格式化内容（用于调试）
@@ -183,6 +188,8 @@ def stream_endpoint():
                 
                 # 完成流式处理
                 final_stream = stream_handler.finalize_stream(session.session_id)
+                # 记录API输出日志
+                # log_api_output(final_stream, session.session_id)
                 yield final_stream
                 
                 # 提取最终响应
@@ -199,6 +206,8 @@ def stream_endpoint():
             except Exception as e:
                 log_error(logger, e, "流式处理", session.session_id)
                 error_stream = create_error_stream(f"处理请求时发生错误: {str(e)}", session.session_id)
+                # 记录API输出日志
+                log_api_output(error_stream, session.session_id)
                 yield error_stream
         
         return Response(
