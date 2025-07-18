@@ -145,6 +145,13 @@
                 <div v-if="message.summaryText" class="summary-block">
                   <div class="summary-content" v-html="renderMarkdown(message.summaryText)"></div>
                 </div>
+                <!-- 使用 ThinkingView 组件显示思考过程和普通内容 -->
+                <ThinkingView 
+                  v-if="message.thinkingText || message.normalText"
+                  :thinking-text="message.thinkingText"
+                  :normal-text="message.normalText"
+                  :unique-id-suffix="`msg-${index}`"
+                />
               </div>
             </div>
           </template>
@@ -189,6 +196,7 @@
 <script setup>
 import { ref, onMounted, nextTick, onUpdated } from 'vue';
 import MarkdownIt from 'markdown-it';
+import ThinkingView from '@/base/views/ThinkingView.vue';
 
 
 // Quick action buttons - loaded from config
@@ -460,17 +468,25 @@ const toggleSearchResult = (result) => {
 };
 
 const sendMessage = async () => {
+  if (!userInput.value.trim()) return; // 防止发送空消息
+  
   try {
     isStreaming.value = true;
+    // 保存当前输入内容，因为后面会清空输入框
+    const currentInput = userInput.value;
+    
     const newMessage = {
       role: 'user',
-      content: userInput.value,
+      content: currentInput,
       searchResults: null,
       answerText: '',
       searchPlan: '',
       roleCards: []
     };
     messages.value.push(newMessage);
+    
+    // 清空输入框
+    userInput.value = '';
     const assistantMessage = {
       role: 'assistant',
       content: '',
@@ -495,7 +511,7 @@ const sendMessage = async () => {
       },
       body: JSON.stringify({
         inputs: {},
-        query: userInput.value,
+        query: currentInput,
         response_mode: 'streaming',
         conversation_id: '',
         user: 'abc-123'
