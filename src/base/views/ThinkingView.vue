@@ -171,12 +171,8 @@ const renderMarkdownInternal = (content, idPrefix = 'default', isForThinkingBloc
     }
     return htmlOutput;
   } else {
-    let html = md.render(content);
-    html = html.replace(/(<\/p>)(\s*)<p>/g, '$1<div style="height:1em"></div><p>');
-    html = html.replace(/(<\/h[1-6]>)(\s*)<p>/g, '$1<div style="height:1em"></div><p>');
-    html = html.replace(/(<\/p>)(\s*)<(h[1-6]>)/g, '$1<div style="height:1em"></div><$3');
-    html = html.replace(/(<\/h[1-6]>)(\s*)<(h[1-6]>)/g, '$1<div style="height:1em"></div><$3');
-    return html;
+    // 只保留原始 markdown 渲染，不做标题前后换行的正则替换
+    return md.render(content);
   }
 };
 
