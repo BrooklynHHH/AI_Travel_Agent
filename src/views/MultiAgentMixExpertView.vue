@@ -210,7 +210,7 @@ const handleQuickAction = (actionText) => {
   // Set the input value to the action text
   userInput.value = actionText;
   // Send the message
-  sendMessage();
+  sendMessage(actionText);
 };
 
 // Product window state
@@ -467,13 +467,14 @@ const toggleSearchResult = (result) => {
   result.show = !result.show;
 };
 
-const sendMessage = async () => {
-  if (!userInput.value.trim()) return; // 防止发送空消息
+const sendMessage = async (actionText) => {
+  const inputText = actionText || userInput.value;
+  if (!inputText.trim()) return; // 防止发送空消息
   
   try {
     isStreaming.value = true;
     // 保存当前输入内容，因为后面会清空输入框
-    const currentInput = userInput.value;
+    const currentInput = inputText;
     
     const newMessage = {
       role: 'user',
@@ -503,10 +504,10 @@ const sendMessage = async () => {
 
     // 1. 第一个API流式获取专家名和analysis
     console.log('[sendMessage] 开始请求第一个API获取专家名和analysis');
-    const response = await fetch('http://10.18.4.170/v1/chat-messages', {
+    const response = await fetch('https://mify-be.pt.xiaomi.com/api/v1/chat-messages', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer app-bCkBvqZL5WpDnEQqNjb0Buld',
+        'Authorization': 'Bearer app-dg1RYsgaMwSVXqDJgTP7Z6Wo',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -569,10 +570,10 @@ const sendMessage = async () => {
     await Promise.all(
       expertNames.map(async (expert, idx) => {
         console.log(`[sendMessage] 请求专家 ${expert} 的独立总结`);
-        const res2 = await fetch('http://10.18.4.170/v1/chat-messages', {
+        const res2 = await fetch('https://mify-be.pt.xiaomi.com/api/v1/chat-messages', {
           method: 'POST',
           headers: {
-            'Authorization': 'Bearer app-fiDcyif946Bsa9u88xKvMR51',
+            'Authorization': 'Bearer app-zEG8RNfd2naycwPjYrCFayZn',
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -580,7 +581,7 @@ const sendMessage = async () => {
               role: expert,
               analysis: analysisText
             },
-            query: userInput.value,
+            query: currentInput,
             response_mode: 'streaming',
             conversation_id: '',
             user: 'abc-123'
@@ -730,7 +731,7 @@ const sendMessage = async () => {
         inputs: {
           expert_idea: expertIdeas
         },
-        query: userInput.value,
+        query: actionText,
         response_mode: 'streaming',
         conversation_id: '',
         user: 'abc-123'
