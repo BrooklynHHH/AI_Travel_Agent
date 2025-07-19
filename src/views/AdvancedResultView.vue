@@ -486,7 +486,7 @@ const tabApiMap = {
     }
   },
   '百度': {
-    url: 'api/baidu-search', // 本地開發用代理解決CORS
+    url: 'http://staging-llm.search.miui.srv/agent-api/baidu-ai', // 本地開發用代理解決CORS
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: (query) => JSON.stringify({ q: query, type: 'base' }),
