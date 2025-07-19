@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:5001' // 本地服務器地址
+const API_BASE_URL = 'http://staging-llm.search.miui.srv' // 本地服務器地址
 
 export const generatePodcast = async (text, type) => {
   try {

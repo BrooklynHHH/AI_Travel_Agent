@@ -8,14 +8,13 @@ import OcrView from '../views/OcrView.vue'
 import PodcastView from '../views/PodcastView.vue'
 import FortuneView from '../views/FortuneView.vue'
 
-import TravelView from '../views/TravelView.vue'
 import MultiAgentMixExpertView from '../views/MultiAgentMixExpertView.vue'
 import VideoGenerationView from '@/views/VideoGenerationView.vue'
 
 export const routes = [ // Add export here
   {
-    path: '/multi-turn-chat-simple',
-    name: '多轮对话-simple',
+    path: '/travel',
+    name: '旅游',
     component: () => import('../views/NewMultiTurnChatView_V1_2.vue')
   },
   {
@@ -27,11 +26,6 @@ export const routes = [ // Add export here
     path: '/search',
     name: '搜索', // Translated
     component: () => import('../views/SearchView.vue')
-  },
-  {
-    path: '/travel',
-    name: '旅游',
-    component: TravelView
   },
   {
     path: '/mi',

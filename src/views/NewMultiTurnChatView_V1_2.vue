@@ -636,11 +636,13 @@ export default {
           }
           break
 
-        case 'done':
+        case 'done': {
           console.log('✅ [处理完成]')
+          const finalContent = data.final_response || data.content || currentMessage.content
+          console.log('📝 [最终内容]:', finalContent)
           updateAssistantMessage(currentMessage.id, {
             isStreaming: false,
-            content: data.final_response || data.content || currentMessage.content
+            content: finalContent
           })
           // 标记所有步骤为完成
           if (currentMessage.progress) {
@@ -663,6 +665,7 @@ export default {
           // 强制立即更新DOM
           await forceUpdate()
           break
+        }
 
         case 'error':
           console.error('❌ [处理错误]:', data.message)
@@ -687,7 +690,7 @@ export default {
             
             console.log(`agent|tools:${langgraph_node}`)
             
-            if (langgraph_node === "tools") {
+            if (langgraph_node === "tools" || langgraph_node === "tour_search_agent") {
               const toolName = chunk[0]?.name || ''
               console.log(`工具名称：${toolName}`)
               console.log(`工具内容：${content}`)
@@ -703,7 +706,7 @@ export default {
               }
             }
             
-            if (langgraph_node === "agent") {
+            if (langgraph_node === "agent" || langgraph_node ==="supervisor") {
               const checkpoint_ns = metadata.checkpoint_ns || ''
               const pattern = /(\w+):([\w-]+)/
               const match = checkpoint_ns.match(pattern)
@@ -771,6 +774,11 @@ export default {
         default:
           console.warn('⚠️ [未知数据类型]:', data.type)
       }
+
+      if (data.data != null && Object.hasOwn(data.data, 'stream_mode')){
+        console.log('type : stream_mode', data)
+      }
+
     }
 
     // API 调用

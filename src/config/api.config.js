@@ -7,7 +7,7 @@
 const getApiBaseUrl = () => {
  
   // 生产环境可以配置为实际的服务器地址
-  return 'http://127.0.0.1:5001'
+  return 'http://staging-llm.search.miui.srv'
 }
 
 export const API_CONFIG = {
