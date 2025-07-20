@@ -781,6 +781,95 @@ export default {
 
     }
 
+    // 提取完整SSE消息的辅助函数
+    const extractCompleteMessages = (buffer) => {
+      const messages = []
+      let remaining = buffer
+      
+      // SSE消息以\n\n分隔，但需要考虑data:行内的\n
+      const parts = buffer.split('\n\n')
+      
+      // 最后一部分可能是不完整的，保留在buffer中
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (parts[i].trim()) {
+          messages.push(parts[i] + '\n\n')
+        }
+      }
+      
+      // 最后一部分作为剩余数据
+      remaining = parts[parts.length - 1]
+      
+      return {
+        complete: messages,
+        remaining: remaining
+      }
+    }
+
+    // 处理单个完整SSE消息的函数
+    const processSSEMessage = async (message, assistantMessage) => {
+      const lines = message.split('\n')
+      
+      for (const line of lines) {
+        const trimmedLine = line.trim()
+        if (trimmedLine.startsWith('data: ')) {
+          try {
+            const jsonStr = trimmedLine.slice(6).trim()
+            if (jsonStr && jsonStr !== '[DONE]') {
+              const data = JSON.parse(jsonStr)
+              await processStreamData(data, assistantMessage)
+              // 关键：每处理一行数据就强制更新DOM
+              await forceUpdate()
+            } else if (jsonStr === '[DONE]') {
+              console.log('📥 [流式结束标记] 收到 [DONE] 标记')
+              // 确保消息状态正确更新为完成
+              updateAssistantMessage(assistantMessage.id, {
+                isStreaming: false
+              })
+              // 标记所有agent输出为完成
+              if (assistantMessage.agentOutputs) {
+                assistantMessage.agentOutputs.forEach(output => {
+                  if (output.status === 'processing') {
+                    output.status = 'completed'
+                    output.endTime = Date.now()
+                    output.isActive = false
+                  }
+                })
+              }
+              // 最终强制更新DOM
+              await forceUpdate()
+            }
+          } catch (e) {
+            console.warn('⚠️ [解析警告] 解析流式数据失败:', e, '原始数据:', trimmedLine)
+          }
+        }
+      }
+    }
+
+    // 处理buffer中剩余数据的函数
+    const processBufferData = async (buffer, assistantMessage) => {
+      if (!buffer.trim()) return
+      
+      console.log('📦 [处理剩余数据] 长度:', buffer.length)
+      
+      // 尝试处理剩余数据，可能是不完整的SSE消息
+      const lines = buffer.split('\n')
+      for (const line of lines) {
+        const trimmedLine = line.trim()
+        if (trimmedLine.startsWith('data: ')) {
+          try {
+            const jsonStr = trimmedLine.slice(6).trim()
+            if (jsonStr && jsonStr !== '[DONE]') {
+              const data = JSON.parse(jsonStr)
+              await processStreamData(data, assistantMessage)
+              await forceUpdate()
+            }
+          } catch (e) {
+            console.warn('⚠️ [剩余数据解析警告] 可能是不完整的数据:', e, '原始数据:', trimmedLine)
+          }
+        }
+      }
+    }
+
     // API 调用
     const callStreamAPI = async (userMessage) => {
       const requestData = {
@@ -810,12 +899,21 @@ export default {
           // 创建助手消息
           const assistantMessage = addAssistantMessage()
 
+          // 数据缓冲区，用于处理跨chunk的SSE消息
+          let buffer = ''
+
           async function readStream() {
             try {
               const { done, value } = await reader.read()
               
               if (done) {
                 console.log('📥 [流式完成] 数据接收完毕')
+                
+                // 处理buffer中剩余的数据
+                if (buffer.trim()) {
+                  await processBufferData(buffer, assistantMessage)
+                }
+                
                 // 确保消息状态正确更新为完成
                 updateAssistantMessage(assistantMessage.id, {
                   isStreaming: false
@@ -834,43 +932,25 @@ export default {
                 return
               }
 
-              // 解码数据块
+              // 解码数据块并拼接到buffer
               const chunk = decoder.decode(value, { stream: true })
-              const lines = chunk.split('\n')
+              buffer += chunk
+              
+              console.log('📦 [数据块] 长度:', chunk.length, 'Buffer总长度:', buffer.length)
 
-              for (const line of lines) {
-                const trimmedLine = line.trim()
-                if (trimmedLine.startsWith('data: ')) {
-                  try {
-                    const jsonStr = trimmedLine.slice(6).trim()
-                    if (jsonStr && jsonStr !== '[DONE]') {
-                      const data = JSON.parse(jsonStr)
-                      await processStreamData(data, assistantMessage)
-                      // 关键：每处理一行数据就强制更新DOM
-                      await forceUpdate()
-                    } else if (jsonStr === '[DONE]') {
-                      console.log('📥 [流式结束标记] 收到 [DONE] 标记')
-                      // 确保消息状态正确更新为完成
-                      updateAssistantMessage(assistantMessage.id, {
-                        isStreaming: false
-                      })
-                      // 标记所有agent输出为完成
-                      if (assistantMessage.agentOutputs) {
-                        assistantMessage.agentOutputs.forEach(output => {
-                          if (output.status === 'processing') {
-                            output.status = 'completed'
-                            output.endTime = Date.now()
-                            output.isActive = false
-                          }
-                        })
-                      }
-                      // 最终强制更新DOM
-                      await forceUpdate()
-                    }
-                  } catch (e) {
-                    console.warn('⚠️ [解析警告] 解析流式数据失败:', e, '原始数据:', trimmedLine)
-                  }
-                }
+              // 提取完整的SSE消息
+              const messageResult = extractCompleteMessages(buffer)
+              
+              // 处理每个完整消息
+              for (const message of messageResult.complete) {
+                await processSSEMessage(message, assistantMessage)
+              }
+              
+              // 更新buffer为剩余的不完整数据
+              buffer = messageResult.remaining
+              
+              if (messageResult.remaining) {
+                console.log('📦 [剩余数据] 长度:', messageResult.remaining.length, '内容预览:', messageResult.remaining.substring(0, 100))
               }
 
               return readStream()
