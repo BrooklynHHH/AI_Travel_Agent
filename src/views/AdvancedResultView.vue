@@ -100,9 +100,6 @@
             <div v-if="item.images && item.images.length">
               <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
             </div>
-            <div v-else>
-              <div class="img-placeholder result-img" v-for="i in 3" :key="i"></div>
-            </div>
           </div>
           <div class="result-source">
             <img v-if="item.icon" :src="item.icon" class="result-source-icon" />
@@ -185,10 +182,7 @@
           <div class="result-desc">{{ item.desc }}</div>
           <div class="result-imgs">
             <div v-if="item.images && item.images.length">
-              <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
-            </div>
-            <div v-else>
-              <div class="img-placeholder result-img" v-for="i in 3" :key="i"></div>
+              <img v-for="img in item.images" :key="img" :src="img.url" class="img-placeholder result-img" />
             </div>
           </div>
           <div class="result-source">
@@ -271,10 +265,7 @@
           <div class="result-desc">{{ item.desc }}</div>
           <div class="result-imgs">
             <div v-if="item.images && item.images.length">
-              <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
-            </div>
-            <div v-else>
-              <div class="img-placeholder result-img" v-for="i in 3" :key="i"></div>
+              <img v-for="img in item.images" :key="img" :src="img.url" class="img-placeholder result-img" />
             </div>
           </div>
           <div class="result-source">
@@ -358,9 +349,6 @@
           <div class="result-imgs">
             <div v-if="item.images && item.images.length">
               <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
-            </div>
-            <div v-else>
-              <div class="img-placeholder result-img" v-for="i in 3" :key="i"></div>
             </div>
           </div>
           <div class="result-source">
