@@ -75,22 +75,6 @@ const md = new MarkdownIt({
   breaks: true
 })
 
-// 禁用代码块和内联代码的渲染
-md.renderer.rules.code_inline = function (tokens, idx) {
-  const token = tokens[idx]
-  return token.content
-}
-
-md.renderer.rules.code_block = function (tokens, idx) {
-  const token = tokens[idx]
-  return token.content
-}
-
-md.renderer.rules.fence = function (tokens, idx) {
-  const token = tokens[idx]
-  return token.content
-}
-
 export default {
   name: 'FocusAgentCard',
   props: {
@@ -467,9 +451,11 @@ export default {
   overflow-x: hidden;
   overflow-y: auto;
   padding: 12px;
-  background: white;
+  background: #ffffff !important;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .focus-markdown-content * {
