@@ -93,6 +93,7 @@
                 :conversations="session.conversations"
                 :current-status="session.currentStatus"
                 :streaming-content="session.streamingContent"
+                :session-index="session.sessionIndex"
                 :is-in-focus="focusedAgentInfo && focusedAgentInfo.agentInfo.key === session.agentInfo.key"
                 @toggle-card="handleToggleCard"
                 @toggle-conversation="handleToggleConversation"
@@ -636,12 +637,10 @@ export default {
                 // 确保智能体已启动
                 handleAgentStart(agentName)
                 
-                if (content) {
-                  console.log(`📝 [智能体内容] 更新内容，长度: ${content.length}`)
-                  await handleAgentContentUpdate(agentName, content, true)
-                } else {
-                  console.log(`⚠️ [智能体内容] 内容为空`)
-                }
+                // 🔑 关键修改：无论内容是否为空都调用 handleAgentContentUpdate
+                // 让 handleAgentContentUpdate 内部处理空内容的逻辑
+                console.log(`📝 [智能体内容] 处理内容，长度: ${content ? content.length : 0}`)
+                await handleAgentContentUpdate(agentName, content || '', true)
               } else {
                 console.log(`⚠️ [智能体解析] 无法解析 checkpoint_ns: ${checkpoint_ns}`)
                 
@@ -649,9 +648,8 @@ export default {
                 if (langgraph_node === "supervisor") {
                   console.log(`🎯 [智能体识别] 使用默认名称: supervisor`)
                   handleAgentStart('supervisor')
-                  if (content) {
-                    await handleAgentContentUpdate('supervisor', content, true)
-                  }
+                  // 🔑 关键修改：同样无论内容是否为空都调用处理方法
+                  await handleAgentContentUpdate('supervisor', content || '', true)
                 }
               }
             }

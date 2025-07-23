@@ -14,7 +14,10 @@
           <div v-if="currentStatus === 'streaming'" class="streaming-pulse"></div>
         </div>
         <div class="agent-details">
-          <div class="agent-name">{{ agentInfo.name }}</div>
+          <div class="agent-name">
+            {{ agentInfo.name }}
+            <span v-if="sessionIndex && sessionIndex > 1" class="session-index">#{{ sessionIndex }}</span>
+          </div>
           <div class="agent-description">{{ agentInfo.description }}</div>
         </div>
       </div>
@@ -141,6 +144,10 @@ export default {
     isInFocus: {
       type: Boolean,
       default: false
+    },
+    sessionIndex: {
+      type: Number,
+      default: 1
     }
   },
   emits: ['toggle-card', 'toggle-conversation'],
@@ -504,6 +511,17 @@ export default {
   font-size: 12px;
   color: #718096;
   font-weight: 500;
+}
+
+.session-index {
+  font-size: 11px;
+  color: #f59e0b;
+  font-weight: 700;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .card-controls {

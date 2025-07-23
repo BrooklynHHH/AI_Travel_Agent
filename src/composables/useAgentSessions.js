@@ -151,13 +151,13 @@ export function useAgentSessions() {
   }
 
   // 获取或创建当前轮次的智能体会话
-  const getOrCreateAgentSession = (agentKey, turnId = null) => {
+  const getOrCreateAgentSession = (agentKey, turnId = null, forceNew = false) => {
     const targetTurnId = turnId || currentTurnId.value
     
     if (!targetTurnId) {
       console.warn('⚠️ [会话管理] 没有活跃的轮次，创建新轮次')
       createNewTurn()
-      return getOrCreateAgentSession(agentKey, currentTurnId.value)
+      return getOrCreateAgentSession(agentKey, currentTurnId.value, forceNew)
     }
     
     const turn = conversationTurns[targetTurnId]
@@ -166,25 +166,75 @@ export function useAgentSessions() {
       return null
     }
     
-    // 关键修复：使用轮次+智能体的组合键确保数据隔离
-    const sessionKey = `${targetTurnId}_${agentKey}`
-    if (!turn.agentSessions[sessionKey]) {
-      // 深度克隆创建完全独立的会话对象
+    // 检查是否需要创建新会话实例
+    if (forceNew) {
+      // 为同一智能体创建新的会话实例
+      const sessionIndex = Object.keys(turn.agentSessions)
+        .filter(key => key.includes(`${targetTurnId}_${agentKey}`))
+        .length + 1
+      
+      const sessionKey = `${targetTurnId}_${agentKey}_${sessionIndex}`
+      console.log(`🆕 [新会话实例] 为 ${agentKey} 创建第 ${sessionIndex} 个会话实例`)
+      
       turn.agentSessions[sessionKey] = {
-        agentInfo: getAgentConfig(agentKey), // 已经是深拷贝
-        conversations: [], // 新数组实例
+        agentInfo: getAgentConfig(agentKey),
+        conversations: [],
         isCardCollapsed: false,
-        currentStatus: 'waiting', // waiting, streaming, completed
-        streamingContent: '', // 独立的字符串
+        currentStatus: 'waiting',
+        streamingContent: '',
         totalDuration: 0,
         lastUpdateTime: Date.now(),
         turnId: targetTurnId,
         agentKey: agentKey,
-        uniqueKey: sessionKey, // 用于Vue的key
-        // 添加会话创建时间戳，确保唯一性
+        uniqueKey: sessionKey,
         createdAt: Date.now(),
-        sessionId: generateId()
+        sessionId: generateId(),
+        sessionIndex: sessionIndex, // 会话实例序号
+        // 新增：智能体完成状态跟踪
+        emptyContentCount: 0,
+        needNewSessionOnNextContent: false,
+        lastContentTime: null
       }
+      
+      return turn.agentSessions[sessionKey]
+    }
+    
+    // 查找该智能体的最新会话实例
+    const existingSessions = Object.entries(turn.agentSessions)
+      .filter(([, session]) => session.agentKey === agentKey)
+      .sort(([, a], [, b]) => (b.sessionIndex || 1) - (a.sessionIndex || 1))
+    
+    if (existingSessions.length > 0) {
+      const [, latestSession] = existingSessions[0]
+      
+      // 如果最新会话标记需要新会话，则创建新的
+      if (latestSession.needNewSessionOnNextContent) {
+        return getOrCreateAgentSession(agentKey, turnId, true)
+      }
+      
+      return latestSession
+    }
+    
+    // 首次创建会话
+    const sessionKey = `${targetTurnId}_${agentKey}_1`
+    turn.agentSessions[sessionKey] = {
+      agentInfo: getAgentConfig(agentKey),
+      conversations: [],
+      isCardCollapsed: false,
+      currentStatus: 'waiting',
+      streamingContent: '',
+      totalDuration: 0,
+      lastUpdateTime: Date.now(),
+      turnId: targetTurnId,
+      agentKey: agentKey,
+      uniqueKey: sessionKey,
+      createdAt: Date.now(),
+      sessionId: generateId(),
+      sessionIndex: 1,
+      // 新增：智能体完成状态跟踪
+      emptyContentCount: 0,
+      needNewSessionOnNextContent: false,
+      lastContentTime: null
     }
     
     return turn.agentSessions[sessionKey]
@@ -340,35 +390,55 @@ export function useAgentSessions() {
   const handleAgentStart = (agentKey) => {
     console.log(`🎯 [智能体启动] ${agentKey}`)
     
-    const session = getOrCreateAgentSession(agentKey)
-    
-    // 如果当前没有活跃的对话轮次，创建一个新的
-    const activeConversation = session.conversations.find(conv => conv.status === 'streaming')
-    if (!activeConversation) {
-      startNewConversation(agentKey)
-    }
-    
-    session.currentStatus = 'streaming'
+    // 🔑 关键修改：不在启动时立即创建会话，等到有实际内容时再创建
+    // 这样可以避免创建空内容的卡片
     
     // 简化的焦点区管理：只在没有焦点智能体时设置初始焦点
     // 后续的焦点切换将由 handleAgentContentUpdate 处理
     if (agentKey !== 'tools' && agentKey !== 'unified_stream') {
       if (!focusedAgent.value) {
         console.log(`🎯 [初始焦点] 设置初始焦点智能体: ${agentKey}`)
-        setFocusedAgent(agentKey)
+        // 延迟设置焦点，等到有内容时再设置
+        // setFocusedAgent(agentKey)
       }
     }
   }
 
+
   // 处理智能体内容更新
   const handleAgentContentUpdate = async (agentKey, content, isIncremental = true) => {
     console.log(`📝 [内容更新] ${agentKey}: ${content.length} 字符`)
+    
+    // 🔑 关键修改：如果内容为空，直接返回，不创建任何会话或卡片
+    if (!content || content.trim() === '') {
+      console.log(`🚫 [跳过空内容] ${agentKey} 内容为空，不创建卡片`)
+      return
+    }
     
     // 关键修复：确保内容更新只影响当前轮次
     const session = getOrCreateAgentSession(agentKey, currentTurnId.value)
     if (!session) {
       console.warn(`⚠️ [内容更新] 无法获取智能体会话: ${agentKey}`)
       return
+    }
+    
+    // 检查是否需要创建新会话实例
+    if (session.needNewSessionOnNextContent) {
+      console.log(`🆕 [新会话] ${agentKey} 需要创建新会话实例`)
+      
+      // 创建新的会话实例
+      getOrCreateAgentSession(agentKey, currentTurnId.value, true)
+      
+      // 重置标记
+      session.needNewSessionOnNextContent = false
+      
+      console.log(`✨ [新卡片] ${agentKey} 已创建新的输出卡片`)
+    }
+    
+    // 确保有活跃的对话
+    const activeConversation = session.conversations.find(conv => conv.status === 'streaming')
+    if (!activeConversation) {
+      startNewConversation(agentKey)
     }
     
     // 🔑 关键修复：更新最新活跃智能体和时间戳
@@ -602,11 +672,22 @@ export function useAgentSessions() {
       const allSessions = Object.values(turn.agentSessions)
         .filter(session => session.turnId === turn.turnId)
       
+      // 🔑 关键修改：过滤掉没有内容的会话（空内容的卡片不显示）
+      const sessionsWithContent = allSessions.filter(session => {
+        // 检查是否有实际内容
+        const hasContent = session.streamingContent && session.streamingContent.trim() !== ''
+        const hasValidConversations = session.conversations && session.conversations.some(conv => 
+          conv.content && conv.content.trim() !== ''
+        )
+        
+        return hasContent || hasValidConversations
+      })
+      
       // 分离智能体和工具会话
-      const agentSessions = allSessions.filter(session => 
+      const agentSessions = sessionsWithContent.filter(session => 
         session.agentKey !== 'tools' && session.agentKey !== 'unified_stream'
       )
-      const toolSessions = allSessions.filter(session => 
+      const toolSessions = sessionsWithContent.filter(session => 
         session.agentKey === 'tools' || session.agentKey === 'unified_stream'
       )
       
@@ -630,26 +711,30 @@ export function useAgentSessions() {
         return timeA - timeB
       })
       
-      // 🔑 对工具会话按创建时间排序（保持工具调用的时间顺序）
+      // 🔑 对工具会话按最后更新时间排序（最新的在后面）
       const sortedToolSessions = toolSessions.sort((a, b) => {
-        return (a.createdAt || 0) - (b.createdAt || 0)
+        const timeA = a.lastUpdateTime || a.createdAt || 0
+        const timeB = b.lastUpdateTime || b.createdAt || 0
+        return timeA - timeB
       })
       
-      // 🔑 合并：智能体在前，工具在后，但智能体内部是动态排序的
+      // 🔑 合并：智能体在前，工具在后，但都按最新更新时间排序（最新的在最后）
       const finalSessions = [...sortedAgentSessions, ...sortedToolSessions]
       
       console.log(`🔄 [最终排序] 轮次 ${turn.turnId} 的会话顺序:`, 
         finalSessions.map(s => `${s.agentKey}(${s.lastUpdateTime || s.createdAt})`))
       
-      // 关键修改：即使没有智能体会话，也显示轮次容器
-      result[turn.turnId] = {
-        turnInfo: {
-          turnId: turn.turnId,
-          userMessage: turn.userMessage,
-          timestamp: turn.timestamp,
-          status: turn.status
-        },
-        sessions: finalSessions // 现在按动态顺序排列
+      // 关键修改：只有当有实际会话时才显示轮次容器
+      if (finalSessions.length > 0) {
+        result[turn.turnId] = {
+          turnInfo: {
+            turnId: turn.turnId,
+            userMessage: turn.userMessage,
+            timestamp: turn.timestamp,
+            status: turn.status
+          },
+          sessions: finalSessions // 现在按动态顺序排列，最新的在最后
+        }
       }
     })
     

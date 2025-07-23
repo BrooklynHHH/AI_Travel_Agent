@@ -443,14 +443,14 @@ export default {
   word-wrap: break-word;
   overflow-wrap: break-word;
   word-break: break-word;
+  hyphens: auto;
+  white-space: pre-wrap;
   max-width: 100%;
-}
-
-.focus-streaming-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 12px;
   background: rgba(66, 153, 225, 0.05);
   border-radius: 8px;
   border: 1px dashed rgba(66, 153, 225, 0.3);

@@ -366,7 +366,7 @@ export function useTravelChat() {
 
     return new Promise((resolve, reject) => {
       // 使用 fetch 进行流式请求
-      fetch(`${API_BASE_URL}/api/stream`, {
+      fetch(`${API_BASE_URL}/agent-api/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
