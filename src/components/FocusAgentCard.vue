@@ -75,6 +75,22 @@ const md = new MarkdownIt({
   breaks: true
 })
 
+// 禁用代码块和内联代码的渲染
+md.renderer.rules.code_inline = function (tokens, idx) {
+  const token = tokens[idx]
+  return token.content
+}
+
+md.renderer.rules.code_block = function (tokens, idx) {
+  const token = tokens[idx]
+  return token.content
+}
+
+md.renderer.rules.fence = function (tokens, idx) {
+  const token = tokens[idx]
+  return token.content
+}
+
 export default {
   name: 'FocusAgentCard',
   props: {
@@ -442,18 +458,41 @@ export default {
   font-size: 13px;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  word-break: break-word;
+  word-break: break-all;
   hyphens: auto;
-  white-space: pre-wrap;
+  white-space: normal;
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 12px;
-  background: rgba(66, 153, 225, 0.05);
+  background: white;
   border-radius: 8px;
-  border: 1px dashed rgba(66, 153, 225, 0.3);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.focus-markdown-content * {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-all !important;
+  box-sizing: border-box !important;
+}
+
+.focus-markdown-content pre,
+.focus-markdown-content code {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-all !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.focus-markdown-content a {
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
 }
 
 .focus-streaming-indicator {
