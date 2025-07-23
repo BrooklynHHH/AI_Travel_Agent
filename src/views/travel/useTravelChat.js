@@ -292,7 +292,7 @@ export function useTravelChat() {
 
       case 'raw_chunk': {
         // 处理原始数据块 - 修复重复字符问题
-        console.log('🔍 [原始数据块]:', data.data)
+        // console.log('🔍 [原始数据块]:', data.data)
         
         let newToken = ''
         
@@ -366,7 +366,7 @@ export function useTravelChat() {
 
     return new Promise((resolve, reject) => {
       // 使用 fetch 进行流式请求
-      fetch(`${API_BASE_URL}/api/stream`, {
+      fetch(`${API_BASE_URL}/agent-api/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
