@@ -292,7 +292,7 @@ export function useTravelChat() {
 
       case 'raw_chunk': {
         // 处理原始数据块 - 修复重复字符问题
-        console.log('🔍 [原始数据块]:', data.data)
+        // console.log('🔍 [原始数据块]:', data.data)
         
         let newToken = ''
         

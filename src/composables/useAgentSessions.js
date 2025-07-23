@@ -103,6 +103,7 @@ export function useAgentSessions() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2)
   }
 
+
   // 获取智能体配置 - 深拷贝防止引用污染
   const getAgentConfig = (agentKey) => {
     const config = AGENT_CONFIG[agentKey] || { 
@@ -245,7 +246,9 @@ export function useAgentSessions() {
     }
     
     session.currentStatus = 'streaming'
-    session.lastUpdateTime = Date.now()
+    // 🔑 注意：这里的 lastUpdateTime 会被 handleAgentContentUpdate 中的时间戳覆盖
+    // 所以我们不在这里更新，避免时间戳不一致
+    // session.lastUpdateTime = Date.now()
     
     // 如果有活跃的对话轮次，也更新其内容（同样创建新字符串）
     const activeConversation = session.conversations.find(conv => 
@@ -368,9 +371,13 @@ export function useAgentSessions() {
       return
     }
     
-    // 新增：更新最新活跃智能体
+    // 🔑 关键修复：更新最新活跃智能体和时间戳
+    const currentTime = Date.now()
     lastActiveAgent.value = agentKey
-    lastActiveTime.value = Date.now()
+    lastActiveTime.value = currentTime
+    
+    // 🔑 关键修复：同步更新会话的lastUpdateTime，确保动态排序生效
+    session.lastUpdateTime = currentTime
     
     // 新增：焦点区动态切换逻辑 - 实时跟随最新活跃的智能体
     if (agentKey !== 'tools' && agentKey !== 'unified_stream') {
@@ -382,6 +389,8 @@ export function useAgentSessions() {
     }
     
     await updateStreamingContent(agentKey, content, isIncremental)
+    
+    console.log(`🔄 [动态排序] ${agentKey} 的 lastUpdateTime 已更新为: ${currentTime}`)
   }
 
   // 处理智能体完成
@@ -416,8 +425,9 @@ export function useAgentSessions() {
     }
   }
 
-  // 处理工具调用（轮次级别去重）
-  const handleToolCall = async (toolName, content) => {
+  // 处理工具调用（支持多卡片创建）
+  const handleToolCall = async (toolName, content, options = {}) => {
+    const { mode = 'new_card', toolType = 'unknown' } = options
     const agentKey = 'tools'
     
     if (!currentTurnId.value) {
@@ -431,37 +441,60 @@ export function useAgentSessions() {
       return
     }
     
-    // 创建工具调用的唯一标识符
-    const toolCallHash = `${toolName}_${content.substring(0, 100)}_${content.length}`
-    
-    // 检查当前轮次是否已经处理过这个工具调用
-    if (turn.processedToolCalls.has(toolCallHash)) {
-      console.log(`⚠️ [工具调用去重] 跳过重复的工具调用: ${toolName}`)
-      return
-    }
+    // 🔑 关键改进：每次工具调用都创建新的记录，不进行去重
+    const toolCallHash = `${toolName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     
     // 标记为已处理（仅在当前轮次）
     turn.processedToolCalls.add(toolCallHash)
     
-    console.log(`🔧 [工具调用] ${toolName}: ${content.length} 字符`)
-    
-    // 为工具调用创建特殊的内容格式
-    const timestamp = new Date().toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    })
-    const toolContent = `**[${timestamp}] 工具调用: ${toolName}**\n\n${content}\n\n---\n\n`
+    console.log(`🔧 [工具调用] ${toolName} (${mode}模式): ${content.length} 字符`)
     
     const session = getOrCreateAgentSession(agentKey)
     
-    // 检查是否有活跃的对话轮次
-    let activeConversation = session.conversations.find(conv => conv.status === 'streaming')
-    if (!activeConversation) {
-      activeConversation = startNewConversation(agentKey)
+    // 🔑 关键改进：每次工具调用都创建新的对话记录
+    const timestamp = Date.now()
+    const toolCallConversation = {
+      id: generateId(),
+      timestamp: timestamp,
+      startTime: timestamp,
+      endTime: timestamp, // 工具调用立即完成
+      content: content, // 工具调用的完整内容
+      status: 'completed', // 工具调用状态为已完成
+      isCollapsed: false,
+      // 工具调用特有的元数据
+      toolCallMetadata: {
+        toolName,
+        toolType,
+        timestamp,
+        mode,
+        callIndex: session.conversations.length + 1 // 调用序号
+      },
+      // 添加对话级别的唯一标识
+      conversationId: generateId(),
+      turnId: session.turnId,
+      agentKey: agentKey,
+      // 标记这是一个工具调用记录
+      isToolCall: true
     }
     
-    await updateStreamingContent(agentKey, toolContent, true)
+    // 确保conversations数组是独立的
+    if (!Array.isArray(session.conversations)) {
+      session.conversations = []
+    }
+    
+    // � 关键改进：直接添加新的工具调用记录，不替换现有内容
+    session.conversations.push(toolCallConversation)
+    
+    // 更新会话状态
+    session.currentStatus = 'completed' // 工具调用会话状态
+    session.lastUpdateTime = timestamp
+    
+    // 🔑 关键改进：更新streamingContent为最新的工具调用内容（用于焦点区显示）
+    session.streamingContent = content
+    
+    console.log(`✅ [工具调用] 创建新的工具调用卡片 #${toolCallConversation.toolCallMetadata.callIndex}`)
+    
+    return toolCallConversation
   }
 
   // 切换卡片折叠状态
@@ -556,7 +589,7 @@ export function useAgentSessions() {
       .reduce((total, session) => total + session.conversations.length, 0)
   })
 
-  // 获取按轮次分组的智能体会话（使用固定排序）
+  // 获取按轮次分组的智能体会话（使用动态重排序）
   const agentSessionsByTurn = computed(() => {
     const result = {}
     
@@ -565,15 +598,48 @@ export function useAgentSessions() {
       .sort((a, b) => a.timestamp - b.timestamp)
     
     sortedTurns.forEach(turn => {
-      // 关键修改：使用固定的角色顺序排序，而不是lastUpdateTime
-      const turnSessions = Object.values(turn.agentSessions)
+      // 🔑 关键修改：分别处理智能体和工具，然后合并
+      const allSessions = Object.values(turn.agentSessions)
         .filter(session => session.turnId === turn.turnId)
-        .sort((a, b) => {
-          // 按照预设的角色顺序排序
+      
+      // 分离智能体和工具会话
+      const agentSessions = allSessions.filter(session => 
+        session.agentKey !== 'tools' && session.agentKey !== 'unified_stream'
+      )
+      const toolSessions = allSessions.filter(session => 
+        session.agentKey === 'tools' || session.agentKey === 'unified_stream'
+      )
+      
+      // 🔑 对智能体会话进行动态排序 - 最新活跃的排在最后
+      const sortedAgentSessions = agentSessions.sort((a, b) => {
+        // 首先按照最后更新时间排序，最新的在后面
+        const timeA = a.lastUpdateTime || a.createdAt || 0
+        const timeB = b.lastUpdateTime || b.createdAt || 0
+        
+        console.log(`🔄 [排序调试] ${a.agentKey}: ${timeA}, ${b.agentKey}: ${timeB}`)
+        
+        // 如果时间相同，则按照角色顺序排序
+        if (Math.abs(timeA - timeB) < 1000) { // 1秒内认为是相同时间
           const orderA = a.agentInfo.roleOrder || 999
           const orderB = b.agentInfo.roleOrder || 999
+          console.log(`🔄 [排序调试] 时间相近，使用角色顺序: ${a.agentKey}(${orderA}) vs ${b.agentKey}(${orderB})`)
           return orderA - orderB
-        })
+        }
+        
+        console.log(`🔄 [排序调试] 按时间排序: ${timeA < timeB ? a.agentKey + ' < ' + b.agentKey : a.agentKey + ' > ' + b.agentKey}`)
+        return timeA - timeB
+      })
+      
+      // 🔑 对工具会话按创建时间排序（保持工具调用的时间顺序）
+      const sortedToolSessions = toolSessions.sort((a, b) => {
+        return (a.createdAt || 0) - (b.createdAt || 0)
+      })
+      
+      // 🔑 合并：智能体在前，工具在后，但智能体内部是动态排序的
+      const finalSessions = [...sortedAgentSessions, ...sortedToolSessions]
+      
+      console.log(`🔄 [最终排序] 轮次 ${turn.turnId} 的会话顺序:`, 
+        finalSessions.map(s => `${s.agentKey}(${s.lastUpdateTime || s.createdAt})`))
       
       // 关键修改：即使没有智能体会话，也显示轮次容器
       result[turn.turnId] = {
@@ -583,7 +649,7 @@ export function useAgentSessions() {
           timestamp: turn.timestamp,
           status: turn.status
         },
-        sessions: turnSessions // 现在按固定顺序排列
+        sessions: finalSessions // 现在按动态顺序排列
       }
     })
     

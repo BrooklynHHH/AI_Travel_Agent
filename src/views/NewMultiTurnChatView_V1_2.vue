@@ -85,8 +85,9 @@
           <!-- 智能体响应区域 -->
           <div class="turn-agents-response">
             <div class="agents-grid" :class="{ 'with-focus-area': showFocusArea && !isMinimized }">
+              <!-- 智能体卡片 -->
               <AgentCard
-                v-for="session in turnData.sessions"
+                v-for="session in turnData.sessions.filter(s => s.agentInfo.key !== 'tools')"
                 :key="session.uniqueKey"
                 :agent-info="session.agentInfo"
                 :conversations="session.conversations"
@@ -98,6 +99,26 @@
                 @focus-agent="handleFocusAgent"
                 class="agent-response-card"
               />
+              
+              <!-- 工具调用卡片 - 每个工具调用对话都创建一个独立的卡片 -->
+              <template v-for="session in turnData.sessions.filter(s => s.agentInfo.key === 'tools')" :key="session.uniqueKey">
+                <ToolsCard
+                  v-for="conversation in session.conversations.filter(conv => conv.isToolCall)"
+                  :key="`${session.uniqueKey}_${conversation.id}`"
+                  :tool-content="conversation.content"
+                  :tool-type="conversation.toolCallMetadata?.toolType || 'unknown'"
+                  :tool-name="conversation.toolCallMetadata?.toolName || 'unknown_tool'"
+                  :call-index="conversation.toolCallMetadata?.callIndex || 1"
+                  :timestamp="conversation.timestamp"
+                  :processing-time="conversation.endTime - conversation.startTime"
+                  :status="conversation.status"
+                  @expand="handleToolExpand"
+                  @collapse="handleToolCollapse"
+                  @error="handleToolError"
+                  @copy="handleToolCopy"
+                  class="tool-response-card"
+                />
+              </template>
             </div>
           </div>
           </div>
@@ -220,7 +241,65 @@ import MarkdownIt from 'markdown-it'
 import { API_CONFIG } from '@/config/api.config.js'
 import AgentCard from '@/components/AgentCard.vue'
 import FocusAgentCard from '@/components/FocusAgentCard.vue'
+import ToolsCard from '@/components/ToolsCard.vue'
 import { useAgentSessions } from '@/composables/useAgentSessions.js'
+
+// 智能工具类型检测函数
+const detectToolType = (toolName, content) => {
+  if (!content || typeof content !== 'string') {
+    return 'unknown'
+  }
+
+  const trimmedContent = content.trim()
+  
+  // JSON工具检测
+  if (trimmedContent.startsWith('{') || trimmedContent.startsWith('[')) {
+    try {
+      JSON.parse(trimmedContent)
+      return 'json'
+    } catch (e) {
+      // 可能是格式不完整的JSON，继续其他检测
+    }
+  }
+  
+  // 搜索工具检测
+  if (toolName.toLowerCase().includes('search') || 
+      trimmedContent.includes('search_ref') || 
+      trimmedContent.includes('search_tool') ||
+      trimmedContent.includes('"type":"search') ||
+      trimmedContent.includes("'type':'search")) {
+    return 'search'
+  }
+  
+  // API工具检测
+  if (toolName.toLowerCase().includes('api') || 
+      trimmedContent.includes('http://') || 
+      trimmedContent.includes('https://') ||
+      trimmedContent.includes('status_code') ||
+      trimmedContent.includes('response')) {
+    return 'api'
+  }
+  
+  // 文件工具检测
+  if (toolName.toLowerCase().includes('file') || 
+      trimmedContent.includes('file_path') || 
+      trimmedContent.includes('directory') ||
+      trimmedContent.includes('path:')) {
+    return 'file'
+  }
+
+  // 数据库工具检测
+  if (toolName.toLowerCase().includes('db') || 
+      toolName.toLowerCase().includes('sql') || 
+      trimmedContent.includes('SELECT') || 
+      trimmedContent.includes('INSERT') ||
+      trimmedContent.includes('UPDATE')) {
+    return 'database'
+  }
+  
+  // 默认文本类型
+  return 'text'
+}
 
 // 初始化 Markdown 渲染器
 const md = new MarkdownIt({
@@ -274,7 +353,8 @@ export default {
   name: 'NewMultiTurnChatView',
   components: {
     AgentCard,
-    FocusAgentCard
+    FocusAgentCard,
+    ToolsCard
   },
   setup() {
     // 使用智能体会话管理（新的轮次系统）
@@ -502,7 +582,7 @@ export default {
           break
 
         case 'raw_chunk': {
-          console.log('🔍 [原始数据块]:', JSON.stringify(data.data, null, 2))
+          // console.log('🔍 [原始数据块]:', JSON.stringify(data.data, null, 2))
           
           // 处理supervisor流式输出
           if (data.data && data.data.chunk && Array.isArray(data.data.chunk) && data.data.chunk.length >= 2) {
@@ -515,18 +595,28 @@ export default {
             console.log(`📊 [数据解析] langgraph_node: "${langgraph_node}", checkpoint_ns: "${checkpoint_ns}"`)
             console.log(`📝 [内容] content: "${content}"`)
             
-            // 处理工具调用 - 添加去重逻辑
+            // 处理工具调用 - 使用新的替换模式和工具类型检测
             if (langgraph_node === "tools" || langgraph_node === "tour_search_agent") {
               const toolName = chunk[0]?.name || 'unknown_tool'
-              console.log(`🔧 [工具调用] 工具名称：${toolName}`)
-              console.log(`🔧 [工具调用] 工具内容：${content}`)
+              let content = chunk[0]?.content || ''
               
-              // 创建工具调用的唯一标识符
-              const toolCallId = `${toolName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+              console.log(`🔧 [工具调用] 工具名称：${toolName}`)
+              console.log(`� [工具调用] 原始内容长度：${content.length}`)
+              console.log(`� [工具调用] 原始内容预览：${content.substring(0, 200)}...`)
               
               if (content) {
-                console.log(`🔧 [工具调用] 处理工具调用 ID: ${toolCallId}`)
-                await handleToolCall(toolName, content)
+                // 🔑 关键改进：使用智能工具类型检测
+                const toolType = detectToolType(toolName, content)
+                console.log(`🔧 [工具调用] 检测到工具类型：${toolType}`)
+                
+                // 🔑 关键改进：使用新卡片模式处理工具调用
+                console.log(`🔧 [工具调用] 使用新卡片模式处理工具调用`)
+                await handleToolCall(toolName, content, { 
+                  mode: 'new_card',  // 每次创建新卡片
+                  toolType: toolType
+                })
+                
+                console.log(`🔧 [工具调用] 工具调用处理完成`)
               }
             }
             
@@ -983,6 +1073,72 @@ export default {
       console.log(`🎯 [焦点切换] 用户手动切换焦点到: ${agentKey}`)
     }
 
+    // 工具卡片相关方法
+    const getLatestToolContent = (session) => {
+      if (!session.conversations || session.conversations.length === 0) {
+        return ''
+      }
+      
+      const latestConversation = session.conversations[session.conversations.length - 1]
+      return latestConversation.content || ''
+    }
+
+    const getToolType = (session) => {
+      // 根据工具内容或会话信息判断工具类型
+      const content = getLatestToolContent(session)
+      
+      if (content.includes('search_ref') || content.includes('search_tool')) {
+        return 'search'
+      }
+      
+      if (content.includes('api') || content.includes('http')) {
+        return 'api'
+      }
+      
+      if (content.includes('database') || content.includes('sql')) {
+        return 'database'
+      }
+      
+      if (content.includes('file') || content.includes('path')) {
+        return 'file'
+      }
+      
+      return 'unknown'
+    }
+
+    const getToolProcessingTime = (session) => {
+      if (!session.conversations || session.conversations.length === 0) {
+        return 0
+      }
+      
+      const latestConversation = session.conversations[session.conversations.length - 1]
+      if (latestConversation.startTime && latestConversation.endTime) {
+        return latestConversation.endTime - latestConversation.startTime
+      }
+      
+      if (latestConversation.startTime) {
+        return Date.now() - latestConversation.startTime
+      }
+      
+      return 0
+    }
+
+    const handleToolExpand = () => {
+      console.log('🔧 [工具卡片] 用户展开工具卡片')
+    }
+
+    const handleToolCollapse = () => {
+      console.log('🔧 [工具卡片] 用户折叠工具卡片')
+    }
+
+    const handleToolError = (error) => {
+      console.error('🔧 [工具卡片] 工具解析错误:', error)
+    }
+
+    const handleToolCopy = (content) => {
+      console.log('🔧 [工具卡片] 用户复制工具内容:', content.substring(0, 100) + '...')
+    }
+
     // 返回所有需要在模板中使用的数据和方法
     return {
       // 数据
@@ -1027,7 +1183,16 @@ export default {
       handleMinimizeFocus,
       handleRestoreFocus,
       handleFocusAgent,
-      isMinimized
+      isMinimized,
+      
+      // 工具卡片事件处理
+      getLatestToolContent,
+      getToolType,
+      getToolProcessingTime,
+      handleToolExpand,
+      handleToolCollapse,
+      handleToolError,
+      handleToolCopy
     }
   }
 }
@@ -1498,21 +1663,80 @@ export default {
 
 .agents-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: 1fr;
   gap: 20px;
   transition: grid-template-columns 0.3s ease;
 }
 
-/* 当焦点区域显示时，调整智能体网格布局 */
+/* 当焦点区域显示时，保持单列布局 */
 .agents-grid.with-focus-area {
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .agent-response-card {
-  transition: all 0.3s ease;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .agent-response-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* 动态重排序动画效果 */
+.agent-response-card.recently-active {
+  animation: cardReorder 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid #4299e1;
+  box-shadow: 0 8px 32px rgba(66, 153, 225, 0.25);
+}
+
+@keyframes cardReorder {
+  0% {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(66, 153, 225, 0.3);
+  }
+  50% {
+    transform: translateY(0) scale(1.01);
+    box-shadow: 0 8px 32px rgba(66, 153, 225, 0.25);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 8px 32px rgba(66, 153, 225, 0.25);
+  }
+}
+
+/* 新活跃智能体的高亮效果 */
+.agent-response-card.newly-active::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #4299e1, #3182ce, #2563eb, #4299e1);
+  background-size: 400% 400%;
+  border-radius: 18px;
+  z-index: -1;
+  animation: gradientShift 2s ease-in-out;
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 0.6;
+  }
+}
+
+/* 工具卡片样式 */
+.tool-response-card {
+  transition: all 0.3s ease;
+}
+
+.tool-response-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
@@ -2965,8 +3189,9 @@ export default {
     margin-right: 360px; /* 减少到360px */
   }
   
+  /* 保持单列布局 */
   .agents-grid.with-focus-area {
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2976,8 +3201,9 @@ export default {
     margin-right: 340px; /* 减少到340px */
   }
   
+  /* 保持单列布局 */
   .agents-grid.with-focus-area {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2987,6 +3213,7 @@ export default {
     margin-right: 0;
   }
   
+  /* 保持单列布局 */
   .agents-grid.with-focus-area {
     grid-template-columns: 1fr;
   }

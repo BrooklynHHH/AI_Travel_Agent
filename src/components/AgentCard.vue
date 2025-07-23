@@ -6,7 +6,7 @@
     { 'in-focus': isInFocus }
   ]">
     <!-- 卡片头部 -->
-     <!-- lizylizy12 -->
+     <!-- lizylizy123 -->
     <div class="agent-card-header" @click="toggleCard">
       <div class="agent-info">
         <div class="agent-avatar">
@@ -110,6 +110,7 @@
 <script>
 import { ref, computed, watch } from 'vue'
 import MarkdownIt from 'markdown-it'
+import ContentFormatter from '@/utils/contentFormatter.js'
 
 const md = new MarkdownIt({
   html: true,
@@ -267,60 +268,25 @@ export default {
 
     const processJsonContent = (content) => {
       try {
-        let data
+        // 使用新的内容格式化器
+        const formattedContent = ContentFormatter.formatToolContent(content, {
+          showSummary: true,
+          showMetadata: false,
+          maxResults: 8,
+          cardStyle: true
+        })
         
-        // 尝试直接解析 JSON
-        try {
-          data = JSON.parse(content)
-        } catch (e) {
-          // 如果直接解析失败，尝试处理Python字典格式
-          // 将单引号替换为双引号，处理None值
-          const normalizedContent = content
-            .replace(/'/g, '"')
-            .replace(/None/g, 'null')
-            .replace(/True/g, 'true')
-            .replace(/False/g, 'false')
-          
-          data = JSON.parse(normalizedContent)
+        // 如果格式化成功且不同于原内容，说明是结构化数据
+        if (formattedContent && formattedContent !== content) {
+          return formattedContent
         }
         
-        // 检查是否是搜索工具类型
-        if (data.type === 'search_ref' || data.type === 'search_tool') {
-          return renderSearchReferences(data)
-        }
-        
-        // 其他类型保持原样
+        // 如果不是结构化数据，保持原样
         return content
-      } catch (e) {
-        // 如果都解析失败，保持原样
+      } catch (error) {
+        console.warn('内容处理失败:', error)
         return content
       }
-    }
-
-    // 搜索结果渲染器
-    const renderSearchReferences = (data) => {
-      if (!data.datas || !Array.isArray(data.datas)) return ''
-      
-      const validItems = data.datas.filter(item => item.title && item.url)
-      if (validItems.length === 0) return ''
-      
-      const richContent = validItems
-        .map(item => {
-          let content = `### [${item.title}](${item.url})\n`
-          
-          // 添加内容摘要（前50字）
-          if (item.content && item.content.trim()) {
-            const summary = item.content.trim().length > 50 
-              ? item.content.trim().substring(0, 50) + '...'
-              : item.content.trim()
-            content += `${summary}\n`
-          }
-          
-          return content
-        })
-        .join('\n---\n\n')
-      
-      return `\n\n**🔍 相关参考资料：**\n\n${richContent}\n`
     }
 
     // const formatSegmentTime = (timestamp) => {
@@ -1264,6 +1230,199 @@ export default {
   margin: 16px 0;
 }
 
+/* 搜索结果样式 */
+.search-results-container {
+  margin: 16px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(66, 153, 225, 0.2);
+  background: linear-gradient(135deg, rgba(66, 153, 225, 0.05) 0%, rgba(66, 153, 225, 0.02) 100%);
+}
+
+.search-results-header {
+  padding: 12px 16px;
+  background: rgba(66, 153, 225, 0.1);
+  border-bottom: 1px solid rgba(66, 153, 225, 0.2);
+}
+
+.search-results-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2563eb;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-metadata {
+  font-size: 11px;
+  color: #718096;
+  margin-top: 4px;
+}
+
+.search-results-list {
+  padding: 8px;
+}
+
+.search-item {
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+
+.search-item:last-child {
+  margin-bottom: 0;
+}
+
+.search-item-card {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.search-item-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: rgba(66, 153, 225, 0.3);
+}
+
+.search-item-simple {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.search-item-simple:last-child {
+  border-bottom: none;
+}
+
+.search-item-content {
+  padding: 12px;
+  flex: 1;
+}
+
+.search-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.search-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.search-item-title:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.search-item-site {
+  font-size: 11px;
+  color: #718096;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.search-item-summary {
+  font-size: 13px;
+  color: #4a5568;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.search-item-content-text {
+  font-size: 13px;
+  color: #2d3748;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  padding: 8px 0;
+  border-left: 3px solid rgba(66, 153, 225, 0.3);
+  padding-left: 12px;
+  background: rgba(66, 153, 225, 0.05);
+  border-radius: 4px;
+}
+
+.search-item-metadata {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #a0aec0;
+}
+
+.search-item-domain,
+.search-item-length,
+.search-item-score {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-item-thumbnail {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.search-item-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.search-no-results {
+  padding: 20px;
+  text-align: center;
+  color: #718096;
+  font-style: italic;
+}
+
+.generic-content {
+  margin: 16px 0;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.content-type-label {
+  padding: 8px 12px;
+  background: rgba(107, 114, 128, 0.1);
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.json-content {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 12px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-x: auto;
+}
+
+.error-content {
+  padding: 12px;
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
 @media (max-width: 768px) {
   .agent-card-header {
     padding: 12px 16px;
@@ -1290,6 +1449,22 @@ export default {
     flex-direction: column;
     gap: 8px;
     align-items: flex-start;
+  }
+
+  .search-item-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .search-item-metadata {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .search-item-thumbnail {
+    width: 50px;
+    height: 50px;
   }
 }
 </style>
