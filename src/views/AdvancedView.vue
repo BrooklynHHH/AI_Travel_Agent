@@ -129,6 +129,14 @@
               <div class="item-label">思维导图</div>
             </div>
           </div>
+          <div class="category-items" style="margin-top: 12px;">
+            <div class="category-item" @click="handleFeature('图片翻译')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+              <div class="item-label">图片翻译</div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="category-row">
@@ -412,6 +420,9 @@ const handleFeature = (feature) => {
   } else if (feature === 'ISBN书号查询MCP') {
     // ISBN书号查询MCP功能跳转到指定页面
     router.push('/aliyun-mcp-isbn');
+  } else if (feature === '图片翻译'){
+    // 图片翻译功能跳转至图片翻译界面
+    router.push('/pic-translate');
   } else {
     // 其他功能正常跳转到结果页
     router.push({

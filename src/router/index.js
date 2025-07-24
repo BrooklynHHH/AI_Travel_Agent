@@ -140,6 +140,11 @@ export const routes = [ // Add export here
     path: '/aliyun-mcp-isbn',
     name: 'ISBN书号查询MCP',
     component: () => import('../views/IsbnMcpView.vue')
+  },
+  {
+    path: '/pic-translate',
+    name: '图片翻译',
+    component: () => import('../views/PicTranslateView.vue')
   }
 
 ]
