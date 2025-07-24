@@ -26,7 +26,7 @@
     </div>
 
     <!-- 大模型回答和搜索结果联动 -->
-    <div v-if="activeTab === 'AI'">
+    <div v-if="activeTab === '博查搜索'">
       <div class="ai-answer-card">
         <div class="ai-answer-header">
           <span class="ai-label">AI为你找到参考资料</span>
@@ -89,7 +89,7 @@
       <div class="search-result-list">
         <div
           class="result-card"
-          v-for="item in resultListMap['AI']"
+          v-for="item in resultListMap['博查搜索']"
           :key="item.title + item.source"
           @click="onResultCardClick(item.url)"
           style="cursor: pointer;"
@@ -109,7 +109,7 @@
       </div>
     </div>
     <!-- 其他tab複刻AI區塊，接口待替換 -->
-    <div v-if="activeTab === '百度'">
+    <div v-if="activeTab === '百度基础搜索'">
       <div class="ai-answer-card">
         <!-- TODO: 百度接口數據，請在此處替換為百度相關接口 -->
         <div class="ai-answer-header">
@@ -173,7 +173,7 @@
       <div class="search-result-list">
         <div
           class="result-card"
-          v-for="item in resultListMap['百度']"
+          v-for="item in resultListMap['百度基础搜索']"
           :key="item.title + item.source"
           @click="onResultCardClick(item.url)"
           style="cursor: pointer;"
@@ -192,7 +192,7 @@
         </div>
       </div>
     </div>
-    <div v-if="activeTab === '百度AI'">
+    <div v-if="activeTab === '百度AI搜索'">
       <div class="ai-answer-card">
         <!-- TODO: 百度AI接口數據，請在此處替換為百度AI相關接口 -->
         <div class="ai-answer-header">
@@ -256,7 +256,7 @@
       <div class="search-result-list">
         <div
           class="result-card"
-          v-for="item in resultListMap['百度AI']"
+          v-for="item in resultListMap['百度AI搜索']"
           :key="item.title + item.source"
           @click="onResultCardClick(item.url)"
           style="cursor: pointer;"
@@ -275,7 +275,7 @@
         </div>
       </div>
     </div>
-    <div v-if="activeTab === '豆包'">
+    <div v-if="activeTab === '豆包联网问答Agent'">
       <div class="ai-answer-card">
         <!-- TODO: 豆包接口數據，請在此處替換為豆包相關接口 -->
         <div class="ai-answer-header">
@@ -338,27 +338,84 @@
       </div>
       <div class="search-result-list">
         <div
-          class="result-card"
-          v-for="(item, index) in resultListMap['豆包']"
+          v-for="(item, index) in resultListMap['豆包联网问答Agent']"
           :key="item.url || (item.title + item.source + index)"
-          @click="onResultCardClick(item.url)"
-          style="cursor: pointer;"
         >
-          <div class="result-title">{{ item.title }}</div>
-          <div class="result-desc">{{ item.desc }}</div>
-          <div class="result-imgs">
-            <div v-if="item.images && item.images.length">
-              <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
+          <!-- 天气卡片 -->
+          <div v-if="item.type === 'weather'" class="weather-card">
+            <div class="weather-header">
+              <div class="weather-city">{{ item.weatherData.city.name }}</div>
+              <div class="weather-temp">{{ item.weatherData.condition.temp }}°C</div>
+            </div>
+            
+            <div class="weather-main">
+              <div class="weather-condition">
+                <div class="weather-desc">{{ item.weatherData.condition.weather }}</div>
+                <div class="weather-details">
+                  <span>体感 {{ item.weatherData.condition.real_feel }}°C</span>
+                  <span>湿度 {{ item.weatherData.condition.humidity }}%</span>
+                  <span>{{ item.weatherData.condition.wind_dir }} {{ item.weatherData.condition.wind_level }}级</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="weather-aqi">
+              <div class="aqi-header">空气质量</div>
+              <div class="aqi-content">
+                <div class="aqi-value" :class="getAqiClass(item.weatherData.aqi.aqi)">
+                  {{ item.weatherData.aqi.aqi }}
+                </div>
+                <div class="aqi-level">{{ item.weatherData.aqi.quality_level }}</div>
+              </div>
+            </div>
+
+            <div class="weather-forecast">
+              <div class="forecast-header">7天预报</div>
+              <div class="forecast-list">
+                <div 
+                  v-for="(day, dayIndex) in item.weatherData.seven_forecast_data.slice(0, 7)" 
+                  :key="dayIndex"
+                  class="forecast-item"
+                >
+                  <div class="forecast-date">{{ formatDate(day.predict_date) }}</div>
+                  <div class="forecast-weather">{{ day.weather_day }}</div>
+                  <div class="forecast-temp">
+                    <span class="temp-high">{{ day.temp_high }}°</span>
+                    <span class="temp-low">{{ day.temp_low }}°</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="weather-source">
+              <img v-if="item.icon" :src="item.icon" class="result-source-icon" />
+              {{ item.source }}
             </div>
           </div>
-          <div class="result-source">
-            <img v-if="item.icon" :src="item.icon" class="result-source-icon" />
-            {{ item.source }}
+
+          <!-- 普通卡片 -->
+          <div
+            v-else
+            class="result-card"
+            @click="onResultCardClick(item.url)"
+            style="cursor: pointer;"
+          >
+            <div class="result-title">{{ item.title }}</div>
+            <div class="result-desc">{{ item.desc }}</div>
+            <div class="result-imgs">
+              <div v-if="item.images && item.images.length">
+                <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
+              </div>
+            </div>
+            <div class="result-source">
+              <img v-if="item.icon" :src="item.icon" class="result-source-icon" />
+              {{ item.source }}
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div v-if="!['AI','百度','百度AI','豆包'].includes(activeTab)">
+    <div v-if="!['博查搜索','百度基础搜索','百度AI搜索','豆包联网问答Agent'].includes(activeTab)">
       <div class="deving-block">
         <div class="deving-content">开发中</div>
       </div>
@@ -394,12 +451,12 @@ function getHostnameFromUrl(url) {
 const searchInput = ref(''); // 删除默认文字
 const lastSearchQuery = ref(); // 記錄上次搜索詞，避免重複調用AI接口
 const tabs = [
-  { name: 'AI', icon: '🤖' },
-  { name: '百度', icon: '🌐' },
-  { name: '百度AI', icon: '🦊' }, // 原搜狗tab改名
-  { name: '豆包', icon: '🟢' }, // 原360改為豆包
+  { name: '博查搜索', icon: '🤖' },
+  { name: '百度基础搜索', icon: '🌐' },
+  { name: '百度AI搜索', icon: '🦊' }, // 原搜狗tab改名
+  { name: '豆包联网问答Agent', icon: '🟢' }, // 原360改為豆包
 ];
-const activeTab = ref('AI');
+const activeTab = ref('博查搜索');
 // const resultList = ref([]); // 已不再使用，移除
 
 const answer = ref('');
@@ -442,9 +499,37 @@ function onResultCardClick(url) {
   }
 }
 
+// AQI等级判断函数
+function getAqiClass(aqi) {
+  if (aqi <= 50) return 'aqi-good';
+  if (aqi <= 100) return 'aqi-moderate';
+  if (aqi <= 150) return 'aqi-unhealthy-sensitive';
+  if (aqi <= 200) return 'aqi-unhealthy';
+  if (aqi <= 300) return 'aqi-very-unhealthy';
+  return 'aqi-hazardous';
+}
+
+// 日期格式化函数
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return '今天';
+  } else if (date.toDateString() === tomorrow.toDateString()) {
+    return '明天';
+  } else {
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}/${day}`;
+  }
+}
+
 // 定義每個tab對應的網頁卡片接口
 const tabApiMap = {
-  'AI': {
+  '博查搜索': {
     url: 'https://api.bochaai.com/v1/web-search',
     method: 'POST',
     headers: {
@@ -473,7 +558,7 @@ const tabApiMap = {
       return [];
     }
   },
-  '百度': {
+  '百度基础搜索': {
     url: 'http://staging-llm.search.miui.srv/agent-api/baidu-ai', // 本地開發用代理解決CORS
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -528,7 +613,7 @@ const tabApiMap = {
       return [];
     },
   },
-  '百度AI': {
+  '百度AI搜索': {
     url: 'http://staging-llm.search.miui.srv/agent-api/baidu-ai',
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -577,7 +662,7 @@ const tabApiMap = {
       return [];
     }
   },
-  '豆包': {
+  '豆包联网问答Agent': {
     url: 'http://staging-llm.search.miui.srv/agent-api/doubao-agent', // 使用相對路徑，支持前後端分離和線上部署    url: 'http://localhost:3001/api/doubao-agent', // 使用本地智能體代理
 
     method: 'POST',
@@ -598,11 +683,26 @@ const tabApiMap = {
           url: item.url || ''
         }));
       }
-      // 2. 多模態卡片（cards）
+      
+      // 2. 多模態卡片（cards）- 先处理weather卡片，确保它们在最前面
+      let weatherCards = [];
+      let otherCards = [];
+      
       if (data && Array.isArray(data.cards)) {
         data.cards.forEach(card => {
-          if (card.card_type === 'image' && card.image_card) {
-            cards.push({
+          if (card.card_type === 'weather' && card.weather_card) {
+            const weatherData = card.weather_card.moji_weather_card;
+            weatherCards.push({
+              type: 'weather',
+              title: `${weatherData.city.name}天气`,
+              desc: `${weatherData.condition.weather} ${weatherData.condition.temp}°C`,
+              source: '墨迹天气',
+              icon: '',
+              weatherData: weatherData,
+              url: ''
+            });
+          } else if (card.card_type === 'image' && card.image_card) {
+            otherCards.push({
               title: card.image_card.title || '',
               desc: '',
               source: card.image_card.site_name || '',
@@ -611,7 +711,7 @@ const tabApiMap = {
               url: card.image_card.source_image_url || ''
             });
           } else if (card.card_type === 'video' && card.video_card) {
-            cards.push({
+            otherCards.push({
               title: card.video_card.title || '',
               desc: '',
               source: card.video_card.site_name || '',
@@ -622,16 +722,18 @@ const tabApiMap = {
           }
         });
       }
-      return cards;
+      
+      // 将weather卡片放在最前面，然后是其他卡片，最后是references
+      return [...weatherCards, ...otherCards, ...cards];
     }
   }
 };
 
 const resultListMap = ref({
-  'AI': [],
-  '百度': [],
-  '百度AI': [],
-  '豆包': []
+  '博查搜索': [],
+  '百度基础搜索': [],
+  '百度AI搜索': [],
+  '豆包联网问答Agent': []
 });
 
 async function onSearch() {
@@ -1207,5 +1309,219 @@ onMounted(() => {
   word-break: break-all;
   margin: 0;
   font-family: inherit;
+}
+
+/* 天气卡片样式 */
+.weather-card {
+  background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+  border-radius: 16px;
+  margin-bottom: 7px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(116, 185, 255, 0.3);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.weather-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.weather-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.weather-city {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+}
+
+.weather-temp {
+  font-size: 32px;
+  font-weight: bold;
+  color: white;
+}
+
+.weather-main {
+  margin-bottom: 16px;
+}
+
+.weather-condition {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.weather-desc {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.weather-details {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.weather-details span {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.weather-aqi {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.aqi-header {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 8px;
+}
+
+.aqi-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aqi-value {
+  font-size: 24px;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 8px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.aqi-good {
+  background: #00b894;
+  color: white;
+}
+
+.aqi-moderate {
+  background: #fdcb6e;
+  color: white;
+}
+
+.aqi-unhealthy-sensitive {
+  background: #e17055;
+  color: white;
+}
+
+.aqi-unhealthy {
+  background: #d63031;
+  color: white;
+}
+
+.aqi-very-unhealthy {
+  background: #a29bfe;
+  color: white;
+}
+
+.aqi-hazardous {
+  background: #6c5ce7;
+  color: white;
+}
+
+.aqi-level {
+  font-size: 16px;
+  color: white;
+  font-weight: 500;
+}
+
+.weather-forecast {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.forecast-header {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 12px;
+}
+
+.forecast-list {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.forecast-item {
+  flex: none;
+  min-width: 70px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 6px;
+  backdrop-filter: blur(5px);
+}
+
+.forecast-date {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 4px;
+}
+
+.forecast-weather {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.forecast-temp {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.temp-high {
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+}
+
+.temp-low {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.weather-source {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.weather-source .result-source-icon {
+  filter: brightness(0) invert(1);
+  opacity: 0.7;
 }
 </style>
