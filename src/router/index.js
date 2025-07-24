@@ -128,7 +128,7 @@ export const routes = [ // Add export here
   },
   {
     path: '/aliyun-mcp-moji-weather',
-    name: '【施工中】墨迹天气MCP',
+    name: '墨迹天气MCP',
     component: () => import('../views/MojiWeatherMcpView.vue')
   },
   {
