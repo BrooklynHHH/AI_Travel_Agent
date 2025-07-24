@@ -15,7 +15,7 @@ export const routes = [ // Add export here
   {
     path: '/travel',
     name: '旅游',
-    component: () => import('../views/NewMultiTurnChatView_V1_2.vue')
+    component: () => import('../views/TravelPlanning.vue')
   },
   {
     path: '/podcast',

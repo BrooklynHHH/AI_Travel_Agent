@@ -147,11 +147,11 @@
               </div>
               <div class="item-label">音乐生成</div>
             </div>
-            <div class="category-item" @click="handleFeature('照片动起来')">
+            <div class="category-item" @click="handleFeature('视频生成')">
               <div class="item-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
               </div>
-              <div class="item-label">照片动起来</div>
+              <div class="item-label">视频生成</div>
             </div>
           </div>
         </div>
@@ -170,11 +170,11 @@
               </div>
               <div class="item-label">法律咨询</div>
             </div>
-            <div class="category-item" @click="handleFeature('AI解梦')">
+            <div class="category-item" @click="handleFeature('旅游规划')">
               <div class="item-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
               </div>
-              <div class="item-label">AI解梦</div>
+              <div class="item-label">旅游规划</div>
             </div>
           </div>
         </div>
@@ -255,6 +255,12 @@ const handleFeature = (feature) => {
     router.push({
       name: 'ocr'
     });
+  } else if (feature === '旅游规划') {
+    // 旅游规划功能跳转到旅游页面
+    router.push('/travel');
+  } else if (feature === '视频生成') {
+    // 视频生成功能跳转到视频生成页面
+    router.push('/video');
   } else {
     // 其他功能正常跳转到结果页
     router.push({
