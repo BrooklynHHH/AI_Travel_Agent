@@ -451,7 +451,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   padding: 12px;
-  background: rgba(66, 153, 225, 0.05);
+  background: #ffffff !important;
   border-radius: 8px;
   border: 1px dashed rgba(66, 153, 225, 0.3);
 }
