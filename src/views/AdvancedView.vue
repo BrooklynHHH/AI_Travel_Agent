@@ -190,6 +190,97 @@
               </div>
               <div class="item-label">全国物流查询<br>(阿里mcp)</div>
             </div>
+            <div class="category-item" @click="handleFeature('股票实时查询')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M21 3l-7 7M8 3H3v5M3 3l7 7M16 21h5v-5M21 21l-7-7M8 21H3v-5M3 21l7-7"></path></svg>
+              </div>
+              <div class="item-label">股票实时查询<br>(阿里mcp)</div>
+            </div>
+          </div>
+      </div>
+
+      </div>
+      
+      <!-- 阿里云分类区域 -->
+      <div class="category-row">
+        <div class="category-box aliyun-category">
+          <h3 class="category-title">阿里云</h3>
+          <div class="category-items">
+            <div class="category-item" @click="handleFeature('天气预报MCP')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+              </div>
+              <div class="item-label">天气预报MCP</div>
+            </div>
+            <div class="category-item" @click="handleFeature('夸克搜索MCP')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg>
+              </div>
+              <div class="item-label">夸克搜索MCP</div>
+            </div>
+            <div class="category-item" @click="handleFeature('VIN码车架号查询MCP')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M5 17h-2v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2"></path></svg>
+              </div>
+              <div class="item-label">VIN码车架号查询MCP</div>
+            </div>
+          </div>
+          <div class="category-items" style="margin-top: 12px;">
+            <div class="category-item" @click="handleFeature('企业基本工商信息查询MCP')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path><path d="M9 9v.01"></path><path d="M9 12v.01"></path><path d="M9 15v.01"></path><path d="M9 18v.01"></path></svg>
+              </div>
+              <div class="item-label">企业基本工商信息查询MCP</div>
+            </div>
+            <div class="category-item" @click="handleFeature('汇率查询转换MCP')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6"></path><path d="M21 12h-6m-6 0H3"></path></svg>
+              </div>
+              <div class="item-label">汇率查询转换MCP</div>
+            </div>
+            <div class="category-item" @click="handleFeature('商品条码查询MCP')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5v14"></path><path d="M8 5v14"></path><path d="M12 5v14"></path><path d="M17 5v14"></path><path d="M21 5v14"></path></svg>
+              </div>
+              <div class="item-label">商品条码查询MCP</div>
+            </div>
+          </div>
+          <div class="category-items" style="margin-top: 12px;">
+            <div class="category-item" @click="handleFeature('墨迹天气MCP')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path><path d="M16 14l-2-2-2 2"></path></svg>
+              </div>
+              <div class="item-label">墨迹天气MCP</div>
+            </div>
+            <div class="category-item" @click="handleFeature('发票真伪查询MCP')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline><path d="M9 5l2 2 4-4"></path></svg>
+              </div>
+              <div class="item-label">发票真伪查询MCP</div>
+            </div>
+            <div class="category-item" @click="handleFeature('ISBN书号查询MCP')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              </div>
+              <div class="item-label">ISBN书号查询MCP</div>
+            </div>
+          </div>
+        </div>
+        <div class="category-box">
+          <h3 class="category-title">更多功能</h3>
+          <div class="category-items">
+            <div class="category-item" style="visibility: hidden;">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+              </div>
+              <div class="item-label"></div>
+            </div>
+            <div class="category-item" style="visibility: hidden;">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+              </div>
+              <div class="item-label"></div>
+            </div>
             <div class="category-item" style="visibility: hidden;">
               <div class="item-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
@@ -197,9 +288,9 @@
               <div class="item-label"></div>
             </div>
           </div>
+        </div>
       </div>
 
-      </div>
       <div class="more-tools" @click="handleMoreTools">
         <span>更多AI工具</span>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="arrow-icon"><path d="M9 18l6-6-6-6"></path></svg>
@@ -291,6 +382,36 @@ const handleFeature = (feature) => {
   } else if (feature === '全国物流查询') {
     // 全国物流查询功能跳转到指定页面
     router.push('/quanguo-kuaidi-wuliu-mcp');
+  } else if (feature === '股票实时查询') {
+    // 股票实时查询功能跳转到指定页面
+    router.push('/aliyun-mcp-stocks');
+  } else if (feature === '天气预报MCP') {
+    // 天气预报MCP功能跳转到指定页面
+    router.push('/aliyun-mcp-weather');
+  } else if (feature === '夸克搜索MCP') {
+    // 夸克搜索MCP功能跳转到指定页面
+    router.push('/aliyun-mcp-quark-search');
+  } else if (feature === 'VIN码车架号查询MCP') {
+    // VIN码车架号查询MCP功能跳转到指定页面
+    router.push('/aliyun-mcp-vin');
+  } else if (feature === '企业基本工商信息查询MCP') {
+    // 企业基本工商信息查询MCP功能跳转到指定页面
+    router.push('/aliyun-mcp-company-info');
+  } else if (feature === '汇率查询转换MCP') {
+    // 汇率查询转换MCP功能跳转到指定页面
+    router.push('/aliyun-mcp-exchange-rate');
+  } else if (feature === '商品条码查询MCP') {
+    // 商品条码查询MCP功能跳转到指定页面
+    router.push('/aliyun-mcp-barcode');
+  } else if (feature === '墨迹天气MCP') {
+    // 墨迹天气MCP功能跳转到指定页面
+    router.push('/aliyun-mcp-moji-weather');
+  } else if (feature === '发票真伪查询MCP') {
+    // 发票真伪查询MCP功能跳转到指定页面
+    router.push('/aliyun-mcp-invoice-checker');
+  } else if (feature === 'ISBN书号查询MCP') {
+    // ISBN书号查询MCP功能跳转到指定页面
+    router.push('/aliyun-mcp-isbn');
   } else {
     // 其他功能正常跳转到结果页
     router.push({
@@ -692,6 +813,36 @@ onUnmounted(() => {
   width: 16px;
   height: 16px;
   margin-left: 4px;
+}
+
+/* 阿里云分类特殊样式 */
+.aliyun-category {
+  background: linear-gradient(135deg, #ff6a00 0%, #ff8533 100%);
+  border: 1px solid #ff6a00;
+  color: white;
+}
+
+.aliyun-category .category-title {
+  color: white;
+  font-weight: 600;
+}
+
+.aliyun-category .item-label {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.aliyun-category .item-icon {
+  color: white;
+}
+
+.aliyun-category .category-item:hover .item-icon {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+.aliyun-category .category-item:hover .item-label {
+  color: white;
 }
 
 /* 移动设备适配 */
