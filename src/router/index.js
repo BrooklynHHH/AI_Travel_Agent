@@ -86,6 +86,11 @@ export const routes = [ // Add export here
     name: 'PodcastDetail',
     component: () => import('../views/PodcastDetailView.vue')
   },
+  {
+    path: '/quanguo-kuaidi-wuliu-mcp',
+    name: '全国快递物流MCP',
+    component: () => import('../views/QuanGuoKuaiDiWuLiuMCPView.vue')
+  }
 
 ]
 
