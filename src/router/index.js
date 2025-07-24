@@ -79,7 +79,7 @@ export const routes = [ // Add export here
   },
   {
     path: '/',
-    redirect: '/route-links' // Change redirect to the new page
+    redirect: '/advanced' // Change redirect to the new page
   },
   {
     path: '/podcast-detail',

@@ -141,11 +141,11 @@
               </div>
               <div class="item-label">AI生图</div>
             </div>
-            <div class="category-item" @click="handleFeature('音乐生成')">
+            <div class="category-item" @click="handleFeature('播客')">
               <div class="item-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
               </div>
-              <div class="item-label">音乐生成</div>
+              <div class="item-label">播客</div>
             </div>
             <div class="category-item" @click="handleFeature('视频生成')">
               <div class="item-icon">
@@ -164,20 +164,41 @@
               </div>
               <div class="item-label">健康助手</div>
             </div>
-            <div class="category-item" @click="handleFeature('法律咨询')">
+            <div class="category-item" @click="handleFeature('算命')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m15.5-6.5L17 7l-1.5-1.5M7 17l-1.5 1.5M17 17l1.5 1.5M7 7L5.5 5.5"></path></svg>
+              </div>
+              <div class="item-label">算命</div>
+            </div>
+            <div class="category-item" @click="handleFeature('法行宝')">
               <div class="item-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
               </div>
-              <div class="item-label">法律咨询</div>
+              <div class="item-label">法行宝</div>
             </div>
+          </div>
+          <div class="category-items" style="margin-top: 12px;">
             <div class="category-item" @click="handleFeature('旅游规划')">
               <div class="item-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
               </div>
               <div class="item-label">旅游规划</div>
             </div>
+            <div class="category-item" style="visibility: hidden;">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+              </div>
+              <div class="item-label"></div>
+            </div>
+            <div class="category-item" style="visibility: hidden;">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+              </div>
+              <div class="item-label"></div>
+            </div>
           </div>
-        </div>
+      </div>
+
       </div>
       <div class="more-tools" @click="handleMoreTools">
         <span>更多AI工具</span>
@@ -261,6 +282,12 @@ const handleFeature = (feature) => {
   } else if (feature === '视频生成') {
     // 视频生成功能跳转到视频生成页面
     router.push('/video');
+  } else if (feature === '播客') {
+    // 播客功能跳转到播客页面
+    router.push('/podcast');
+  } else if (feature === '算命') {
+    // 算命功能跳转到算命页面
+    router.push('/fortune');
   } else {
     // 其他功能正常跳转到结果页
     router.push({
