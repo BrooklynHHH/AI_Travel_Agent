@@ -85,40 +85,42 @@
           <!-- 智能体响应区域 -->
           <div class="turn-agents-response">
             <div class="agents-grid" :class="{ 'with-focus-area': showFocusArea && !isMinimized }">
-              <!-- 智能体卡片 -->
-              <AgentCard
-                v-for="session in turnData.sessions.filter(s => s.agentInfo.key !== 'tools')"
-                :key="session.uniqueKey"
-                :agent-info="session.agentInfo"
-                :conversations="session.conversations"
-                :current-status="session.currentStatus"
-                :streaming-content="session.streamingContent"
-                :session-index="session.sessionIndex"
-                :is-in-focus="focusedAgentInfo && focusedAgentInfo.agentInfo.key === session.agentInfo.key"
-                @toggle-card="handleToggleCard"
-                @toggle-conversation="handleToggleConversation"
-                @focus-agent="handleFocusAgent"
-                class="agent-response-card"
-              />
-              
-              <!-- 工具调用卡片 - 每个工具调用对话都创建一个独立的卡片 -->
-              <template v-for="session in turnData.sessions.filter(s => s.agentInfo.key === 'tools')" :key="session.uniqueKey">
-                <ToolsCard
-                  v-for="conversation in session.conversations.filter(conv => conv.isToolCall)"
-                  :key="`${session.uniqueKey}_${conversation.id}`"
-                  :tool-content="conversation.content"
-                  :tool-type="conversation.toolCallMetadata?.toolType || 'unknown'"
-                  :tool-name="conversation.toolCallMetadata?.toolName || 'unknown_tool'"
-                  :call-index="conversation.toolCallMetadata?.callIndex || 1"
-                  :timestamp="conversation.timestamp"
-                  :processing-time="conversation.endTime - conversation.startTime"
-                  :status="conversation.status"
-                  @expand="handleToolExpand"
-                  @collapse="handleToolCollapse"
-                  @error="handleToolError"
-                  @copy="handleToolCopy"
-                  class="tool-response-card"
+              <!-- 🔑 关键修复：统一渲染所有卡片，按照时间顺序 -->
+              <template v-for="session in turnData.sessions" :key="session.uniqueKey">
+                <!-- 智能体卡片 -->
+                <AgentCard
+                  v-if="session.agentInfo.key !== 'tools'"
+                  :agent-info="session.agentInfo"
+                  :conversations="session.conversations"
+                  :current-status="session.currentStatus"
+                  :streaming-content="session.streamingContent"
+                  :session-index="session.sessionIndex"
+                  :is-in-focus="focusedAgentInfo && focusedAgentInfo.agentInfo.key === session.agentInfo.key"
+                  @toggle-card="handleToggleCard"
+                  @toggle-conversation="handleToggleConversation"
+                  @focus-agent="handleFocusAgent"
+                  class="agent-response-card"
                 />
+                
+                <!-- 工具调用卡片 - 每个工具调用对话都创建一个独立的卡片 -->
+                <template v-else-if="session.agentInfo.key === 'tools'">
+                  <ToolsCard
+                    v-for="conversation in session.conversations.filter(conv => conv.isToolCall)"
+                    :key="`${session.uniqueKey}_${conversation.id}`"
+                    :tool-content="conversation.content"
+                    :tool-type="conversation.toolCallMetadata?.toolType || 'unknown'"
+                    :tool-name="conversation.toolCallMetadata?.toolName || 'unknown_tool'"
+                    :call-index="conversation.toolCallMetadata?.callIndex || 1"
+                    :timestamp="conversation.timestamp"
+                    :processing-time="conversation.endTime - conversation.startTime"
+                    :status="conversation.status"
+                    @expand="handleToolExpand"
+                    @collapse="handleToolCollapse"
+                    @error="handleToolError"
+                    @copy="handleToolCopy"
+                    class="tool-response-card"
+                  />
+                </template>
               </template>
             </div>
           </div>
@@ -594,7 +596,7 @@ export default {
             const checkpoint_ns = metadata.checkpoint_ns || ''
             
             console.log(`📊 [数据解析] langgraph_node: "${langgraph_node}", checkpoint_ns: "${checkpoint_ns}"`)
-            console.log(`📝 [内容] content: "${content}"`)
+            // console.log(`📝 [内容] content: "${content}"`)
             
             // 处理工具调用 - 使用新的替换模式和工具类型检测
             if (langgraph_node === "tools" || langgraph_node === "tour_search_agent") {
@@ -603,7 +605,7 @@ export default {
               
               console.log(`🔧 [工具调用] 工具名称：${toolName}`)
               console.log(`� [工具调用] 原始内容长度：${content.length}`)
-              console.log(`� [工具调用] 原始内容预览：${content.substring(0, 200)}...`)
+              // console.log(`� [工具调用] 原始内容预览：${content.substring(0, 200)}...`)
               
               if (content) {
                 // 🔑 关键改进：使用智能工具类型检测
