@@ -85,6 +85,7 @@
                   <div v-else class="think-content" v-html="renderMarkdown(message.thinkContent)"></div>
                 </details>
               </div>
+              <!-- 统一用 marked 渲染 assistant 消息 -->
               <div v-if="message.streaming" class="response-text">
                 <div v-html="renderMarkdown(message.content)"></div><span class="cursor">|</span>
               </div>
@@ -126,8 +127,8 @@ import ImageViewer from '../components/modals/ImageViewer.vue';
 import ProductWindow from '../components/modals/ProductWindow.vue';
 import SettingsModal from '../components/modals/SettingsModal.vue';
 import VideoPlayer from '../components/modals/VideoPlayer.vue';
-import MarkdownIt from 'markdown-it';
-import markdownItKatex from 'markdown-it-katex';
+// 替换 markdown-it 为 marked
+import { marked } from 'marked';
 // 已在main.js全局导入，此处移除: import 'katex/dist/katex.min.css';
 import { createWorker, createScheduler } from 'tesseract.js';
 import FabricCanvas from '../components/FabricCanvas.vue';
@@ -681,67 +682,18 @@ const drawBoxes = () => {
   });
 };
 
-// Markdown 渲染
-const md = new MarkdownIt({ 
-  html: true, 
-  linkify: true, 
-  typographer: true, 
-  breaks: true 
-});
-// 配置KaTeX选项，确保公式正确渲染
-md.use(markdownItKatex, {
-  throwOnError: false,
-  errorColor: '#cc0000',
-  macros: {
-    // 添加常用宏命令支持
-    "\\boldsymbol": "\\mathbf"
-  },
-  delimiters: [
-    {left: '$$', right: '$$', display: true},
-    {left: '$', right: '$', display: false},
-    {left: '\\(', right: '\\)', display: false},
-    {left: '\\[', right: '\\]', display: true}
-  ]
-});
-
-// 处理<think>标签并提取思考内容
-const processThinkTags = (content) => {
-  if (!content) return { content: '', thinkContent: '' };
-  
-  // 使用正则表达式匹配<think>和</think>之间的内容
-  const thinkRegex = /<think>([\s\S]*?)<\/think>/g;
-  let thinkContent = '';
-  
-  // 提取所有思考内容并从原内容中移除
-  const processedContent = content.replace(thinkRegex, (match, content) => {
-    console.log('找到思考内容:', content.substring(0, 50) + '...');
-    thinkContent += content + '\n\n';
-    return '';
-  });
-  
-  return {
-    content: processedContent.trim(),
-    thinkContent: thinkContent.trim()
-  };
-};
-
+// Markdown 渲染，自动去除 markdown 代码块包裹
 const renderMarkdown = (content) => {
   if (!content) return '';
-  
-  // 先处理<think>标签，提取思考内容
-  const { content: processedContent } = processThinkTags(content);
-  
-  // 处理LaTeX分隔符 \( \) 转换为 $ $ 以确保正确渲染
-  let latexProcessedContent = processedContent
-    .replace(/\\\(/g, '$')
-    .replace(/\\\)/g, '$');
-  
-  // 使用正则表达式检测非分隔符内的\boldsymbol并转换为\mathbf
-  // 这是因为有些KaTeX版本不支持\boldsymbol，但支持\mathbf
-  latexProcessedContent = latexProcessedContent.replace(/(\$.*?)\\boldsymbol(\{.*?\})(.*?\$)/g, "$1\\mathbf$2$3");
-  
-  // 然后渲染Markdown
-  return md.render(latexProcessedContent);
+  // 打印内容便于调试
+  console.log('message.content:', JSON.stringify(content));
+  // 去除 markdown 代码块包裹
+  const codeBlockRegex = /^```(?:html)?\n([\s\S]*?)\n```$/i;
+  const match = content.match(codeBlockRegex);
+  if (match) {
+    return match[1]; // 直接返回 HTML
+  }
+  return marked.parse(content);
 };
 
 // iframe加载事件处理
