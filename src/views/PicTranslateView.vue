@@ -22,7 +22,13 @@
       <div class="platform-result">
         <h3>原图</h3>
         <div class="image-container">
-          <img v-if="originalImage" :src="originalImage" class="result-image"  alt=""/>
+          <img 
+            v-if="originalImage" 
+            :src="originalImage" 
+            class="result-image clickable-image"
+            @click="showImageViewer(originalImage, '原图')"
+            alt=""
+          />
           <div v-else class="placeholder">请上传图片</div>
         </div>
       </div>
@@ -38,8 +44,10 @@
           <img
               v-else-if="platform.image"
               :src="platform.image"
-              class="result-image"
-           alt=""/>
+              class="result-image clickable-image"
+              @click="showImageViewer(platform.image, platform.display)"
+              alt=""
+          />
           <div v-else class="placeholder">等待翻译</div>
         </div>
         <p v-if="platform.time" class="time-info">
@@ -47,22 +55,46 @@
         </p>
       </div>
     </div>
+
+    <!-- 图片查看器 -->
+    <ImageViewer
+      v-model:show="imageViewerShow"
+      :images="currentImages"
+      :current-index="currentImageIndex"
+      :keyword="currentImageTitle"
+      @update:current-index="currentImageIndex = $event"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { translateImage } from '@/api/pic-translate' // 修改为你的接口路径
+import { translateImage } from '@/api/pic-translate'
+import ImageViewer from '@/components/modals/ImageViewer.vue'
 
 const file = ref(null)
 const originalImage = ref(null)
 const targetLang = ref('en')
+
+// 图片查看器相关
+const imageViewerShow = ref(false)
+const currentImages = ref([])
+const currentImageIndex = ref(0)
+const currentImageTitle = ref('')
 
 const platforms = ref([
   { name: 'aliyun', display: '阿里云翻译', image: null, time: null, loading: false },
   { name: 'baidu', display: '百度翻译', image: null, time: null, loading: false },
   { name: 'volc', display: '火山翻译', image: null, time: null, loading: false }
 ])
+
+// 显示图片查看器
+function showImageViewer(imageUrl, title) {
+  currentImages.value = [{ url: imageUrl, keyword: title }]
+  currentImageIndex.value = 0
+  currentImageTitle.value = title
+  imageViewerShow.value = true
+}
 
 function handleFileChange(event) {
   const selected = event.target.files[0]
@@ -167,5 +199,15 @@ button:disabled {
 .loading {
   color: #666;
   font-style: italic;
+}
+
+.clickable-image {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clickable-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 </style>
