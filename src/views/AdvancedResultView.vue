@@ -951,7 +951,7 @@ const tabApiMap = {
     }
   },
   '豆包融合信息搜索Agent': {
-    url: 'http://localhost:3001/api/doubao-search',
+    url: 'http://staging-llm.search.miui.srv/agent-api/doubao-search',
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
