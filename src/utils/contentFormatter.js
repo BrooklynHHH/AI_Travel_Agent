@@ -8,13 +8,33 @@ import SearchContentParser from './searchContentParser.js'
 class ContentFormatter {
   /**
    * 格式化工具返回的内容
-   * @param {string} content - 原始内容
+   * @param {string|Object} content - 原始内容或结构化数据对象
    * @param {Object} options - 格式化选项
    * @returns {string} 格式化后的内容
    */
   static formatToolContent(content, options = {}) {
-    if (!content || typeof content !== 'string') {
-      return content
+    if (!content) {
+      return ''
+    }
+
+    // 如果是对象，直接处理
+    if (typeof content === 'object') {
+      try {
+        const structuredData = this.parseStructuredContent(content)
+        if (structuredData) {
+          return this.renderStructuredContent(structuredData, options)
+        }
+        // 如果不是已知的结构化数据类型，返回JSON字符串
+        return JSON.stringify(content, null, 2)
+      } catch (error) {
+        console.warn('对象内容格式化失败:', error)
+        return JSON.stringify(content, null, 2)
+      }
+    }
+
+    // 如果是字符串，按原逻辑处理
+    if (typeof content !== 'string') {
+      return String(content)
     }
 
     try {
@@ -35,12 +55,20 @@ class ContentFormatter {
 
   /**
    * 解析结构化内容
-   * @param {string} content - 原始内容
+   * @param {string|Object} content - 原始内容或结构化数据对象
    * @returns {Object|null} 解析后的结构化数据
    */
   static parseStructuredContent(content) {
-    // 检测内容类型并使用相应的解析器
-    if (this.isSearchContent(content)) {
+    // 如果已经是对象，直接使用SearchContentParser处理
+    if (typeof content === 'object' && content !== null) {
+      if (content.type === 'search_ref' || content.type === 'search_tool') {
+        return SearchContentParser.processStructuredData(content)
+      }
+      return content // 其他类型的对象直接返回
+    }
+    
+    // 如果是字符串，检测内容类型并使用相应的解析器
+    if (typeof content === 'string' && this.isSearchContent(content)) {
       return SearchContentParser.parseSearchContent(content)
     }
     
@@ -185,7 +213,7 @@ class ContentFormatter {
     const structuredData = this.parseStructuredContent(content)
     
     if (structuredData && structuredData.type === 'search_ref') {
-      return SearchContentParser.getTextSummary(structuredData, 3)
+      return SearchContentParser.formatAsReferenceList(structuredData, 5)
     }
 
     // 对于普通文本，直接截取

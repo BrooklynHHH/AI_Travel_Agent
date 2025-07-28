@@ -1,520 +1,57 @@
 /**
  * 搜索内容解析器
- * 用于将搜索工具返回的字符串内容转换为结构化数据
+ * 用于处理搜索工具返回的结构化数据并进行渲染
  */
 
 class SearchContentParser {
   /**
-   * 解析搜索工具返回的内容
-   * @param {string} content - 原始字符串内容
-   * @returns {Object} 解析后的结构化数据
+   * 处理搜索工具返回的结构化数据
+   * @param {Object|string} data - 结构化数据对象或字符串
+   * @returns {Object} 标准化后的搜索数据
    */
-  static parseSearchContent(content) {
-    console.log('🔍 [SearchContentParser] 开始解析搜索内容')
-    console.log('🔍 [SearchContentParser] 输入内容类型:', typeof content)
-    console.log('🔍 [SearchContentParser] 输入内容长度:', content?.length || 0)
+  static processStructuredData(data) {
+    console.log('🔍 [SearchContentParser] 开始处理搜索数据')
+    console.log('🔍 [SearchContentParser] 输入数据类型:', typeof data)
     
-    if (!content || typeof content !== 'string') {
-      console.warn('🔍 [SearchContentParser] 内容为空或不是字符串类型')
-      return null
-    }
-
-    // 预处理：检查并处理多个连接的JSON对象
-    console.log('🔍 [SearchContentParser] 开始预处理多个连接的JSON对象')
-    const cleanedContent = this.preprocessMultipleJsonObjects(content)
-    console.log('🔍 [SearchContentParser] 预处理完成，处理后内容长度:', cleanedContent.length)
-
-    // 预检查：确保内容看起来像是搜索结果
-    console.log('🔍 [SearchContentParser] 开始预检查内容格式')
-    if (!this.isValidSearchContent(cleanedContent)) {
-      console.warn('🔍 [SearchContentParser] 内容不是有效的搜索结果格式')
-      console.log('🔍 [SearchContentParser] 内容预览:', cleanedContent.substring(0, 200) + '...')
-      return null
-    }
-    
-    console.log('🔍 [SearchContentParser] 预检查通过，开始解析')
-    console.log('🔍 [SearchContentParser] 处理前数据预览:', cleanedContent.substring(0, 500) + '...')
-    
-    try {
-      console.log('🔍 [SearchContentParser] 尝试JSON解析')
-      const jsonResult = this.tryParseJSON(cleanedContent)
-      console.log('🔍 [SearchContentParser] JSON解析成功')
-      return jsonResult
-    } catch (error) {
-      console.warn('🔍 [SearchContentParser] JSON解析失败:', error.message)
-      console.log('🔍 [SearchContentParser] JSON解析错误详情:', error)
-      
+    // 如果是字符串，尝试解析为JSON（兼容旧格式）
+    if (typeof data === 'string') {
+      console.log('🔍 [SearchContentParser] 检测到字符串格式，尝试解析')
       try {
-        console.log('🔍 [SearchContentParser] 尝试Python字典解析')
-        const pythonResult = this.parsePythonDict(cleanedContent)
-        console.log('🔍 [SearchContentParser] Python字典解析成功')
-        return pythonResult
-      } catch (pythonError) {
-        console.error('🔍 [SearchContentParser] Python字典解析也失败:', pythonError.message)
-        console.log('🔍 [SearchContentParser] Python解析错误详情:', pythonError)
-        console.warn('🔍 [SearchContentParser] 所有解析方法都失败，返回null')
+        data = JSON.parse(data)
+        console.log('🔍 [SearchContentParser] 字符串解析成功')
+      } catch (error) {
+        console.warn('🔍 [SearchContentParser] 字符串解析失败:', error.message)
         return null
       }
     }
+    
+    // 验证数据格式
+    if (!data || typeof data !== 'object') {
+      console.warn('🔍 [SearchContentParser] 数据格式无效')
+      return null
+    }
+    
+    // 检查是否是搜索结果类型
+    if (data.type !== 'search_ref' && data.type !== 'search_tool') {
+      console.warn('🔍 [SearchContentParser] 不是搜索结果类型:', data.type)
+      return null
+    }
+    
+    console.log('🔍 [SearchContentParser] 开始标准化数据')
+    const normalized = this.normalizeSearchData(data)
+    console.log('🔍 [SearchContentParser] 数据处理完成，结果数量:', normalized?.results?.length || 0)
+    
+    return normalized
   }
 
   /**
-   * 预处理多个连接的JSON对象
-   * @param {string} content - 原始内容
-   * @returns {string} 处理后的内容
+   * 解析搜索工具返回的内容（兼容旧版本）
+   * @param {string|Object} content - 原始字符串内容或结构化数据
+   * @returns {Object} 解析后的结构化数据
    */
-  static preprocessMultipleJsonObjects(content) {
-    console.log('🔍 [preprocessMultipleJsonObjects] 开始预处理多个JSON对象')
-    console.log('🔍 [preprocessMultipleJsonObjects] 原始内容长度:', content.length)
-    
-    // 检查是否包含多个连接的JSON对象的模式
-    // 常见模式：}]}{  或  }]}{'  等
-    const multipleJsonPattern = /\}\]\}\s*[{['"]]/g
-    const matches = content.match(multipleJsonPattern)
-    
-    if (matches && matches.length > 0) {
-      console.log('🔍 [preprocessMultipleJsonObjects] 检测到多个连接的JSON对象')
-      console.log('🔍 [preprocessMultipleJsonObjects] 匹配模式数量:', matches.length)
-      console.log('🔍 [preprocessMultipleJsonObjects] 匹配内容:', matches)
-      
-      // 策略1：尝试提取第一个完整的JSON对象
-      const firstJsonResult = this.extractFirstJsonObject(content)
-      if (firstJsonResult) {
-        console.log('🔍 [preprocessMultipleJsonObjects] 成功提取第一个JSON对象')
-        return firstJsonResult
-      }
-      
-      // 策略2：尝试提取最后一个完整的JSON对象
-      const lastJsonResult = this.extractLastJsonObject(content)
-      if (lastJsonResult) {
-        console.log('🔍 [preprocessMultipleJsonObjects] 成功提取最后一个JSON对象')
-        return lastJsonResult
-      }
-      
-      // 策略3：尝试分割并选择最大的JSON对象
-      const largestJsonResult = this.extractLargestJsonObject(content)
-      if (largestJsonResult) {
-        console.log('🔍 [preprocessMultipleJsonObjects] 成功提取最大的JSON对象')
-        return largestJsonResult
-      }
-      
-      console.warn('🔍 [preprocessMultipleJsonObjects] 所有提取策略都失败，返回原内容')
-    } else {
-      console.log('🔍 [preprocessMultipleJsonObjects] 未检测到多个连接的JSON对象')
-    }
-    
-    return content
-  }
-
-  /**
-   * 提取第一个完整的JSON对象
-   * @param {string} content - 原始内容
-   * @returns {string|null} 第一个JSON对象或null
-   */
-  static extractFirstJsonObject(content) {
-    console.log('🔍 [extractFirstJsonObject] 尝试提取第一个JSON对象')
-    
-    try {
-      // 寻找第一个 }]} 的位置
-      const firstEndIndex = content.indexOf('}]}')
-      if (firstEndIndex !== -1) {
-        const firstJsonCandidate = content.substring(0, firstEndIndex + 3)
-        console.log('🔍 [extractFirstJsonObject] 第一个JSON候选长度:', firstJsonCandidate.length)
-        console.log('🔍 [extractFirstJsonObject] 第一个JSON预览:', firstJsonCandidate.substring(0, 200))
-        
-        // 验证是否是有效的JSON
-        if (this.validateJsonCandidate(firstJsonCandidate)) {
-          console.log('🔍 [extractFirstJsonObject] 第一个JSON对象验证成功')
-          return firstJsonCandidate
-        }
-      }
-    } catch (error) {
-      console.warn('🔍 [extractFirstJsonObject] 提取第一个JSON对象失败:', error.message)
-    }
-    
-    return null
-  }
-
-  /**
-   * 提取最后一个完整的JSON对象
-   * @param {string} content - 原始内容
-   * @returns {string|null} 最后一个JSON对象或null
-   */
-  static extractLastJsonObject(content) {
-    console.log('🔍 [extractLastJsonObject] 尝试提取最后一个JSON对象')
-    
-    try {
-      // 寻找最后一个 {"type" 的位置
-      const lastStartIndex = content.lastIndexOf('{"type"')
-      if (lastStartIndex === -1) {
-        // 如果没有找到双引号格式，尝试单引号格式
-        const lastStartIndexSingle = content.lastIndexOf("{'type'")
-        if (lastStartIndexSingle !== -1) {
-          const lastJsonCandidate = content.substring(lastStartIndexSingle)
-          console.log('🔍 [extractLastJsonObject] 最后一个JSON候选(单引号)长度:', lastJsonCandidate.length)
-          
-          if (this.validateJsonCandidate(lastJsonCandidate)) {
-            console.log('🔍 [extractLastJsonObject] 最后一个JSON对象(单引号)验证成功')
-            return lastJsonCandidate
-          }
-        }
-      } else {
-        const lastJsonCandidate = content.substring(lastStartIndex)
-        console.log('🔍 [extractLastJsonObject] 最后一个JSON候选长度:', lastJsonCandidate.length)
-        console.log('🔍 [extractLastJsonObject] 最后一个JSON预览:', lastJsonCandidate.substring(0, 200))
-        
-        if (this.validateJsonCandidate(lastJsonCandidate)) {
-          console.log('🔍 [extractLastJsonObject] 最后一个JSON对象验证成功')
-          return lastJsonCandidate
-        }
-      }
-    } catch (error) {
-      console.warn('🔍 [extractLastJsonObject] 提取最后一个JSON对象失败:', error.message)
-    }
-    
-    return null
-  }
-
-  /**
-   * 提取最大的JSON对象
-   * @param {string} content - 原始内容
-   * @returns {string|null} 最大的JSON对象或null
-   */
-  static extractLargestJsonObject(content) {
-    console.log('🔍 [extractLargestJsonObject] 尝试提取最大的JSON对象')
-    
-    try {
-      // 使用正则表达式分割多个JSON对象
-      const jsonSeparatorPattern = /\}\]\}\s*[{['"]]/g
-      const parts = content.split(jsonSeparatorPattern)
-      
-      console.log('🔍 [extractLargestJsonObject] 分割后的部分数量:', parts.length)
-      
-      let largestJson = null
-      let maxLength = 0
-      
-      for (let i = 0; i < parts.length; i++) {
-        let candidate = parts[i].trim()
-        
-        // 为非第一个部分添加可能缺失的结尾
-        if (i > 0 && !candidate.endsWith('}]}')) {
-          candidate += '}]}'
-        }
-        
-        // 为非最后一个部分添加可能缺失的开头
-        if (i < parts.length - 1 && !candidate.startsWith('{')) {
-          candidate = '{' + candidate
-        }
-        
-        console.log('🔍 [extractLargestJsonObject] 候选', i, '长度:', candidate.length)
-        
-        if (candidate.length > maxLength && this.validateJsonCandidate(candidate)) {
-          largestJson = candidate
-          maxLength = candidate.length
-          console.log('🔍 [extractLargestJsonObject] 找到更大的有效JSON，长度:', maxLength)
-        }
-      }
-      
-      if (largestJson) {
-        console.log('🔍 [extractLargestJsonObject] 最大JSON对象验证成功，长度:', maxLength)
-        return largestJson
-      }
-    } catch (error) {
-      console.warn('🔍 [extractLargestJsonObject] 提取最大JSON对象失败:', error.message)
-    }
-    
-    return null
-  }
-
-  /**
-   * 验证JSON候选是否有效
-   * @param {string} candidate - JSON候选字符串
-   * @returns {boolean} 是否有效
-   */
-  static validateJsonCandidate(candidate) {
-    if (!candidate || typeof candidate !== 'string') {
-      return false
-    }
-    
-    try {
-      // 尝试直接解析JSON
-      JSON.parse(candidate)
-      return true
-    } catch (directError) {
-      try {
-        // 尝试Python字典格式转换后解析
-        const normalized = candidate
-          .replace(/'/g, '"')
-          .replace(/None/g, 'null')
-          .replace(/True/g, 'true')
-          .replace(/False/g, 'false')
-        
-        JSON.parse(normalized)
-        return true
-      } catch (pythonError) {
-        return false
-      }
-    }
-  }
-
-  /**
-   * 检查内容是否是有效的搜索结果格式
-   * @param {string} content - 内容字符串
-   * @returns {boolean} 是否有效
-   */
-  static isValidSearchContent(content) {
-    console.log('🔍 [isValidSearchContent] 开始检查内容格式')
-    
-    // 检查是否包含搜索结果的基本特征
-    const hasSearchType = content.includes('"type"') || content.includes("'type'")
-    const hasSearchData = content.includes('"datas"') || content.includes("'datas'")
-    const hasSearchRef = content.includes('search_ref') || content.includes('search_tool')
-    
-    console.log('🔍 [isValidSearchContent] 特征检查结果:')
-    console.log('  - hasSearchType:', hasSearchType)
-    console.log('  - hasSearchData:', hasSearchData)
-    console.log('  - hasSearchRef:', hasSearchRef)
-    
-    // 排除明显的Markdown内容
-    const hasMarkdownHeaders = content.includes('**') || content.includes('##')
-    const hasMarkdownLinks = content.includes('[') && content.includes('](')
-    
-    console.log('🔍 [isValidSearchContent] Markdown检查结果:')
-    console.log('  - hasMarkdownHeaders:', hasMarkdownHeaders)
-    console.log('  - hasMarkdownLinks:', hasMarkdownLinks)
-    
-    // 如果包含大量Markdown格式，可能不是搜索结果
-    if (hasMarkdownHeaders || hasMarkdownLinks) {
-      console.log('🔍 [isValidSearchContent] 检测到Markdown格式，需要同时满足搜索特征')
-      const isValid = hasSearchType && hasSearchData && hasSearchRef
-      console.log('🔍 [isValidSearchContent] Markdown内容验证结果:', isValid)
-      return isValid
-    }
-    
-    const isValid = hasSearchType && hasSearchData
-    console.log('🔍 [isValidSearchContent] 普通内容验证结果:', isValid)
-    return isValid
-  }
-
-  /**
-   * 尝试解析标准JSON格式
-   * @param {string} content - JSON字符串
-   * @returns {Object} 解析结果
-   */
-  static tryParseJSON(content) {
-    console.log('🔍 [tryParseJSON] 开始JSON解析')
-    console.log('🔍 [tryParseJSON] 内容长度:', content.length)
-    console.log('🔍 [tryParseJSON] 内容开头:', content.substring(0, 100))
-    console.log('🔍 [tryParseJSON] 内容结尾:', content.substring(content.length - 100))
-    
-    try {
-      const parsed = JSON.parse(content)
-      console.log('🔍 [tryParseJSON] JSON.parse成功')
-      console.log('🔍 [tryParseJSON] 解析结果类型:', typeof parsed)
-      console.log('🔍 [tryParseJSON] 解析结果键:', Object.keys(parsed || {}))
-      
-      const normalized = this.normalizeSearchData(parsed)
-      console.log('🔍 [tryParseJSON] 标准化完成')
-      return normalized
-    } catch (error) {
-      console.error('🔍 [tryParseJSON] JSON.parse失败:', error.message)
-      throw error
-    }
-  }
-
-  /**
-   * 解析Python字典格式的字符串
-   * @param {string} content - Python字典格式字符串
-   * @returns {Object} 解析结果
-   */
-  static parsePythonDict(content) {
-    console.log('🔍 [parsePythonDict] 开始Python字典解析')
-    console.log('🔍 [parsePythonDict] 原始内容长度:', content.length)
-    console.log('🔍 [parsePythonDict] 原始内容预览:', content.substring(0, 200))
-    
-    // 清理和标准化Python字典格式
-    let normalizedContent = content.trim()
-    console.log('🔍 [parsePythonDict] trim后长度:', normalizedContent.length)
-    
-    // 移除可能的外层引号
-    if ((normalizedContent.startsWith('"') && normalizedContent.endsWith('"')) ||
-        (normalizedContent.startsWith("'") && normalizedContent.endsWith("'"))) {
-      console.log('🔍 [parsePythonDict] 检测到外层引号，移除中...')
-      normalizedContent = normalizedContent.slice(1, -1)
-      console.log('🔍 [parsePythonDict] 移除外层引号后长度:', normalizedContent.length)
-    }
-
-    console.log('🔍 [parsePythonDict] 开始替换Python特有值')
-    
-    // 先处理字符串内容中的引号问题
-    // 使用更精确的正则表达式来处理字符串值中的引号
-    console.log('🔍 [parsePythonDict] 开始处理字符串值中的引号')
-    
-    // 替换Python特有的值
-    normalizedContent = normalizedContent
-      .replace(/None/g, 'null')     // None转null
-      .replace(/True/g, 'true')     // True转true
-      .replace(/False/g, 'false')   // False转false
-    
-    console.log('🔍 [parsePythonDict] Python值替换完成')
-    
-    // 更精确地处理单引号转双引号的问题
-    // 需要避免转换字符串内容中的引号
-    console.log('🔍 [parsePythonDict] 开始精确处理引号转换')
-    
-    try {
-      // 尝试使用更安全的方法转换引号
-      // 先找到所有的字符串值，然后逐个处理
-      normalizedContent = this.safeConvertQuotes(normalizedContent)
-      console.log('🔍 [parsePythonDict] 安全引号转换完成')
-      console.log('🔍 [parsePythonDict] 转换后内容预览:', normalizedContent.substring(0, 300))
-      
-    } catch (quoteError) {
-      console.warn('🔍 [parsePythonDict] 安全引号转换失败，使用简单替换:', quoteError.message)
-      // 如果安全转换失败，回退到简单替换
-      normalizedContent = normalizedContent.replace(/'/g, '"')
-      console.log('🔍 [parsePythonDict] 简单引号替换完成')
-    }
-      
-    console.log('🔍 [parsePythonDict] 开始处理转义字符')
-    // 处理可能的转义字符
-    normalizedContent = normalizedContent
-      .replace(/\\'/g, "'")         // 处理转义的单引号
-      .replace(/\\"/g, '"')         // 处理转义的双引号
-
-    console.log('🔍 [parsePythonDict] 转义字符处理完成')
-    console.log('🔍 [parsePythonDict] 最终标准化内容预览:', normalizedContent.substring(0, 300))
-
-    try {
-      console.log('🔍 [parsePythonDict] 尝试JSON.parse标准化内容')
-      const parsed = JSON.parse(normalizedContent)
-      console.log('🔍 [parsePythonDict] JSON.parse成功')
-      console.log('🔍 [parsePythonDict] 解析结果类型:', typeof parsed)
-      console.log('🔍 [parsePythonDict] 解析结果键:', Object.keys(parsed || {}))
-      
-      const normalized = this.normalizeSearchData(parsed)
-      console.log('🔍 [parsePythonDict] 标准化完成')
-      return normalized
-    } catch (error) {
-      console.error('🔍 [parsePythonDict] JSON.parse失败:', error.message)
-      console.log('🔍 [parsePythonDict] 失败时的内容:', normalizedContent.substring(0, 500))
-      
-      // 尝试找到具体的错误位置
-      const errorMatch = error.message.match(/position (\d+)/)
-      if (errorMatch) {
-        const errorPos = parseInt(errorMatch[1])
-        console.log('🔍 [parsePythonDict] 错误位置周围的内容:', normalizedContent.substring(Math.max(0, errorPos - 50), errorPos + 50))
-        console.log('🔍 [parsePythonDict] 错误位置字符:', JSON.stringify(normalizedContent.charAt(errorPos)))
-      }
-      
-      throw error
-    }
-  }
-
-  /**
-   * 安全地转换Python字典中的单引号为双引号
-   * @param {string} content - 原始内容
-   * @returns {string} 转换后的内容
-   */
-  static safeConvertQuotes(content) {
-    console.log('🔍 [safeConvertQuotes] 开始安全引号转换')
-    
-    // 使用更简单但更可靠的方法：
-    // 1. 先标记所有字符串值的位置
-    // 2. 然后安全地替换键名和结构中的单引号
-    
-    try {
-      // 方法1: 使用正则表达式匹配字符串值，并保护其中的内容
-      let result = content
-      
-      // 首先处理字符串值中的双引号，将其转义
-      // 匹配单引号包围的字符串值
-      result = result.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, (match, stringContent) => {
-        // 在字符串内容中转义双引号
-        const escapedContent = stringContent.replace(/"/g, '\\"')
-        return `"${escapedContent}"`
-      })
-      
-      // 然后处理剩余的单引号（主要是键名）
-      // 匹配键名模式：'key':
-      result = result.replace(/'([^']+)'(\s*:)/g, '"$1"$2')
-      
-      console.log('🔍 [safeConvertQuotes] 正则表达式方法完成')
-      return result
-      
-    } catch (regexError) {
-      console.warn('🔍 [safeConvertQuotes] 正则表达式方法失败，使用状态机方法:', regexError.message)
-      
-      // 方法2: 回退到状态机方法，但改进处理逻辑
-      return this.safeConvertQuotesStateMachine(content)
-    }
-  }
-
-  /**
-   * 使用状态机安全地转换引号
-   * @param {string} content - 原始内容
-   * @returns {string} 转换后的内容
-   */
-  static safeConvertQuotesStateMachine(content) {
-    console.log('🔍 [safeConvertQuotesStateMachine] 开始状态机引号转换')
-    
-    let result = ''
-    let inString = false
-    let stringChar = null
-    let i = 0
-    
-    while (i < content.length) {
-      const char = content[i]
-      const nextChar = i + 1 < content.length ? content[i + 1] : null
-      
-      if (!inString) {
-        // 不在字符串内部
-        if (char === "'" || char === '"') {
-          // 开始一个字符串
-          inString = true
-          stringChar = char
-          result += '"' // 统一使用双引号
-        } else {
-          result += char
-        }
-      } else {
-        // 在字符串内部
-        if (char === stringChar) {
-          // 检查是否是转义的引号
-          let backslashCount = 0
-          let j = i - 1
-          while (j >= 0 && content[j] === '\\') {
-            backslashCount++
-            j--
-          }
-          const isEscaped = backslashCount % 2 === 1
-          
-          if (!isEscaped) {
-            // 字符串结束
-            inString = false
-            stringChar = null
-            result += '"' // 统一使用双引号
-          } else {
-            // 转义的引号，保持原样
-            result += char
-          }
-        } else if (char === '"' && stringChar === "'") {
-          // 在单引号字符串内部遇到双引号，需要转义
-          result += '\\"'
-        } else if (char === '\\' && nextChar === '"' && stringChar === "'") {
-          // 处理已经转义的双引号
-          result += '\\\\"'
-          i++ // 跳过下一个字符
-        } else {
-          result += char
-        }
-      }
-      
-      i++
-    }
-    
-    console.log('🔍 [safeConvertQuotesStateMachine] 状态机引号转换完成')
-    return result
+  static parseSearchContent(content) {
+    console.log('🔍 [SearchContentParser] 使用兼容模式解析内容')
+    return this.processStructuredData(content)
   }
 
   /**
@@ -590,31 +127,62 @@ class SearchContentParser {
    * @param {number} maxLength - 最大长度
    * @returns {string} 摘要
    */
-  static generateSummary(content, maxLength = 150) {
+  static generateSummary(content, maxLength = 200) {
     if (!content || typeof content !== 'string') {
       return ''
     }
 
-    const cleanContent = content.trim().replace(/\s+/g, ' ')
+    // 清理内容：移除多余的空白字符和特殊符号
+    let cleanContent = content.trim()
+      .replace(/\s+/g, ' ')
+      .replace(/^\d+\.\s*/, '') // 移除开头的数字编号
+      .replace(/^[*•-]\s*/, '') // 移除开头的列表符号
     
     if (cleanContent.length <= maxLength) {
       return cleanContent
     }
 
-    // 尝试在句号处截断
-    const sentences = cleanContent.split(/[。！？.!?]/)
+    // 智能截断：优先在合适的标点符号处截断
+    const punctuationMarks = /[。！？；：.!?;:]/
+    const sentences = cleanContent.split(punctuationMarks)
     let summary = ''
+    let currentLength = 0
     
-    for (const sentence of sentences) {
-      if ((summary + sentence).length > maxLength) {
+    for (let i = 0; i < sentences.length; i++) {
+      const sentence = sentences[i].trim()
+      if (!sentence) continue
+      
+      const nextLength = currentLength + sentence.length + 1 // +1 for punctuation
+      
+      if (nextLength > maxLength && summary.length > 0) {
         break
       }
-      summary += sentence + '。'
+      
+      if (summary.length > 0) {
+        summary += '。' + sentence
+        currentLength = nextLength
+      } else {
+        summary = sentence
+        currentLength = sentence.length
+      }
     }
 
-    if (summary.length === 0) {
-      // 如果没有合适的句号，直接截断
-      summary = cleanContent.substring(0, maxLength) + '...'
+    // 如果没有找到合适的句子边界，直接截断
+    if (summary.length === 0 || summary.length < maxLength * 0.3) {
+      summary = cleanContent.substring(0, maxLength)
+      
+      // 尝试在最后一个空格处截断，避免截断单词
+      const lastSpaceIndex = summary.lastIndexOf(' ')
+      if (lastSpaceIndex > maxLength * 0.7) {
+        summary = summary.substring(0, lastSpaceIndex)
+      }
+    }
+
+    // 确保摘要以合适的标点结尾
+    if (summary.length < cleanContent.length) {
+      if (!/[。！？.!?]$/.test(summary)) {
+        summary += '...'
+      }
     }
 
     return summary.trim()
@@ -893,6 +461,174 @@ class SearchContentParser {
     })
 
     return `搜索到 ${validResults.length} 条相关结果：\n\n${summaryLines.join('\n\n')}`
+  }
+
+  /**
+   * 格式化搜索结果为参考资料列表
+   * @param {Object} data - 标准化后的搜索数据或原始search_ref数据
+   * @param {number} maxItems - 最大项目数
+   * @returns {string} 参考资料格式的字符串
+   */
+  static formatAsReferenceList(data, maxItems = 10) {
+    // 如果是原始的search_ref数据，先进行标准化
+    let normalizedData = data
+    if (data && data.type === 'search_ref' && data.datas) {
+      normalizedData = this.normalizeSearchData(data)
+    }
+
+    if (!normalizedData || !normalizedData.results || !Array.isArray(normalizedData.results)) {
+      return '参考资料：\n暂无相关资料'
+    }
+
+    const validResults = normalizedData.results
+      .filter(item => item.title || item.content)
+      .slice(0, maxItems)
+
+    if (validResults.length === 0) {
+      return '参考资料：\n暂无有效资料'
+    }
+
+    const referenceLines = validResults.map((item, index) => {
+      const title = item.title || '无标题'
+      const url = item.url || ''
+      const content = item.content || ''
+      
+      // 生成摘要，优先使用content，其次使用已有的summary
+      let summary = ''
+      if (content) {
+        summary = this.generateSummary(content, 150)
+      } else if (item.summary) {
+        summary = item.summary
+      } else {
+        summary = '无内容摘要'
+      }
+
+      // 格式化标题和URL
+      const titleWithUrl = url ? `${title}[${url}]` : title
+      
+      return `${index + 1}.${titleWithUrl}\n   摘要：${summary}`
+    })
+
+    return `参考资料：\n${referenceLines.join('\n')}`
+  }
+
+  /**
+   * 渲染search_ref数据为参考资料的markdown格式
+   * @param {Object} data - search_ref类型的数据
+   * @param {number} maxItems - 最大项目数
+   * @param {number} summaryLength - 摘要长度
+   * @returns {string} markdown格式的参考资料
+   */
+  static renderSearchRefAsMarkdown(data, maxItems = 10, summaryLength = 150) {
+    console.log('🔍 [SearchContentParser] 开始渲染search_ref为markdown格式')
+    console.log('🔍 [SearchContentParser] 输入数据:', data)
+    
+    if (!data || data.type !== 'search_ref' || !data.datas || !Array.isArray(data.datas)) {
+      console.warn('🔍 [SearchContentParser] 数据格式不正确或不是search_ref类型')
+      return ''
+    }
+
+    const validResults = data.datas
+      .filter(item => item && (item.title || item.content))
+      .slice(0, maxItems)
+
+    if (validResults.length === 0) {
+      console.warn('🔍 [SearchContentParser] 没有有效的搜索结果')
+      return ''
+    }
+
+    console.log(`🔍 [SearchContentParser] 处理 ${validResults.length} 条有效结果`)
+
+    const referenceLines = validResults.map((item, index) => {
+      const title = item.title || '无标题'
+      const url = item.url || ''
+      const content = item.content || ''
+      
+      // 生成摘要
+      const summary = content ? this.generateSummary(content, summaryLength) : '无内容摘要'
+      
+      // 格式化为markdown超链接
+      const titleLink = url ? `[${title}](${url})` : title
+      
+      return `${index + 1}.${titleLink}\n   摘要：${summary}`
+    })
+
+    const result = `参考资料：\n${referenceLines.join('\n')}`
+    console.log('🔍 [SearchContentParser] markdown渲染完成')
+    return result
+  }
+
+  /**
+   * 渲染search_ref数据为HTML格式的参考资料
+   * @param {Object} data - search_ref类型的数据
+   * @param {Object} options - 渲染选项
+   * @returns {string} HTML格式的参考资料
+   */
+  static renderSearchRefAsHTML(data, options = {}) {
+    const {
+      maxItems = 10,
+      summaryLength = 150,
+      showIndex = true,
+      cardStyle = true
+    } = options
+
+    console.log('🔍 [SearchContentParser] 开始渲染search_ref为HTML格式')
+    
+    if (!data || data.type !== 'search_ref' || !data.datas || !Array.isArray(data.datas)) {
+      console.warn('🔍 [SearchContentParser] 数据格式不正确或不是search_ref类型')
+      return '<div class="search-ref-empty">暂无参考资料</div>'
+    }
+
+    const validResults = data.datas
+      .filter(item => item && (item.title || item.content))
+      .slice(0, maxItems)
+
+    if (validResults.length === 0) {
+      return '<div class="search-ref-empty">暂无有效的参考资料</div>'
+    }
+
+    const itemsHtml = validResults.map((item, index) => {
+      const title = item.title || '无标题'
+      const url = item.url || ''
+      const content = item.content || ''
+      
+      // 生成摘要
+      const summary = content ? this.generateSummary(content, summaryLength) : '无内容摘要'
+      
+      // 格式化标题
+      const titleHtml = url 
+        ? `<a href="${url}" target="_blank" rel="noopener noreferrer" class="search-ref-title-link" title="点击访问原文">${this.escapeHtml(title)}</a>`
+        : `<span class="search-ref-title">${this.escapeHtml(title)}</span>`
+
+      const indexHtml = showIndex ? `<span class="search-ref-index">${index + 1}.</span>` : ''
+
+      return `
+        <div class="search-ref-item ${cardStyle ? 'search-ref-card' : 'search-ref-simple'}">
+          <div class="search-ref-header">
+            ${indexHtml}
+            ${titleHtml}
+          </div>
+          <div class="search-ref-summary">
+            <span class="search-ref-summary-label">摘要：</span>
+            <span class="search-ref-summary-text">${this.escapeHtml(summary)}</span>
+            <br></br>
+          </div>
+        </div>
+        ${index < validResults.length - 1 ? '<div class="search-ref-separator"></div>' : ''}
+      `
+    }).join('')
+
+    return `
+      <div class="search-ref-container">
+        <div class="search-ref-header">
+          <h4 class="search-ref-title">📚 参考资料 (${validResults.length}条)</h4>
+        </div>
+        <div class="search-ref-list">
+          ${itemsHtml}
+        </div>
+        <hr>
+      </div>
+    `
   }
 }
 

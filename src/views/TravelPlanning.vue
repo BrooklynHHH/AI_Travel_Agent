@@ -255,23 +255,32 @@ const detectToolType = (toolName, content) => {
 
   const trimmedContent = content.trim()
   
+  // 搜索工具检测 - 优先检测，因为search_ref是最重要的类型
+  if (toolName.toLowerCase().includes('search') || 
+      trimmedContent.includes('search_ref') || 
+      trimmedContent.includes('search_tool') ||
+      trimmedContent.includes('"type":"search_ref"') ||
+      trimmedContent.includes('"type":"search_tool"') ||
+      trimmedContent.includes("'type':'search_ref'") ||
+      trimmedContent.includes("'type':'search_tool'")) {
+    return 'search_ref'  // 返回具体的类型
+  }
+  
   // JSON工具检测
   if (trimmedContent.startsWith('{') || trimmedContent.startsWith('[')) {
     try {
-      JSON.parse(trimmedContent)
+      const parsed = JSON.parse(trimmedContent)
+      // 检查解析后的JSON是否包含search_ref类型
+      if (parsed && parsed.type === 'search_ref') {
+        return 'search_ref'
+      }
+      if (parsed && parsed.type === 'search_tool') {
+        return 'search_ref'  // 统一处理为search_ref
+      }
       return 'json'
     } catch (e) {
       // 可能是格式不完整的JSON，继续其他检测
     }
-  }
-  
-  // 搜索工具检测
-  if (toolName.toLowerCase().includes('search') || 
-      trimmedContent.includes('search_ref') || 
-      trimmedContent.includes('search_tool') ||
-      trimmedContent.includes('"type":"search') ||
-      trimmedContent.includes("'type':'search")) {
-    return 'search'
   }
   
   // API工具检测
