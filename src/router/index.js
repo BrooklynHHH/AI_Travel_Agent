@@ -15,7 +15,7 @@ export const routes = [ // Add export here
   {
     path: '/travel',
     name: '旅游',
-    component: () => import('../views/NewMultiTurnChatView_V1_2.vue')
+    component: () => import('../views/TravelPlanning.vue')
   },
   {
     path: '/podcast',
@@ -79,13 +79,73 @@ export const routes = [ // Add export here
   },
   {
     path: '/',
-    redirect: '/route-links' // Change redirect to the new page
+    redirect: '/advanced' // Change redirect to the new page
   },
   {
     path: '/podcast-detail',
     name: 'PodcastDetail',
     component: () => import('../views/PodcastDetailView.vue')
   },
+  {
+    path: '/aliyun-mcp-delivery',
+    name: '全国快递物流查询MCP',
+    component: () => import('../views/DeliveryMcpView.vue')
+  },
+  {
+    path: '/aliyun-mcp-stocks',
+    name: '股票实时行情查询MCP',
+    component: () => import('../views/StocksMcpView.vue')
+  },
+  {
+    path: '/aliyun-mcp-weather',
+    name: '天气预报MCP',
+    component: () => import('../views/WeatherMcpView.vue')
+  },
+  {
+    path: '/aliyun-mcp-quark-search',
+    name: '夸克搜索MCP',
+    component: () => import('../views/QuarkSearchMcpView.vue')
+  },
+  {
+    path: '/aliyun-mcp-vin',
+    name: 'VIN码车架号查询MCP',
+    component: () => import('../views/VinMcpView.vue')
+  },
+  {
+    path: '/aliyun-mcp-company-info',
+    name: '企业基本工商信息查询MCP',
+    component: () => import('../views/CompanyInfoMcpView.vue')
+  },
+  {
+    path: '/aliyun-mcp-exchange-rate',
+    name: '汇率查询转换MCP',
+    component: () => import('../views/ExchangeRateMcpView.vue')
+  },
+  {
+    path: '/aliyun-mcp-barcode',
+    name: '商品条码查询MCP',
+    component: () => import('../views/BarCodeMcpView.vue')
+  },
+  {
+    path: '/aliyun-mcp-moji-weather',
+    name: '墨迹天气MCP',
+    component: () => import('../views/MojiWeatherMcpView.vue')
+  },
+  {
+    path: '/aliyun-mcp-invoice-checker',
+    name: '发票真伪查询MCP',
+    component: () => import('../views/InvoiceCheckerMcpView.vue')
+  },
+  {
+    path: '/aliyun-mcp-isbn',
+    name: 'ISBN书号查询MCP',
+    component: () => import('../views/IsbnMcpView.vue')
+  },
+  {
+    path: '/pic-translate',
+    name: '图片翻译',
+    component: () => import('../views/PicTranslateView.vue')
+  }
 
 ]
 

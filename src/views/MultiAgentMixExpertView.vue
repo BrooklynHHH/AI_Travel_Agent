@@ -410,6 +410,7 @@ const userInput = ref('');
 const chatContent = ref(null);
 const isLoading = ref(false);
 const isStreaming = ref(false);
+const queryFromUrl = ref(''); // 保存URL中的query参数
 
 // Store messages
 const messages = ref([]);
@@ -468,13 +469,24 @@ const toggleSearchResult = (result) => {
 };
 
 const sendMessage = async (actionText) => {
-  const inputText = actionText || userInput.value;
-  if (!inputText.trim()) return; // 防止发送空消息
+  // 如果 actionText 是事件对象，则忽略它，使用输入框的值
+  let inputText;
+  if (actionText && typeof actionText === 'object' && actionText.type) {
+    // 这是一个事件对象，使用输入框的值
+    inputText = userInput.value || '';
+  } else {
+    // 这是文本参数或其他值
+    inputText = actionText || userInput.value || '';
+  }
+  
+  // 确保 inputText 是字符串类型
+  const textToSend = String(inputText);
+  if (!textToSend || !textToSend.trim()) return; // 防止发送空消息
   
   try {
     isStreaming.value = true;
     // 保存当前输入内容，因为后面会清空输入框
-    const currentInput = inputText;
+    const currentInput = textToSend;
     
     const newMessage = {
       role: 'user',
@@ -731,7 +743,7 @@ const sendMessage = async (actionText) => {
         inputs: {
           expert_idea: expertIdeas
         },
-        query: actionText,
+        query: actionText || userInput.value || queryFromUrl.value,
         response_mode: 'streaming',
         conversation_id: '',
         user: 'abc-123'
@@ -926,6 +938,18 @@ onMounted(() => {
   const chatContentEl = document.querySelector('.chat-content');
   if (chatContentEl) {
     chatContentEl.addEventListener('click', handleContentClick);
+  }
+
+  // 检查URL参数中的query，如果存在则自动发起问答
+  const urlParams = new URLSearchParams(window.location.search);
+  const queryFromUrlParam = urlParams.get('query');
+  if (queryFromUrlParam && queryFromUrlParam.trim()) {
+    queryFromUrl.value = queryFromUrlParam; // 保存到ref中
+    userInput.value = queryFromUrlParam;
+    // 延迟一下确保组件完全加载
+    setTimeout(() => {
+      sendMessage();
+    }, 100);
   }
 });
 

@@ -31,6 +31,19 @@
             <img src="@/assets/search-input-logo.jpg" class="deep-search-icon" />
             <span>深度搜索</span>
           </button>
+          <button
+            class="deep-search-btn"
+            :class="{ selected: multiExpertSelected }"
+            @click="toggleMultiExpert"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="deep-search-icon">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span>多专家</span>
+          </button>
         </div>
         <div class="add-button">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -124,6 +137,19 @@ const inputValue = ref(props.currentInput || '');
 const deepSearchSelected = ref(false);
 const toggleDeepSearch = () => {
   deepSearchSelected.value = !deepSearchSelected.value;
+  // 如果选中深度搜索，取消多专家选择
+  if (deepSearchSelected.value) {
+    multiExpertSelected.value = false;
+  }
+};
+
+const multiExpertSelected = ref(false);
+const toggleMultiExpert = () => {
+  multiExpertSelected.value = !multiExpertSelected.value;
+  // 如果选中多专家，取消深度搜索选择
+  if (multiExpertSelected.value) {
+    deepSearchSelected.value = false;
+  }
 };
 
 // 发送按钮点击
@@ -131,13 +157,20 @@ const onSend = () => {
   const query = inputValue.value.trim();
   if (query !== '') {
     addToHistory(query); // 保存到历史记录
-    router.push({
-      name: '高级搜索结果',
-      query: {
-        query: query,
-        isdeep: deepSearchSelected.value,
-      },
-    });
+    
+    if (multiExpertSelected.value) {
+      // 多专家模式，跳转到多专家路由
+      router.push('/multi-agent-experts?query=' + encodeURIComponent(query));
+    } else {
+      // 普通搜索或深度搜索
+      router.push({
+        name: '高级搜索结果',
+        query: {
+          query: query,
+          isdeep: deepSearchSelected.value,
+        },
+      });
+    }
   }
 };
 
@@ -222,13 +255,19 @@ const clearHistory = () => {
 // 选择历史记录项
 const selectHistoryItem = (item) => {
   // emit('select', item); // 原始逻辑是emit，现在改为跳转
-  router.push({
-    name: '高级搜索结果',
-    query: {
-      query: item,
-      isdeep: deepSearchSelected.value,
-    },
-  });
+  if (multiExpertSelected.value) {
+    // 多专家模式，跳转到多专家路由
+    router.push('/multi-agent-experts?query=' + encodeURIComponent(item));
+  } else {
+    // 普通搜索或深度搜索
+    router.push({
+      name: '高级搜索结果',
+      query: {
+        query: item,
+        isdeep: deepSearchSelected.value,
+      },
+    });
+  }
   close(); // 选择后依然关闭历史记录弹窗
 };
 
