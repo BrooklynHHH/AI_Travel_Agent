@@ -1,6 +1,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import MarkdownIt from 'markdown-it'
 import { API_CONFIG } from '@/config/api.config.js'
+import SearchContentParser from '@/utils/searchContentParser.js'
 
 // 初始化 Markdown 渲染器
 const md = new MarkdownIt({
@@ -63,32 +64,36 @@ export function useTravelChat() {
     return md.render(content)
   }
 
-  // 格式化搜索引用卡片
-  const formatSearchRefCards = (datas) => {
-    if (!datas || !Array.isArray(datas)) return ''
-    
-    let cardsHtml = '\n\n<div class="search-ref-cards">\n'
-    cardsHtml += '<div class="search-ref-header">🔍 相关搜索结果</div>\n'
-    
-    datas.forEach((item, index) => {
-      cardsHtml += `
-<div class="search-ref-card">
-  <div class="card-header">
-    <div class="card-title">${item.title || '无标题'}</div>
-    <div class="card-site">${item.siteName || '未知来源'}</div>
-  </div>
-  <div class="card-content">${item.content || '暂无内容'}</div>
-  <div class="card-footer">
-    <a href="${item.url || '#'}" target="_blank" class="card-link">
-      <span class="link-icon">🔗</span>
-      <span class="link-text">查看详情</span>
-    </a>
-  </div>
-</div>`
-    })
-    
-    cardsHtml += '\n</div>\n\n'
-    return cardsHtml
+  // 格式化搜索引用卡片 - 使用新的SearchContentParser
+  const formatSearchRefCards = (searchData) => {
+    try {
+      // 如果传入的是数组，转换为标准格式
+      if (Array.isArray(searchData)) {
+        searchData = {
+          type: 'search_ref',
+          datas: searchData
+        }
+      }
+      
+      // 使用 SearchContentParser 处理结构化数据
+      const processedData = SearchContentParser.processStructuredData(searchData)
+      
+      if (processedData && processedData.results) {
+        // 使用 SearchContentParser 的渲染方法
+        return SearchContentParser.renderSearchResults(processedData, {
+          showSummary: true,
+          showMetadata: false,
+          maxResults: 10,
+          cardStyle: true
+        })
+      }
+      
+      // 如果处理失败，返回空字符串
+      return ''
+    } catch (error) {
+      console.warn('🔧 [formatSearchRefCards] 处理失败:', error)
+      return ''
+    }
   }
 
   const scrollToBottom = () => {
@@ -323,10 +328,10 @@ export function useTravelChat() {
           try {
             const parsedToken = JSON.parse(newToken)
             if (parsedToken.type === 'search_ref' && parsedToken.datas && Array.isArray(parsedToken.datas)) {
-              console.log('🔍 [搜索引用数据]:', parsedToken)
+              console.log('🔍 [搜索引用数据] 标准JSON解析成功:', parsedToken)
               
-              // 处理搜索引用数据，转换为卡片格式
-              const searchCards = formatSearchRefCards(parsedToken.datas)
+              // 处理搜索引用数据，转换为卡片格式 - 直接传入完整的搜索数据对象
+              const searchCards = formatSearchRefCards(parsedToken)
               const currentContent = currentMessage.content || ''
               const newContent = currentContent + searchCards
               
@@ -335,8 +340,32 @@ export function useTravelChat() {
               })
               break
             }
-          } catch (e) {
-            // 不是JSON格式，按普通文本处理
+          } catch (jsonError) {
+            // 标准JSON解析失败，尝试使用SearchContentParser修复
+            console.log('🔧 [JSON解析失败] 尝试使用SearchContentParser修复:', jsonError.message)
+            console.log('🔧 [原始数据预览]:', newToken.substring(0, 200) + '...')
+            
+            try {
+              const fixedData = SearchContentParser.parseSearchContent(newToken)
+              if (fixedData && fixedData.type === 'search_ref') {
+                console.log('🎉 [SearchContentParser修复成功] 解析结果:', fixedData)
+                
+                // 使用修复后的数据 - 直接传入完整的搜索数据对象
+                const searchCards = formatSearchRefCards(fixedData)
+                const currentContent = currentMessage.content || ''
+                const newContent = currentContent + searchCards
+                
+                updateAssistantMessage(currentMessage.id, {
+                  content: newContent
+                })
+                break
+              } else {
+                console.log('🔧 [SearchContentParser] 不是搜索数据或解析失败')
+              }
+            } catch (parserError) {
+              console.warn('🔧 [SearchContentParser失败]:', parserError.message)
+              // 继续按普通文本处理
+            }
           }
           
           // 累积更新消息内容 - 只添加新的token

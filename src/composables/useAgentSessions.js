@@ -824,13 +824,13 @@ export function useAgentSessions() {
         const timeA = a.createdAt || 0
         const timeB = b.createdAt || 0
         
-        console.log(`🔄 [时间轴排序] ${a.agentKey} #${a.sessionIndex}: ${timeA}, ${b.agentKey} #${b.sessionIndex}: ${timeB}`)
+        // console.log(`🔄 [时间轴排序] ${a.agentKey} #${a.sessionIndex}: ${timeA}, ${b.agentKey} #${b.sessionIndex}: ${timeB}`)
         
         return timeA - timeB // 按创建时间排序，早调用的在前，晚调用的在后
       })
       
-      console.log(`🔄 [最终排序] 轮次 ${turn.turnId} 的会话顺序:`, 
-        sortedSessions.map(s => `${s.agentKey}#${s.sessionIndex}(${s.createdAt})`))
+      // console.log(`🔄 [最终排序] 轮次 ${turn.turnId} 的会话顺序:`, 
+      //   sortedSessions.map(s => `${s.agentKey}#${s.sessionIndex}(${s.createdAt})`))
       
       // 只有当有实际会话时才显示轮次容器
       if (sortedSessions.length > 0) {
