@@ -85,10 +85,8 @@
                   <div v-else class="think-content" v-html="renderMarkdown(message.thinkContent)"></div>
                 </details>
               </div>
-              <div v-if="message.streaming" class="response-text">
-                <div v-html="renderMarkdown(message.content)"></div><span class="cursor">|</span>
-              </div>
-              <div v-else class="response-text" v-html="renderMarkdown(message.content)"></div>
+              <!-- 统一用 marked 渲染 assistant 消息 -->
+              <div class="response-text" v-html="renderMarkdown(message.content)"></div>
             </div>
           </div>
         </template>
@@ -126,8 +124,8 @@ import ImageViewer from '../components/modals/ImageViewer.vue';
 import ProductWindow from '../components/modals/ProductWindow.vue';
 import SettingsModal from '../components/modals/SettingsModal.vue';
 import VideoPlayer from '../components/modals/VideoPlayer.vue';
-import MarkdownIt from 'markdown-it';
-import markdownItKatex from 'markdown-it-katex';
+// 替换 markdown-it 为 marked
+import { marked } from 'marked';
 // 已在main.js全局导入，此处移除: import 'katex/dist/katex.min.css';
 import { createWorker, createScheduler } from 'tesseract.js';
 import FabricCanvas from '../components/FabricCanvas.vue';
@@ -762,6 +760,8 @@ const renderMarkdown = (content) => {
   // 然后渲染Markdown
   return md.render(latexProcessedContent);
 };
+
+// 处理<think>标签并提取思考内容
 
 // iframe加载事件处理
 const onIframeLoad = () => {
