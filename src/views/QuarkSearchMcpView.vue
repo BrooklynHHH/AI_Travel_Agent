@@ -725,11 +725,30 @@ const processThinkTags = (content) => {
   };
 };
 
+// 检测内容是否为HTML
+const isHtmlContent = (content) => {
+  if (!content) return false;
+  
+  // 检测是否包含HTML标签，特别是div标签
+  const htmlTagRegex = /<\s*\/?[a-zA-Z][^>]*>/;
+  const divTagRegex = /<\s*\/?div[^>]*>/i;
+  
+  // 如果包含div标签或其他HTML标签，认为是HTML内容
+  return divTagRegex.test(content) || htmlTagRegex.test(content);
+};
+
 const renderMarkdown = (content) => {
   if (!content) return '';
   
   // 先处理<think>标签，提取思考内容
   const { content: processedContent } = processThinkTags(content);
+  
+  // 检测是否为HTML内容
+  if (isHtmlContent(processedContent)) {
+    console.log('检测到HTML内容，直接渲染');
+    // 如果是HTML内容，直接返回，不进行Markdown处理
+    return processedContent;
+  }
   
   // 处理LaTeX分隔符 \( \) 转换为 $ $ 以确保正确渲染
   let latexProcessedContent = processedContent
