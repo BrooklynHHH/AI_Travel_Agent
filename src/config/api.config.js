@@ -7,7 +7,7 @@
 const getApiBaseUrl = () => {
  
   // 生产环境可以配置为实际的服务器地址
-  return 'http://staging-llm.search.miui.srv'
+  return 'http://localhost:5001'
 }
 
 export const API_CONFIG = {
@@ -16,10 +16,10 @@ export const API_CONFIG = {
   
   // API端点
   ENDPOINTS: {
-    STREAM: '/agent-api/stream',
-    HEALTH: '/agent-api/health',
-    SESSIONS: '/agent-api/sessions',
-    STATUS: '/agent-api/status'
+    STREAM: '/api/stream',
+    HEALTH: '/api/health',
+    SESSIONS: '/api/sessions',
+    STATUS: '/api/status'
   },
   
   // 请求超时时间（毫秒）

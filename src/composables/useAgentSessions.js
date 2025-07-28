@@ -824,7 +824,7 @@ export function useAgentSessions() {
         const timeA = a.createdAt || 0
         const timeB = b.createdAt || 0
         
-        console.log(`🔄 [时间轴排序] ${a.agentKey} #${a.sessionIndex}: ${timeA}, ${b.agentKey} #${b.sessionIndex}: ${timeB}`)
+        // console.log(`🔄 [时间轴排序] ${a.agentKey} #${a.sessionIndex}: ${timeA}, ${b.agentKey} #${b.sessionIndex}: ${timeB}`)
         
         return timeA - timeB // 按创建时间排序，早调用的在前，晚调用的在后
       })
