@@ -77,7 +77,14 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import {callDoubaoVisionOcr, callAliyunOcr, callBaiduOcr, callRapidOcr, callTencentOcr, callVolcOcr} from '@/api/ocr'
+import {
+  callDoubaoVisionOcr,
+  callAliyunOcr,
+  callBaiduOcr,
+  callTencentOcr,
+  callVolcOcr,
+  callTess4jOcr
+} from '@/api/ocr'
 
 // 图片上传相关
 const imageFile = ref(null)
@@ -88,42 +95,49 @@ const isDragging = ref(false)
 // OCR结果
 const ocrResults = reactive({
   doubaoVision: {
-    title: '豆包视觉模型文字识别',
+    title: '模型视觉-豆包模型文字识别',
     result: '',
     loading: false,
     error: '',
     responseTime: null
   },
   aliyunOcr: {
-    title: '阿里云OCR',
+    title: '云厂商-阿里云OCR',
     result: '',
     loading: false,
     error: '',
     responseTime: null
   },
   baiduOcr: {
-    title: '百度OCR',
+    title: '云厂商-百度OCR',
     result: '',
     loading: false,
     error: '',
     responseTime: null
   },
-  rapidOcr: {
-    title: 'RapidOCR',
+  // rapidOcr: {
+  //   title: 'RapidOCR',
+  //   result: '',
+  //   loading: false,
+  //   error: '',
+  //   responseTime: null
+  // },
+  tess4jOcr: {
+    title: '本地部署-Tess4jOcr',
     result: '',
     loading: false,
     error: '',
     responseTime: null
   },
   tencentOcr: {
-    title: '腾讯云OCR',
+    title: '云厂商-腾讯云OCR',
     result: '',
     loading: false,
     error: '',
     responseTime: null
   },
   volcOcr: {
-    title: '火山OCR',
+    title: '云厂商-火山OCR',
     result: '',
     loading: false,
     error: '',
@@ -224,13 +238,22 @@ const processImage = async () => {
         ocrResults.baiduOcr.loading = false
       }),
 
-      callRapidOcr(formData).then(response => {
-        ocrResults.rapidOcr.result = response.data
-        ocrResults.rapidOcr.responseTime = response.time
-        ocrResults.rapidOcr.loading = false
+      // callRapidOcr(formData).then(response => {
+      //   ocrResults.rapidOcr.result = response.data
+      //   ocrResults.rapidOcr.responseTime = response.time
+      //   ocrResults.rapidOcr.loading = false
+      // }).catch(error => {
+      //   ocrResults.rapidOcr.error = `请求失败: ${error.message}`
+      //   ocrResults.rapidOcr.loading = false
+      // }),
+
+      callTess4jOcr(formData).then(response => {
+        ocrResults.tess4jOcr.result = response.data
+        ocrResults.tess4jOcr.responseTime = response.time
+        ocrResults.tess4jOcr.loading = false
       }).catch(error => {
-        ocrResults.rapidOcr.error = `请求失败: ${error.message}`
-        ocrResults.rapidOcr.loading = false
+        ocrResults.tess4jOcr.error = `请求失败: ${error.message}`
+        ocrResults.tess4jOcr.loading = false
       }),
 
       callTencentOcr(formData).then(response => {

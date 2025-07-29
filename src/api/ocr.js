@@ -59,6 +59,15 @@ export const callRapidOcr = (formData) => {
     })
 }
 
+// tess4jOCR接口
+export const callTess4jOcr = (formData) => {
+    return timedRequest(USE_URL+'/ocr/tess4j-ocr', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
+}
+
 // 腾讯云OCR接口
 export const callTencentOcr = (formData) => {
     return timedRequest(USE_URL+'/ocr/tencent-ocr', formData, {
