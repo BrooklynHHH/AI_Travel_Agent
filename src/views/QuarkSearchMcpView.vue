@@ -124,8 +124,8 @@ import ImageViewer from '../components/modals/ImageViewer.vue';
 import ProductWindow from '../components/modals/ProductWindow.vue';
 import SettingsModal from '../components/modals/SettingsModal.vue';
 import VideoPlayer from '../components/modals/VideoPlayer.vue';
-// 替换 markdown-it 为 marked
-import { marked } from 'marked';
+import MarkdownIt from 'markdown-it';
+import markdownItKatex from 'markdown-it-katex';
 // 已在main.js全局导入，此处移除: import 'katex/dist/katex.min.css';
 import { createWorker, createScheduler } from 'tesseract.js';
 import FabricCanvas from '../components/FabricCanvas.vue';
@@ -760,8 +760,6 @@ const renderMarkdown = (content) => {
   // 然后渲染Markdown
   return md.render(latexProcessedContent);
 };
-
-// 处理<think>标签并提取思考内容
 
 // iframe加载事件处理
 const onIframeLoad = () => {

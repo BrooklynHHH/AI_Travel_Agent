@@ -10,6 +10,7 @@ import FortuneView from '../views/FortuneView.vue'
 
 import MultiAgentMixExpertView from '../views/MultiAgentMixExpertView.vue'
 import VideoGenerationView from '@/views/VideoGenerationView.vue'
+import ImageGenerationView from '@/views/ImageGenerationView.vue'
 
 export const routes = [ // Add export here
   {
@@ -36,6 +37,11 @@ export const routes = [ // Add export here
     path: '/video',
     name: '视频生成', // Translated
     component: VideoGenerationView
+  },
+  {
+    path: '/image',
+    name: '图像生成',
+    component: ImageGenerationView
   },
   {
     path: '/ocr',
@@ -145,6 +151,11 @@ export const routes = [ // Add export here
     path: '/pic-translate',
     name: '图片翻译',
     component: () => import('../views/PicTranslateView.vue')
+  },
+  {
+    path: '/qianfan',
+    name: '千帆',
+    component: () => import('../views/QianfanVideoGenerate.vue')
   }
 
 ]

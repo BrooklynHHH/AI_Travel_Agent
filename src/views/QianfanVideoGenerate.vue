@@ -30,14 +30,7 @@
             <div class="user-image-container card bg-base-100 shadow-sm theme-light" :data-task-id="message.taskId" style="max-width: 320px;">
               <figure>
                 <div style="position: relative; display: inline-block;">
-                  <img :src="message.image || require('@/assets/video-default.jpg')" :ref="el => { if(message.hasOcr) ocrImage = el }" style="max-width: 320px; max-height: 300px; object-fit: contain;" />
-                  <canvas
-                    v-if="message.hasOcr"
-                    width="320"
-                    height="240"
-                    ref="ocrCanvas"
-                    style="position: absolute; left: 0; top: 0; pointer-events: none;"
-                  ></canvas>
+                  <img :src="message.image || require('@/assets/video-default.jpg')" style="max-width: 320px; max-height: 300px; object-fit: contain;" />
                   <!-- 视频播放按钮 -->
                   <div v-if="message.videoUrl" class="play-button-overlay" @click="playVideo(message.videoUrl)">
                     <div class="play-button-icon">▶</div>
@@ -51,51 +44,51 @@
               <div class="card-body p-4">
                 <div v-if="message.content">{{ message.content }}</div>
                 <div class="card-actions justify-end mt-2">
-                  <div class="badge badge-outline" style="display: inline-flex; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.375rem; border: 1px solid #666; color: #666; margin: 0.125rem;">{{ selectedResolution }}</div>
-                  <div class="badge badge-outline" style="display: inline-flex; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.375rem; border: 1px solid #666; color: #666; margin: 0.125rem;">{{ selectedDuration }}</div>
-                  <div class="badge badge-outline" style="display: inline-flex; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.375rem; border: 1px solid #666; color: #666; margin: 0.125rem;">镜头: {{ selectedCameraFixed.text }}</div>
+                  <div class="badge badge-outline" style="display: inline-flex; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.375rem; border: 1px solid #666; color: #666; margin: 0.125rem;">{{ selectedAspectRatio }}</div>
+                  <div class="badge badge-outline" style="display: inline-flex; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.375rem; border: 1px solid #666; color: #666; margin: 0.125rem;">{{ selectedDuration }}s</div>
+                  <div class="badge badge-outline" style="display: inline-flex; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.375rem; border: 1px solid #666; color: #666; margin: 0.125rem;">{{ selectedModel }}</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
         
-    <!-- 系统消息 -->
-    <div v-else-if="message.role === 'system'" class="message-container system-message">
-      <div role="alert" :class="getAlertClass(message.content)">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>{{ message.content }}</span>
-        
-        <!-- 视频预览（如果有） -->
-        <div v-if="message.videoUrl" class="video-preview-container" @click="playVideo(message.videoUrl)">
-          <div class="video-thumbnail">
-            <div class="play-button-overlay">
-              <div class="play-button-icon">▶</div>
+        <!-- 系统消息 -->
+        <div v-else-if="message.role === 'system'" class="message-container system-message">
+          <div role="alert" :class="getAlertClass(message.content)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ message.content }}</span>
+            
+            <!-- 视频预览（如果有） -->
+            <div v-if="message.videoUrl" class="video-preview-container" @click="playVideo(message.videoUrl)">
+              <div class="video-thumbnail">
+                <div class="play-button-overlay">
+                  <div class="play-button-icon">▶</div>
+                </div>
+                <!-- 使用纯色背景代替图片 -->
+                <div class="video-thumbnail-placeholder"></div>
+              </div>
+              <div class="video-preview-text">点击播放视频</div>
             </div>
-            <!-- 使用纯色背景代替图片 -->
-            <div class="video-thumbnail-placeholder"></div>
-          </div>
-          <div class="video-preview-text">点击播放视频</div>
-        </div>
-        
-        <!-- 使用 vue3-video-play 组件播放视频 -->
-        <div v-if="message.videoUrl" class="core-player-container">
-          <vue3VideoPlay
-            width="100%"
-            height="auto"
-            :title="'生成的视频'"
-            :src="message.videoUrl"
-            poster=""
-            autoPlay
-            muted
-            class="native-video-player"
-            @play="onVideoPlay"
-            @pause="onVideoPlay"
-            @canplay="onVideoPlay"
-          />
-        </div>
+            
+            <!-- 使用 vue3-video-play 组件播放视频 -->
+            <div v-if="message.videoUrl" class="core-player-container">
+              <vue3VideoPlay
+                width="100%"
+                height="auto"
+                :title="'生成的视频'"
+                :src="message.videoUrl"
+                poster=""
+                autoPlay
+                muted
+                class="native-video-player"
+                @play="onVideoPlay"
+                @pause="onVideoPlay"
+                @canplay="onVideoPlay"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -105,20 +98,86 @@
     <!-- 输入区 -->
     <div class="chat-input">
       <!-- 缩略图显示区域 -->
-      <div class="thumbnail-container" v-if="uploadedImage" @click="showFullScreenImage">
-        <img :src="uploadedImage" class="thumbnail-image" alt="上传的图片" />
-        <div class="clear-thumbnail-btn" @click.stop="clearSelectedImage">×</div>
+      <div class="thumbnail-container" v-if="uploadedImage || selectedVideoType.value === 'frame2video' || selectedVideoType.value === 'multiimg2video'">
+        <!-- 普通图生视频模式 -->
+        <div v-if="selectedVideoType.value !== 'frame2video' && selectedVideoType.value !== 'multiimg2video' && uploadedImage" @click="showFullScreenImage" class="single-image-container">
+          <img :src="uploadedImage" class="thumbnail-image" alt="上传的图片" />
+          <div class="clear-thumbnail-btn" @click.stop="clearSelectedImage">×</div>
+        </div>
+        
+        <!-- 首尾帧生视频模式 -->
+        <div v-if="selectedVideoType.value === 'frame2video'" class="frame-images-container">
+          <div class="frame-image-item">
+            <div class="frame-label">首帧</div>
+            <div v-if="startImageThumbnail" class="frame-image-wrapper" @click="showFullScreenImage('start')">
+              <img :src="startImageThumbnail" class="thumbnail-image" alt="首帧图片" />
+              <div class="clear-thumbnail-btn" @click.stop="clearStartImage">×</div>
+            </div>
+            <div v-else class="frame-placeholder" @click="selectStartImage">
+              <span>选择首帧</span>
+            </div>
+          </div>
+          
+          <div class="frame-image-item">
+            <div class="frame-label">尾帧</div>
+            <div v-if="endImageThumbnail" class="frame-image-wrapper" @click="showFullScreenImage('end')">
+              <img :src="endImageThumbnail" class="thumbnail-image" alt="尾帧图片" />
+              <div class="clear-thumbnail-btn" @click.stop="clearEndImage">×</div>
+            </div>
+            <div v-else class="frame-placeholder" @click="selectEndImage">
+              <span>选择尾帧</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 多图参考生视频模式 -->
+        <div v-if="selectedVideoType.value === 'multiimg2video'" class="multi-images-container">
+          <div v-for="(image, index) in multiImages" :key="index" class="frame-image-item">
+            <div class="frame-label">图片{{ index + 1 }}</div>
+            <div v-if="image" class="frame-image-wrapper" @click="showFullScreenImage('multi', index)">
+              <img :src="image.thumbnail" class="thumbnail-image" :alt="`参考图片${index + 1}`" />
+              <div class="clear-thumbnail-btn" @click.stop="removeMultiImage(index)">×</div>
+            </div>
+            <div v-else class="frame-placeholder" @click="selectMultiImage(index)">
+              <span>选择图片</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Configuration Buttons -->
       <div class="config-buttons-container">
-        <!-- Resolution Button -->
+        <!-- Video Type Button -->
         <div class="config-button-wrapper">
-          <button class="config-button" @click="toggleMenu('resolution')" ref="resolutionButtonEl">
-            {{ selectedResolution }}
+          <button class="config-button" @click="toggleMenu('videoType')" ref="videoTypeButtonEl">
+            {{ selectedVideoType.name }}
           </button>
-          <div v-if="activeMenu === 'resolution'" class="config-menu" ref="resolutionMenuEl">
-            <div v-for="option in resolutionOptions" :key="option" class="config-menu-item" @click="selectResolutionOption(option)">
+          <div v-if="activeMenu === 'videoType'" class="config-menu" ref="videoTypeMenuEl">
+            <div v-for="option in videoTypes" :key="option.value" class="config-menu-item" @click="selectVideoTypeOption(option)">
+              {{ option.name }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Model Button -->
+        <div class="config-button-wrapper">
+          <button class="config-button" @click="toggleMenu('model')" ref="modelButtonEl">
+            {{ selectedModel }}
+          </button>
+          <div v-if="activeMenu === 'model'" class="config-menu" ref="modelMenuEl">
+            <div v-for="option in selectedVideoType.models" :key="option" class="config-menu-item" @click="selectModelOption(option)">
+              {{ option }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Aspect Ratio Button -->
+        <div class="config-button-wrapper">
+          <button class="config-button" @click="toggleMenu('aspectRatio')" ref="aspectRatioButtonEl">
+            {{ selectedAspectRatio }}
+          </button>
+          <div v-if="activeMenu === 'aspectRatio'" class="config-menu" ref="aspectRatioMenuEl">
+            <div v-for="option in aspectRatioOptions" :key="option" class="config-menu-item" @click="selectAspectRatioOption(option)">
               {{ option }}
             </div>
           </div>
@@ -127,23 +186,23 @@
         <!-- Duration Button -->
         <div class="config-button-wrapper">
           <button class="config-button" @click="toggleMenu('duration')" ref="durationButtonEl">
-            时长: {{ selectedDuration }}
+            时长: {{ selectedDuration }}s
           </button>
           <div v-if="activeMenu === 'duration'" class="config-menu" ref="durationMenuEl">
             <div v-for="option in durationOptions" :key="option" class="config-menu-item" @click="selectDurationOption(option)">
-              时长: {{ option }}
+              时长: {{ option }}s
             </div>
           </div>
         </div>
 
-        <!-- Camera Fixed Button -->
+        <!-- Mode Button -->
         <div class="config-button-wrapper">
-          <button class="config-button" @click="toggleMenu('cameraFixed')" ref="cameraFixedButtonEl">
-            镜头: {{ selectedCameraFixed.text }}
+          <button class="config-button" @click="toggleMenu('mode')" ref="modeButtonEl">
+            模式: {{ selectedMode }}
           </button>
-          <div v-if="activeMenu === 'cameraFixed'" class="config-menu" ref="cameraFixedMenuEl">
-            <div v-for="option in cameraFixedOptions" :key="option.value" class="config-menu-item" @click="selectCameraFixedOption(option)">
-              镜头: {{ option.text }}
+          <div v-if="activeMenu === 'mode'" class="config-menu" ref="modeMenuEl">
+            <div v-for="option in modeOptions" :key="option" class="config-menu-item" @click="selectModeOption(option)">
+              模式: {{ option }}
             </div>
           </div>
         </div>
@@ -163,7 +222,7 @@
         </label>
         <input 
           type="text" 
-          placeholder="输入你想问的问题" 
+          placeholder="输入视频生成提示词" 
           v-model="userInput"
           @keyup.enter="sendMessage"
         />
@@ -181,20 +240,20 @@
   <div v-if="isFullScreenImageVisible" class="fullscreen-image-overlay" @click="hideFullScreenImage">
     <img :src="fullScreenImageUrl" alt="Full screen image" class="fullscreen-image-content" />
   </div>
+
 </template>
 
 <script setup>
 import { ref, nextTick, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import VideoPlayer from '../components/modals/VideoPlayer.vue';
-import { generateVideo, checkVideoGenerationStatus } from '../utils/videoGenerationApi';
+import { generateVideoFromText, generateVideoFromImage, generateVideoFromStartEnd, generateVideoFromMultiImages, checkQianfanVideoStatus } from '../utils/qianfanVideoApi';
 // 引入 vue3-video-play 样式
 import 'vue3-video-play/dist/style.css';
 
 // 本地存储键名
-const STORAGE_KEY_MESSAGES = 'video_generation_messages';
-const STORAGE_KEY_VIDEOS = 'video_generation_videos';
-
+const STORAGE_KEY_MESSAGES = 'qianfan_video_generation_messages';
+const STORAGE_KEY_VIDEOS = 'qianfan_video_generation_videos';
 
 // 保存消息到本地存储
 const saveMessagesToLocalStorage = () => {
@@ -276,16 +335,16 @@ const checkMessageStatus = async (message) => {
       console.error('读取缓存任务状态失败:', error);
     }
     
-    // 2. 如果任务状态是succeeded且remoteUrl已存在，则不需要调用API
-    if (cachedStatus === 'succeeded' && cachedRemoteUrl) {
+    // 2. 如果任务状态是succeed且remoteUrl已存在，则不需要调用API
+    if (cachedStatus === 'succeed' && cachedRemoteUrl) {
       console.log(`任务 ${message.taskId} 已完成，使用缓存状态`);
       message.isGenerating = false;
       message.videoUrl = cachedRemoteUrl;
       return;
     }
     
-    // 3. 如果任务状态不是succeeded或remoteUrl不存在，则调用API检查状态
-    const statusResult = await checkVideoGenerationStatus(message.taskId);
+    // 3. 如果任务状态不是succeed或remoteUrl不存在，则调用API检查状态
+    const statusResult = await checkQianfanVideoStatus(message.taskId, message.model || selectedModel.value);
     console.log(`检查任务状态 ${message.taskId}:`, statusResult);
     
     // 更新缓存任务状态
@@ -293,20 +352,20 @@ const checkMessageStatus = async (message) => {
       if (!videoCache[message.taskId]) {
         videoCache[message.taskId] = {};
       }
-      videoCache[message.taskId].status = statusResult.status;
+      videoCache[message.taskId].status = statusResult.data?.task_status;
       videoCache[message.taskId].timestamp = Date.now();
       localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(videoCache));
     } catch (error) {
       console.error('缓存任务状态失败:', error);
     }
     
-    if (statusResult.status === 'succeeded') {
+    if (statusResult.data?.task_status === 'succeed') {
       // 任务成功完成
       message.isGenerating = false;
       
       // 如果有视频URL，添加到消息中
-      if (statusResult.content && statusResult.content.video_url) {
-        const videoUrlValue = statusResult.content.video_url;
+      if (statusResult.data?.task_result?.videos && statusResult.data.task_result.videos.length > 0) {
+        const videoUrlValue = statusResult.data.task_result.videos[0].url;
         
         // 直接使用原始URL
         message.videoUrl = videoUrlValue;
@@ -317,7 +376,7 @@ const checkMessageStatus = async (message) => {
             videoCache[message.taskId] = {};
           }
           videoCache[message.taskId].remoteUrl = videoUrlValue;
-          videoCache[message.taskId].status = 'succeeded';
+          videoCache[message.taskId].status = 'succeed';
           videoCache[message.taskId].timestamp = Date.now();
           localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(videoCache));
         } catch (error) {
@@ -326,11 +385,11 @@ const checkMessageStatus = async (message) => {
         
         console.log('已将视频URL添加到用户消息:', message);
       }
-    } else if (statusResult.status === 'failed' || statusResult.status === 'cancelled') {
-      // 任务失败或取消
+    } else if (statusResult.data?.task_status === 'failed') {
+      // 任务失败
       message.isGenerating = false;
       message.hasFailed = true; // 添加失败标记
-    } else if (statusResult.status === 'running' || statusResult.status === 'queued') {
+    } else if (statusResult.data?.task_status === 'processing' || statusResult.data?.task_status === 'submitted') {
       // 任务仍在处理中，继续检查
       message.isGenerating = true;
       currentTaskId.value = message.taskId;
@@ -350,33 +409,73 @@ const messages = ref([]);
 const conversationId = ref('');
 const uploadedImage = ref(null); // Thumbnail
 const originalImage = ref(null); // Original image DataURL for fullscreen
-const ocrImage = ref(null);
 const isFullScreenImageVisible = ref(false);
 const fullScreenImageUrl = ref('');
 
-// Configuration Button States
-const resolutionOptions = ref(['480p', '720p', '1080p']);
-const selectedResolution = ref(resolutionOptions.value[0]);
+// 首尾帧生视频相关变量
+const startImage = ref(null); // 首帧图片
+const endImage = ref(null); // 尾帧图片
+const startImageThumbnail = ref(null); // 首帧缩略图
+const endImageThumbnail = ref(null); // 尾帧缩略图
 
-const durationOptions = ref(['5s', '10s']);
+// 多图参考生视频相关变量
+const multiImages = ref([null, null, null, null]); // 最多4张图片
+
+// Configuration Button States
+// 视频生成类型和对应的模型
+const videoTypes = ref([
+  {
+    name: '文生视频',
+    value: 'text2video',
+    models: ['K1', 'K1.6', 'K2.0', 'K2.1-Master', 'VQ1', 'V1.5', 'MT-Director', 'MT-01']
+  },
+  {
+    name: '图生视频', 
+    value: 'img2video',
+    models: ['K1.0', 'K1.5', 'K1.6', 'K2.0', 'K2.1', 'K2.1-Master', 'V2.0', 'VQ1', 'V1.5', 'MI-Director', 'MI-01-Live', 'MI-01']
+  },
+  {
+    name: '首尾帧生视频',
+    value: 'frame2video', 
+    models: ['VQ1', 'V2.0', 'V1.5']
+  },
+  {
+    name: '多图参考生视频',
+    value: 'multiimg2video',
+    models: ['V2.0', 'V1.5', 'K1.6', 'MS-01']
+  },
+  {
+    name: '对口型',
+    value: 'lipsync',
+    models: ['K-Lip-Sync']
+  }
+]);
+
+const selectedVideoType = ref(videoTypes.value[0]);
+const selectedModel = ref(selectedVideoType.value.models[0]);
+
+const aspectRatioOptions = ref(['16:9', '9:16', '1:1']);
+const selectedAspectRatio = ref(aspectRatioOptions.value[0]);
+
+const durationOptions = ref(['5', '10']);
 const selectedDuration = ref(durationOptions.value[0]);
 
-const cameraFixedOptions = ref([
-  { text: '固定', value: true },
-  { text: '不固定', value: false },
-]);
-const selectedCameraFixed = ref(cameraFixedOptions.value[0]); // Stores the selected object {text, value}
+const modeOptions = ref(['std', 'fast']);
+const selectedMode = ref(modeOptions.value[0]);
 
-const activeMenu = ref(null); // null, 'resolution', 'duration', 'cameraFixed'
+const activeMenu = ref(null); // null, 'videoType', 'model', 'aspectRatio', 'duration', 'mode'
 
 // Template refs for buttons and menus for click outside detection
-const resolutionButtonEl = ref(null);
-const resolutionMenuEl = ref(null);
+const videoTypeButtonEl = ref(null);
+const videoTypeMenuEl = ref(null);
+const modelButtonEl = ref(null);
+const modelMenuEl = ref(null);
+const aspectRatioButtonEl = ref(null);
+const aspectRatioMenuEl = ref(null);
 const durationButtonEl = ref(null);
 const durationMenuEl = ref(null);
-const cameraFixedButtonEl = ref(null);
-const cameraFixedMenuEl = ref(null);
-
+const modeButtonEl = ref(null);
+const modeMenuEl = ref(null);
 
 // 返回按钮功能
 const goBack = () => {
@@ -386,7 +485,7 @@ const goBack = () => {
 // 在组件加载时生成会话ID并加载本地存储的消息
 onMounted(() => {
   const timestamp = new Date().getTime();
-  conversationId.value = `ocr_${timestamp}`;
+  conversationId.value = `qianfan_video_${timestamp}`;
   console.log('生成会话ID:', conversationId.value);
   
   // 从本地存储加载消息
@@ -399,13 +498,13 @@ onMounted(() => {
 // 检查并处理从图像生成页面传递的数据
 const checkForImageData = async () => {
   try {
-    const imageDataStr = sessionStorage.getItem('videoGenerationImageData');
+    const imageDataStr = sessionStorage.getItem('qianfanVideoGenerationImageData');
     if (imageDataStr) {
       const imageData = JSON.parse(imageDataStr);
       console.log('接收到图像数据:', imageData);
       
       // 设置文本输入框的值
-      userInput.value = imageData.prompt || '动一动';
+      userInput.value = imageData.prompt || '让图片中的人物动起来';
       
       // 将图像数据转换为File对象并设置
       if (imageData.imageUrl) {
@@ -429,27 +528,12 @@ const checkForImageData = async () => {
       }
       
       // 清除sessionStorage中的数据，避免重复使用
-      sessionStorage.removeItem('videoGenerationImageData');
+      sessionStorage.removeItem('qianfanVideoGenerationImageData');
     }
   } catch (error) {
     console.error('处理图像数据失败:', error);
   }
 };
-
-// 将DataURL转换为Blob
-// const dataURLtoBlob = (dataURL) => {
-//   const arr = dataURL.split(',');
-//   const mime = arr[0].match(/:(.*?);/)[1];
-//   const bstr = atob(arr[1]);
-//   let n = bstr.length;
-//   const u8arr = new Uint8Array(n);
-  
-//   while (n--) {
-//     u8arr[n] = bstr.charCodeAt(n);
-//   }
-  
-//   return new Blob([u8arr], { type: mime });
-// };
 
 // 处理文件上传
 const onFileChange = (event) => {
@@ -513,8 +597,13 @@ const toggleMenu = (menuName) => {
   }
 };
 
-const selectResolutionOption = (option) => {
-  selectedResolution.value = option;
+const selectModelOption = (option) => {
+  selectedModel.value = option;
+  activeMenu.value = null;
+};
+
+const selectAspectRatioOption = (option) => {
+  selectedAspectRatio.value = option;
   activeMenu.value = null;
 };
 
@@ -523,14 +612,50 @@ const selectDurationOption = (option) => {
   activeMenu.value = null;
 };
 
-const selectCameraFixedOption = (option) => {
-  selectedCameraFixed.value = option;
+const selectVideoTypeOption = (option) => {
+  selectedVideoType.value = option;
+  // 当视频类型改变时，重置模型选择为该类型的第一个模型
+  selectedModel.value = option.models[0];
+  activeMenu.value = null;
+  
+  // 如果选择了首尾帧生视频，立即显示图片选择浮窗
+  if (option.value === 'frame2video') {
+    // 清空之前的图片选择
+    startImage.value = null;
+    startImageThumbnail.value = null;
+    endImage.value = null;
+    endImageThumbnail.value = null;
+    
+    // 延迟一下确保界面更新完成后再触发选择
+    nextTick(() => {
+      selectStartImage();
+    });
+  }
+  
+  // 如果选择了多图参考生视频，清空之前的多图选择
+  if (option.value === 'multiimg2video') {
+    // 清空之前的多图选择
+    multiImages.value = [null, null, null, null];
+  }
+};
+
+const selectModeOption = (option) => {
+  selectedMode.value = option;
   activeMenu.value = null;
 };
 
 // 显示全屏图片
-const showFullScreenImage = () => {
-  if (originalImage.value) {
+const showFullScreenImage = (imageType = 'normal', index = 0) => {
+  if (imageType === 'start' && startImage.value) {
+    fullScreenImageUrl.value = startImage.value;
+    isFullScreenImageVisible.value = true;
+  } else if (imageType === 'end' && endImage.value) {
+    fullScreenImageUrl.value = endImage.value;
+    isFullScreenImageVisible.value = true;
+  } else if (imageType === 'multi' && multiImages.value[index]) {
+    fullScreenImageUrl.value = multiImages.value[index].original;
+    isFullScreenImageVisible.value = true;
+  } else if (originalImage.value) {
     fullScreenImageUrl.value = originalImage.value;
     isFullScreenImageVisible.value = true;
   }
@@ -571,6 +696,172 @@ const clearSelectedImage = () => {
   }
 };
 
+// 首尾帧图片选择和处理方法
+const selectStartImage = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      processFrameImage(file, 'start');
+    }
+  };
+  input.click();
+};
+
+const selectEndImage = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      processFrameImage(file, 'end');
+    }
+  };
+  input.click();
+};
+
+const processFrameImage = (file, frameType) => {
+  const reader = new FileReader();
+  
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const targetWidth = 100;
+      const targetHeight = 100;
+
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      const hRatio = targetWidth / img.width;
+      const vRatio = targetHeight / img.height;
+      const ratio = Math.min(hRatio, vRatio);
+
+      const drawWidth = img.width * ratio;
+      const drawHeight = img.height * ratio;
+
+      const offsetX = (targetWidth - drawWidth) / 2;
+      const offsetY = (targetHeight - drawHeight) / 2;
+      
+      ctx.clearRect(0, 0, targetWidth, targetHeight);
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      
+      const thumbnailDataUrl = canvas.toDataURL('image/png');
+      const originalDataUrl = e.target.result;
+      
+      if (frameType === 'start') {
+        startImageThumbnail.value = thumbnailDataUrl;
+        startImage.value = originalDataUrl;
+        
+        // 选择完首帧后，自动弹出选择尾帧的浮窗
+        nextTick(() => {
+          selectEndImage();
+        });
+      } else if (frameType === 'end') {
+        endImageThumbnail.value = thumbnailDataUrl;
+        endImage.value = originalDataUrl;
+      }
+    };
+    
+    img.src = e.target.result;
+  };
+  
+  reader.readAsDataURL(file);
+};
+
+const clearStartImage = () => {
+  const previousStartImage = startImage.value;
+  startImageThumbnail.value = null;
+  startImage.value = null;
+  
+  if (isFullScreenImageVisible.value && fullScreenImageUrl.value === previousStartImage) {
+    hideFullScreenImage();
+  }
+};
+
+const clearEndImage = () => {
+  const previousEndImage = endImage.value;
+  endImageThumbnail.value = null;
+  endImage.value = null;
+  
+  if (isFullScreenImageVisible.value && fullScreenImageUrl.value === previousEndImage) {
+    hideFullScreenImage();
+  }
+};
+
+// 多图参考生视频相关方法
+const selectMultiImage = (index) => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      processMultiImage(file, index);
+    }
+  };
+  input.click();
+};
+
+const processMultiImage = (file, index) => {
+  const reader = new FileReader();
+  
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const targetWidth = 100;
+      const targetHeight = 100;
+
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      const hRatio = targetWidth / img.width;
+      const vRatio = targetHeight / img.height;
+      const ratio = Math.min(hRatio, vRatio);
+
+      const drawWidth = img.width * ratio;
+      const drawHeight = img.height * ratio;
+
+      const offsetX = (targetWidth - drawWidth) / 2;
+      const offsetY = (targetHeight - drawHeight) / 2;
+      
+      ctx.clearRect(0, 0, targetWidth, targetHeight);
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      
+      const thumbnailDataUrl = canvas.toDataURL('image/png');
+      const originalDataUrl = e.target.result;
+      
+      // 更新对应索引的图片
+      multiImages.value[index] = {
+        thumbnail: thumbnailDataUrl,
+        original: originalDataUrl
+      };
+    };
+    
+    img.src = e.target.result;
+  };
+  
+  reader.readAsDataURL(file);
+};
+
+const removeMultiImage = (index) => {
+  const previousImage = multiImages.value[index];
+  multiImages.value[index] = null;
+  
+  // 如果全屏显示的正是这张被删除的图片，则关闭全屏视图
+  if (isFullScreenImageVisible.value && previousImage && 
+      fullScreenImageUrl.value === previousImage.original) {
+    hideFullScreenImage();
+  }
+};
+
+
 // 滚动到底部
 const scrollToBottom = () => {
   const chatContentEl = document.querySelector('.chat-content');
@@ -594,16 +885,41 @@ const taskCheckInterval = ref(null); // 存储任务状态检查的定时器ID
 
 // 发送消息
 const sendMessage = async () => {
-  if ((!userInput.value.trim() && !uploadedImage.value) || isLoading.value) return;
+  // 检查不同模式下的输入要求
+  if (selectedVideoType.value.value === 'frame2video') {
+    // 首尾帧生视频模式：需要首帧图片和提示词，尾帧图片可选
+    if (!startImage.value || !userInput.value.trim()) {
+      console.log('首尾帧生视频需要选择首帧图片和输入提示词');
+      return;
+    }
+  } else if (selectedVideoType.value.value === 'multiimg2video') {
+    // 多图参考生视频模式：需要至少一张图片和提示词
+    const selectedImages = multiImages.value.filter(img => img);
+    if (selectedImages.length === 0 || !userInput.value.trim()) {
+      console.log('多图参考生视频需要至少选择一张图片和输入提示词');
+      return;
+    }
+  } else {
+    // 其他模式：需要图片或提示词
+    if ((!userInput.value.trim() && !uploadedImage.value) || isLoading.value) return;
+  }
   
   // 添加用户消息
   const message = {
     role: 'user',
-    content: userInput.value
+    content: userInput.value,
+    model: selectedModel.value,
+    videoType: selectedVideoType.value.value
   };
   
-  // 如果有上传的图片，添加到消息中
-  if (originalImage.value) { // 使用 originalImage 以在聊天中显示原始比例图片
+  // 根据视频类型添加图片信息
+  if (selectedVideoType.value.value === 'frame2video') {
+    // 首尾帧生视频：显示首帧图片
+    message.image = startImage.value;
+    message.startImage = startImage.value;
+    message.endImage = endImage.value;
+  } else if (originalImage.value) {
+    // 普通图生视频：使用 originalImage 以在聊天中显示原始比例图片
     message.image = originalImage.value;
   } else if (uploadedImage.value) {
     // Fallback or specific logic if only thumbnail was intended (should not happen with current flow)
@@ -617,76 +933,117 @@ const sendMessage = async () => {
   // 保存消息到本地存储
   saveMessagesToLocalStorage();
   
-  // 调用视频生成API
+  // 调用千帆视频生成API
   try {
-    // 检查是否有图片和文本输入
-    if (message.image || message.content) {
-      isLoading.value = true;
+    isLoading.value = true;
+    let result;
+    
+    if (selectedVideoType.value.value === 'frame2video') {
+      // 首尾帧生视频
+      const startFetchResponse = await fetch(startImage.value);
+      const startBlob = await startFetchResponse.blob();
+      const startFilename = `start_image_${Date.now()}.${startBlob.type.split('/')[1] || 'png'}`;
+      const startImageFile = new File([startBlob], startFilename, { type: startBlob.type });
       
-      // 获取当前选择的分辨率（去掉"p"后缀）
-      const resolution = selectedResolution.value;
-      
-      // 获取当前选择的时长（去掉"s"后缀并转换为数字）
-      const duration = parseInt(selectedDuration.value.replace('s', ''));
-      
-      // 获取当前选择的相机固定设置
-      const cameraFixed = selectedCameraFixed.value.value;
-      
-      // 如果有图片，需要将其转换为File对象
-      let imageFile = null;
-      if (message.image) {
-        // 从Data URL创建Blob
-        const fetchResponse = await fetch(message.image);
-        const blob = await fetchResponse.blob();
-        
-        // 从Blob创建File对象
-        const filename = `image_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
-        imageFile = new File([blob], filename, { type: blob.type });
-        
-        // 发送后清空缩略图和原始图
-        uploadedImage.value = null;
-        originalImage.value = null; 
-        // 如果全屏预览是当前图片，也关闭它
-        if (isFullScreenImageVisible.value && fullScreenImageUrl.value === message.image) {
-          hideFullScreenImage();
-        }
-      } else {
-        // 如果没有图片，则imageFile传空
-        imageFile = null;
+      let endImageFile = null;
+      if (endImage.value) {
+        const endFetchResponse = await fetch(endImage.value);
+        const endBlob = await endFetchResponse.blob();
+        const endFilename = `end_image_${Date.now()}.${endBlob.type.split('/')[1] || 'png'}`;
+        endImageFile = new File([endBlob], endFilename, { type: endBlob.type });
       }
       
-      // 调用generateVideo函数
-      const result = await generateVideo(
-        message.content || "", // 如果没有文本，使用默认文本
-        resolution,
-        duration,
-        cameraFixed,
-        imageFile
+      result = await generateVideoFromStartEnd(
+        message.content,
+        startImageFile,
+        endImageFile,
+        selectedModel.value,
+        selectedDuration.value
       );
       
-      console.log('视频生成API响应:', result);
+      // 清空首尾帧图片
+      startImage.value = null;
+      startImageThumbnail.value = null;
+      endImage.value = null;
+      endImageThumbnail.value = null;
       
-      // 从响应中提取任务ID
-      if (result && result.id) {
-        currentTaskId.value = result.id;
-        console.log('获取到任务ID:', currentTaskId.value);
-        
-        // 将任务ID与用户消息关联
-        const userMessageIndex = messages.value.length - 1;
-        if (userMessageIndex >= 0 && messages.value[userMessageIndex].role === 'user') {
-          messages.value[userMessageIndex].taskId = currentTaskId.value;
-          // 初始化为生成中状态
-          messages.value[userMessageIndex].isGenerating = true;
-        }
-                
-        // 开始定期检查任务状态
-        startTaskStatusCheck();
-      } else {
-        console.error('API响应中没有任务ID');
+    } else if (selectedVideoType.value.value === 'multiimg2video') {
+      // 多图参考生视频
+      const selectedImages = multiImages.value.filter(img => img);
+      const imageFiles = [];
+      
+      for (const imageData of selectedImages) {
+        const fetchResponse = await fetch(imageData.original);
+        const blob = await fetchResponse.blob();
+        const filename = `multi_image_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${blob.type.split('/')[1] || 'png'}`;
+        const imageFile = new File([blob], filename, { type: blob.type });
+        imageFiles.push(imageFile);
       }
+      
+      result = await generateVideoFromMultiImages(
+        message.content,
+        imageFiles,
+        selectedModel.value,
+        { duration: selectedDuration.value }
+      );
+      
+      // 清空多图选择
+      multiImages.value = [null, null, null, null];
+      
+    } else if (message.image) {
+      // 图生视频
+      const fetchResponse = await fetch(message.image);
+      const blob = await fetchResponse.blob();
+      const filename = `image_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
+      const imageFile = new File([blob], filename, { type: blob.type });
+      
+      result = await generateVideoFromImage(
+        message.content || "让图片中的人物动起来",
+        imageFile,
+        selectedModel.value,
+        selectedDuration.value
+      );
+      
+      // 发送后清空缩略图和原始图
+      uploadedImage.value = null;
+      originalImage.value = null; 
+      // 如果全屏预览是当前图片，也关闭它
+      if (isFullScreenImageVisible.value && fullScreenImageUrl.value === message.image) {
+        hideFullScreenImage();
+      }
+    } else {
+      // 文生视频
+      result = await generateVideoFromText(
+        message.content,
+        selectedModel.value,
+        selectedDuration.value,
+        selectedAspectRatio.value,
+        selectedMode.value
+      );
+    }
+    
+    console.log('千帆视频生成API响应:', result);
+    
+    // 从响应中提取任务ID
+    if (result && result.data && result.data.task_id) {
+      currentTaskId.value = result.data.task_id;
+      console.log('获取到任务ID:', currentTaskId.value);
+      
+      // 将任务ID与用户消息关联
+      const userMessageIndex = messages.value.length - 1;
+      if (userMessageIndex >= 0 && messages.value[userMessageIndex].role === 'user') {
+        messages.value[userMessageIndex].taskId = currentTaskId.value;
+        // 初始化为生成中状态
+        messages.value[userMessageIndex].isGenerating = true;
+      }
+              
+      // 开始定期检查任务状态
+      startTaskStatusCheck();
+    } else {
+      console.error('API响应中没有任务ID');
     }
   } catch (error) {
-    console.error('视频生成失败:', error);
+    console.error('千帆视频生成失败:', error);
     // 可以添加错误处理逻辑，例如显示错误消息
     messages.value.push({
       role: 'system',
@@ -726,8 +1083,8 @@ const startTaskStatusCheck = () => {
     try {
       const videoCache = JSON.parse(localStorage.getItem(STORAGE_KEY_VIDEOS) || '{}');
       if (videoCache[currentTaskId.value]) {
-        // 如果任务状态是succeeded且remoteUrl存在，则不需要检查，直接更新UI
-        if (videoCache[currentTaskId.value].status === 'succeeded' && videoCache[currentTaskId.value].remoteUrl) {
+        // 如果任务状态是succeed且remoteUrl存在，则不需要检查，直接更新UI
+        if (videoCache[currentTaskId.value].status === 'succeed' && videoCache[currentTaskId.value].remoteUrl) {
           console.log('任务已完成，使用缓存视频URL:', currentTaskId.value);
           shouldCheck = false;
           cachedRemoteUrl = videoCache[currentTaskId.value].remoteUrl;
@@ -751,9 +1108,9 @@ const startTaskStatusCheck = () => {
           clearInterval(taskCheckInterval.value);
           return;
         }
-        // 如果任务状态不是running或queued，则不需要检查
-        else if (videoCache[currentTaskId.value].status !== 'running' && 
-            videoCache[currentTaskId.value].status !== 'queued') {
+        // 如果任务状态不是processing或submitted，则不需要检查
+        else if (videoCache[currentTaskId.value].status !== 'processing' && 
+            videoCache[currentTaskId.value].status !== 'submitted') {
           shouldCheck = false;
         }
       }
@@ -768,7 +1125,12 @@ const startTaskStatusCheck = () => {
     }
     
     try {
-      const statusResult = await checkVideoGenerationStatus(currentTaskId.value);
+      // 找到对应的用户消息以获取模型信息
+      const userMessage = messages.value.find(msg => 
+        msg.role === 'user' && msg.taskId === currentTaskId.value);
+      
+      const modelToUse = userMessage?.model || selectedModel.value;
+      const statusResult = await checkQianfanVideoStatus(currentTaskId.value, modelToUse);
       console.log('任务状态:', statusResult);
       
       // 缓存任务状态
@@ -777,20 +1139,15 @@ const startTaskStatusCheck = () => {
         if (!videoCache[currentTaskId.value]) {
           videoCache[currentTaskId.value] = {};
         }
-        videoCache[currentTaskId.value].status = statusResult.status;
+        videoCache[currentTaskId.value].status = statusResult.data?.task_status;
         videoCache[currentTaskId.value].timestamp = Date.now();
         localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(videoCache));
       } catch (error) {
         console.error('缓存任务状态失败:', error);
       }
       
-      // 找到对应的用户消息
-      const userMessage = messages.value.find(msg => 
-        msg.role === 'user' && msg.taskId === currentTaskId.value);
-      
-      
       // 根据任务状态更新UI
-      if (statusResult.status === 'succeeded') {
+      if (statusResult.data?.task_status === 'succeed') {
         // 任务成功完成，只处理一次
         clearInterval(taskCheckInterval.value);
         isLoading.value = false;
@@ -808,9 +1165,9 @@ const startTaskStatusCheck = () => {
           msg.role === 'system' && msg.content.includes('视频生成成功'));
         
         if (!hasSuccessMessage) {
-          // 从content.video_url中提取视频URL
-          if (statusResult.content && statusResult.content.video_url) {
-            const videoUrlValue = statusResult.content.video_url;
+          // 从data.task_result.videos中提取视频URL
+          if (statusResult.data?.task_result?.videos && statusResult.data.task_result.videos.length > 0) {
+            const videoUrlValue = statusResult.data.task_result.videos[0].url;
             
             // 直接使用原始URL
             const finalVideoUrl = videoUrlValue;
@@ -822,7 +1179,7 @@ const startTaskStatusCheck = () => {
                 videoCache[currentTaskId.value] = {};
               }
               videoCache[currentTaskId.value].remoteUrl = videoUrlValue;
-              videoCache[currentTaskId.value].status = 'succeeded';
+              videoCache[currentTaskId.value].status = 'succeed';
               videoCache[currentTaskId.value].timestamp = Date.now();
               localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(videoCache));
             } catch (error) {
@@ -834,9 +1191,6 @@ const startTaskStatusCheck = () => {
             videoTitle.value = '生成的视频';
             
             // 找到对应的用户消息，添加视频URL
-            const userMessage = messages.value.find(msg => 
-              msg.role === 'user' && msg.taskId === currentTaskId.value);
-            
             if (userMessage) {
               userMessage.videoUrl = finalVideoUrl;
               console.log('已将视频URL添加到用户消息:', userMessage);
@@ -886,7 +1240,7 @@ const startTaskStatusCheck = () => {
             });
           }
         }
-      } else if (statusResult.status === 'failed') {
+      } else if (statusResult.data?.task_status === 'failed') {
         // 任务失败
         clearInterval(taskCheckInterval.value);
         isLoading.value = false;
@@ -902,7 +1256,7 @@ const startTaskStatusCheck = () => {
         // 添加失败消息，3秒后自动消失
         const failedMessage = {
           role: 'system',
-          content: `视频生成失败: ${statusResult.error || '未知错误'}`,
+          content: `视频生成失败: ${statusResult.data?.task_status_msg || '未知错误'}`,
           autoRemove: true
         };
         messages.value.push(failedMessage);
@@ -917,16 +1271,16 @@ const startTaskStatusCheck = () => {
         
         // 保存消息到本地存储
         saveMessagesToLocalStorage();
-      } else if (statusResult.status === 'running' || statusResult.status === 'queued') {
+      } else if (statusResult.data?.task_status === 'processing' || statusResult.data?.task_status === 'submitted') {
         // 任务仍在处理中或排队中
         
         // 设置生成中状态
-        if (userMessage && statusResult.status === 'running') {
+        if (userMessage && statusResult.data?.task_status === 'processing') {
           userMessage.isGenerating = true;
         }
         
         // 避免重复添加状态消息，只在状态变化时添加
-        const statusText = statusResult.status === 'running' ? '处理中' : '排队中';
+        const statusText = statusResult.data?.task_status === 'processing' ? '处理中' : '排队中';
         const lastMessage = messages.value[messages.value.length - 1];
         
         // 只有当最后一条消息不是相同状态的更新时，才添加新消息
@@ -945,37 +1299,6 @@ const startTaskStatusCheck = () => {
           // 保存消息到本地存储
           saveMessagesToLocalStorage();
         }
-      } else if (statusResult.status === 'cancelled') {
-        // 任务被取消
-        clearInterval(taskCheckInterval.value);
-        isLoading.value = false;
-        
-        // 移除生成中状态
-        if (userMessage) {
-          userMessage.isGenerating = false;
-        }
-        
-        // 移除之前的状态消息
-        removeStatusMessages();
-        
-        // 添加取消消息，3秒后自动消失
-        const cancelledMessage = {
-          role: 'system',
-          content: '视频生成任务已被取消',
-          autoRemove: true
-        };
-        messages.value.push(cancelledMessage);
-        
-        // 3秒后移除消息
-        setTimeout(() => {
-          const index = messages.value.indexOf(cancelledMessage);
-          if (index !== -1) {
-            messages.value.splice(index, 1);
-          }
-        }, 3000);
-        
-        // 保存消息到本地存储
-        saveMessagesToLocalStorage();
       }
       
       // 注意：移除这里的滚动，因为我们已经在各个状态处理中添加了滚动
@@ -1019,15 +1342,21 @@ const handleClickOutside = (event) => {
   let activeMenuElement = null;
   let activeButtonElement = null;
 
-  if (activeMenu.value === 'resolution') {
-    activeMenuElement = resolutionMenuEl.value;
-    activeButtonElement = resolutionButtonEl.value;
+  if (activeMenu.value === 'videoType') {
+    activeMenuElement = videoTypeMenuEl.value;
+    activeButtonElement = videoTypeButtonEl.value;
+  } else if (activeMenu.value === 'model') {
+    activeMenuElement = modelMenuEl.value;
+    activeButtonElement = modelButtonEl.value;
+  } else if (activeMenu.value === 'aspectRatio') {
+    activeMenuElement = aspectRatioMenuEl.value;
+    activeButtonElement = aspectRatioButtonEl.value;
   } else if (activeMenu.value === 'duration') {
     activeMenuElement = durationMenuEl.value;
     activeButtonElement = durationButtonEl.value;
-  } else if (activeMenu.value === 'cameraFixed') {
-    activeMenuElement = cameraFixedMenuEl.value;
-    activeButtonElement = cameraFixedButtonEl.value;
+  } else if (activeMenu.value === 'mode') {
+    activeMenuElement = modeMenuEl.value;
+    activeButtonElement = modeButtonEl.value;
   }
 
   // If click is not on the active button and not inside the active menu, close it
@@ -1055,8 +1384,59 @@ onBeforeUnmount(() => {
 });
 </script>
 
-
 <style scoped>
+
+/* 基础容器样式 */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f8f9fa;
+}
+
+/* 消息容器样式 */
+.chat-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  padding-top: 53px; /* 为返回按钮留出空间 */
+}
+
+.message-wrapper {
+  margin-bottom: 20px;
+}
+
+.message-container {
+  display: flex;
+  width: 100%;
+}
+
+.message-bubble {
+  max-width: 80%;
+}
+
+/* 进度条样式 */
+.progress-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #45a049);
+  animation: progress 2s infinite;
+}
+
+@keyframes progress {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
 
 /* 输入区样式 */
 .chat-input {
@@ -1064,6 +1444,45 @@ onBeforeUnmount(() => {
   padding: 10px 16px; /* 保持与input-container一致的内边距 */
   background-color: #fff; /* 确保背景颜色 */
   border-top: 1px solid #eee; /* 可选：添加边框 */
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 24px;
+}
+
+.input-container input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.voice-button {
+  background-color: #007bff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.voice-button:hover {
+  background-color: #0056b3;
+}
+
+.send-icon {
+  color: white;
 }
 
 /* 缩略图样式 */
@@ -1252,7 +1671,6 @@ onBeforeUnmount(() => {
   background-color: #f0f0f0;
 }
 
-
 /* 视频预览样式 */
 .video-preview-container {
   margin-top: 10px;
@@ -1417,6 +1835,268 @@ onBeforeUnmount(() => {
   height: auto;
   display: block;
   background-color: #000;
+}
+
+/* 首尾帧生视频样式 */
+.frame-images-container {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.frame-image-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.frame-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.frame-image-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.frame-placeholder {
+  width: 100px;
+  height: 100px;
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  transition: all 0.2s ease;
+}
+
+.frame-placeholder:hover {
+  border-color: #007bff;
+  background-color: #f0f8ff;
+}
+
+.frame-placeholder span {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+}
+
+.single-image-container {
+  position: relative;
+  cursor: pointer;
+}
+
+/* 多图参考生视频样式 */
+.multi-images-container {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* 多图参考生视频浮窗样式 */
+.multi-image-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.multi-image-modal {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.image-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.image-upload-slot {
+  aspect-ratio: 1;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s ease;
+  background-color: #fafafa;
+}
+
+.image-upload-slot:hover {
+  border-color: #007bff;
+  background-color: #f0f8ff;
+}
+
+.image-upload-slot.has-image {
+  border-style: solid;
+  border-color: #007bff;
+  background-color: white;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+}
+
+.upload-icon {
+  font-size: 32px;
+  color: #999;
+  font-weight: 300;
+}
+
+.upload-text {
+  font-size: 14px;
+  color: #666;
+}
+
+.uploaded-image-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.uploaded-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.remove-image-btn:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.btn-cancel,
+.btn-confirm {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-cancel {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.btn-cancel:hover {
+  background-color: #e9e9e9;
+  color: #333;
+}
+
+.btn-confirm {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-confirm:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.btn-confirm:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 </style>
