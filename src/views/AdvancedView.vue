@@ -136,6 +136,14 @@
               </div>
               <div class="item-label">图片翻译</div>
             </div>
+            <div class="category-item" @click="handleFeature('识文字')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+              <div class="item-label">识文字</div>
+            </div>
+            <div class="category-item">
+            </div>
           </div>
         </div>
       </div>
@@ -423,6 +431,9 @@ const handleFeature = (feature) => {
   } else if (feature === '图片翻译'){
     // 图片翻译功能跳转至图片翻译界面
     router.push('/pic-translate');
+  } else if (feature === '识文字') {
+    // 识文字功能跳转至识文字界面
+    router.push('/text-recognition');
   } else {
     // 其他功能正常跳转到结果页
     router.push({
