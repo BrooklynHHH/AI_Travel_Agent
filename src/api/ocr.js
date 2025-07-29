@@ -68,9 +68,11 @@ export const callTencentOcr = (formData) => {
     })
 }
 
-// 预留接口2（待实现）
-export const callReservedOcr = (formData) => {
-    // 预留接口，待实现
-    console.log(formData);
-    return Promise.reject(new Error('接口尚未实现'))
+// 火山OCR接口
+export const callVolcOcr = (formData) => {
+    return timedRequest(USE_URL+'/ocr/volc-ocr', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
 }

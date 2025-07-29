@@ -77,7 +77,7 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import {callDoubaoVisionOcr, callAliyunOcr, callBaiduOcr, callRapidOcr, callTencentOcr} from '@/api/ocr'
+import {callDoubaoVisionOcr, callAliyunOcr, callBaiduOcr, callRapidOcr, callTencentOcr, callVolcOcr} from '@/api/ocr'
 
 // 图片上传相关
 const imageFile = ref(null)
@@ -122,9 +122,9 @@ const ocrResults = reactive({
     error: '',
     responseTime: null
   },
-  reservedOcr: {
-    title: '预留OCR接口',
-    result: '预留OCR接口',
+  volcOcr: {
+    title: '火山OCR',
+    result: '',
     loading: false,
     error: '',
     responseTime: null
@@ -240,6 +240,15 @@ const processImage = async () => {
       }).catch(error => {
         ocrResults.tencentOcr.error = `请求失败: ${error.message}`
         ocrResults.tencentOcr.loading = false
+      }),
+
+      callVolcOcr(formData).then(response => {
+        ocrResults.volcOcr.result = response.data
+        ocrResults.volcOcr.responseTime = response.time
+        ocrResults.volcOcr.loading = false
+      }).catch(error => {
+        ocrResults.volcOcr.error = `请求失败: ${error.message}`
+        ocrResults.volcOcr.loading = false
       }),
     ])
   } catch (error) {
