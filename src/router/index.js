@@ -145,8 +145,12 @@ export const routes = [ // Add export here
     path: '/pic-translate',
     name: '图片翻译',
     component: () => import('../views/PicTranslateView.vue')
+  },
+  {
+    path: '/baidu-faxingbao',
+    name: '法行宝',
+    component: () => import('../views/BaiduFaXingBaoView.vue')
   }
-
 ]
 
 const router = createRouter({

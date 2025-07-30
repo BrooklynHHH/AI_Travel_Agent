@@ -423,6 +423,9 @@ const handleFeature = (feature) => {
   } else if (feature === '图片翻译'){
     // 图片翻译功能跳转至图片翻译界面
     router.push('/pic-translate');
+  } else if (feature === '法行宝') {
+    // 百度法行宝功能跳转至百度法行宝界面
+    router.push('/baidu-faxingbao');
   } else {
     // 其他功能正常跳转到结果页
     router.push({
