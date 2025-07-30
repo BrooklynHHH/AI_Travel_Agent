@@ -153,11 +153,15 @@ export const routes = [ // Add export here
     component: () => import('../views/PicTranslateView.vue')
   },
   {
+    path: '/baidu-faxingbao',
+    name: '法行宝',
+    component: () => import('../views/BaiduFaXingBaoView.vue')
+  },
+  {
     path: '/qianfan',
     name: '千帆',
     component: () => import('../views/QianfanVideoGenerate.vue')
   }
-
 ]
 
 const router = createRouter({

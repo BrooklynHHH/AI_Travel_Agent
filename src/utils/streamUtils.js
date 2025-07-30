@@ -413,6 +413,16 @@ export const handleStreamingResponse = async (response, options = {}) => {
         debug && console.error('Error processing line:', parseError);
         onError(parseError);
       }
+    } else if (line.startsWith('event: ')) {
+      // Handle event lines like "event: end"
+      const eventType = line.substring(7).trim();
+      debug && console.log('Received event:', eventType);
+      
+      // Check if this is an end event
+      if (endEvents.includes(eventType)) {
+        debug && console.log(`Received ${eventType} event, marking stream as ended`);
+        isStreamEnded = true;
+      }
     } else {
       // Handle non-data lines (like error responses)
       debug && console.log('Received non-data line:', line);
@@ -426,6 +436,8 @@ export const handleStreamingResponse = async (response, options = {}) => {
     // Start reading the stream
     let buffer = '';          // Buffer for incomplete chunks
     let reading = true;       // Flag to control the reading loop
+    let doneCount = 0;        // Count how many times reader returns done
+    const maxDoneCount = 3;   // Maximum number of times to continue after done
     
     // Keep reading until explicitly stopped by an end event
     while (reading) {
@@ -436,10 +448,11 @@ export const handleStreamingResponse = async (response, options = {}) => {
       // This handles cases where the connection might temporarily report as done
       if (done && !value) {
         debug && console.log('Reader indicated stream is done');
+        doneCount++;
         
-        // Only break if we've already seen an end event
-        if (isStreamEnded) {
-          debug && console.log('Stream end event received, ending stream reception');
+        // Only break if we've already seen an end event or exceeded max done count
+        if (isStreamEnded || doneCount >= maxDoneCount) {
+          debug && console.log(`Stream ending: ${isStreamEnded ? 'end event received' : 'max done count reached'}`);
           reading = false;
           
           // Process any remaining data in the buffer
@@ -452,6 +465,11 @@ export const handleStreamingResponse = async (response, options = {}) => {
         // Add a small delay to prevent tight loop if reader keeps returning done
         await new Promise(resolve => setTimeout(resolve, 100));
         continue;
+      }
+      
+      // Reset done count if we got actual data
+      if (value && value.length > 0) {
+        doneCount = 0;
       }
       
       // Skip if no value (might happen in some edge cases)
