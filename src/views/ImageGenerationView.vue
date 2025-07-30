@@ -41,6 +41,10 @@
                   <button v-if="message.generatedImage" class="animate-button" @click="goToVideoGeneration(message.generatedImage)" title="生成视频">
                     动一动
                   </button>
+                  <!-- P一下按钮 -->
+                  <button v-if="message.generatedImage" class="p-button" @click="addToThumbnail(message.generatedImage)" title="添加到缩略图">
+                    P一下
+                  </button>
                 </div>
               </div>
             </div>
@@ -385,6 +389,51 @@ const goToVideoGeneration = async (imageUrl) => {
   }
 };
 
+// 添加图片到缩略图
+const addToThumbnail = async (imageUrl) => {
+  try {
+    // 创建一个新的Image对象来处理图片
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const targetWidth = 100;
+      const targetHeight = 100;
+
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      const hRatio = targetWidth / img.width;
+      const vRatio = targetHeight / img.height;
+      const ratio = Math.min(hRatio, vRatio);
+
+      const drawWidth = img.width * ratio;
+      const drawHeight = img.height * ratio;
+
+      const offsetX = (targetWidth - drawWidth) / 2;
+      const offsetY = (targetHeight - drawHeight) / 2;
+      
+      // 清除canvas
+      ctx.clearRect(0, 0, targetWidth, targetHeight);
+      
+      // 绘制按比例缩放并居中的图片
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      
+      // 将canvas转换为DataURL并设置为缩略图
+      uploadedImage.value = canvas.toDataURL('image/png');
+      // 保存原始图片的DataURL
+      originalImage.value = imageUrl;
+      
+      console.log('图片已添加到缩略图');
+    };
+    
+    // 设置图片源
+    img.src = imageUrl;
+  } catch (error) {
+    console.error('添加图片到缩略图失败:', error);
+  }
+};
+
 // 滚动到底部
 const scrollToBottom = () => {
   const chatContentEl = document.querySelector('.chat-content');
@@ -610,10 +659,14 @@ onBeforeUnmount(() => {
 <style scoped>
 /* 输入区样式 */
 .chat-input {
-  position: relative;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   padding: 10px 16px;
   background-color: #fff;
   border-top: 1px solid #eee;
+  z-index: 50;
 }
 
 /* 缩略图样式 */
@@ -939,7 +992,10 @@ onBeforeUnmount(() => {
 
 /* chat-content 与 fixed back-button 间距调整 */
 .chat-content {
-  padding-top: 53px; 
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 53px;
+  padding-bottom: 120px; /* 为固定在底部的输入区域留出空间 */
 }
 
 /* 进度条样式 */
@@ -1032,6 +1088,29 @@ onBeforeUnmount(() => {
 }
 
 .animate-button:active {
+  transform: scale(0.95);
+}
+
+/* P一下按钮样式 */
+.p-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+  font-weight: 500;
+}
+
+.p-button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.p-button:active {
   transform: scale(0.95);
 }
 </style>
