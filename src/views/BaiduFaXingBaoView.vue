@@ -590,7 +590,7 @@ const videoDescription = ref('');
 const isStreaming = ref(false);
 
 // 百度法行宝API配置
-const BAIDU_API_URL = 'http://localhost:3001/api/baidu-faxingbao';
+const BAIDU_API_URL = 'http://localhost:5001/agent-api/baidu-faxingbao';
 
 // 消息类型说明
 // messageType: 1 - 法律咨询
