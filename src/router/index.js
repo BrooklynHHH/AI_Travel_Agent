@@ -153,11 +153,11 @@ export const routes = [ // Add export here
     component: () => import('../views/PicTranslateView.vue')
   },
   {
-<<<<<<< HEAD
     path: '/text-recognition',
     name: '识文字',
     component: () => import('@/views/TextRecognizeView.vue')
-=======
+  },
+  {
     path: '/baidu-faxingbao',
     name: '法行宝',
     component: () => import('../views/BaiduFaXingBaoView.vue')
@@ -171,7 +171,6 @@ export const routes = [ // Add export here
     path: '/baidu-wenku',
     name: '百度文库',
     component: () => import('../views/BaiduWenKuView.vue')
->>>>>>> main
   }
 ]
 
