@@ -452,6 +452,9 @@ const handleFeature = (feature) => {
   } else if (feature === '法行宝') {
     // 百度法行宝功能跳转至百度法行宝界面
     router.push('/baidu-faxingbao');
+  } else if (feature === '百度文库') {
+    // 百度文库功能跳转至百度文库界面
+    router.push('/baidu-wenku');
   } else {
     // 其他功能正常跳转到结果页
     router.push({

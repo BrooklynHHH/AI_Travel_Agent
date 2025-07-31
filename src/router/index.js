@@ -161,6 +161,11 @@ export const routes = [ // Add export here
     path: '/qianfan',
     name: '千帆',
     component: () => import('../views/QianfanVideoGenerate.vue')
+  },
+  {
+    path: '/baidu-wenku',
+    name: '百度文库',
+    component: () => import('../views/BaiduWenKuView.vue')
   }
 ]
 

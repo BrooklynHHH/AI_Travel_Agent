@@ -98,7 +98,14 @@
           <div class="result-desc">{{ item.desc }}</div>
           <div class="result-imgs">
             <div v-if="item.images && item.images.length">
-              <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
+              <img 
+                v-for="(img, imgIndex) in item.images" 
+                :key="img" 
+                :src="img" 
+                class="img-placeholder result-img" 
+                @click.stop="openImageViewer(item.images, imgIndex, item.title)"
+                style="cursor: pointer;"
+              />
             </div>
           </div>
           <div class="result-source">
@@ -182,7 +189,14 @@
           <div class="result-desc">{{ item.desc }}</div>
           <div class="result-imgs">
             <div v-if="item.images && item.images.length">
-              <img v-for="img in item.images" :key="img" :src="img.url" class="img-placeholder result-img" />
+              <img 
+                v-for="(img, imgIndex) in item.images" 
+                :key="img" 
+                :src="img.url || img" 
+                class="img-placeholder result-img" 
+                @click.stop="openImageViewer(item.images.map(i => i.url || i), imgIndex, item.title)"
+                style="cursor: pointer;"
+              />
             </div>
           </div>
           <div class="result-source">
@@ -265,7 +279,14 @@
           <div class="result-desc">{{ item.desc }}</div>
           <div class="result-imgs">
             <div v-if="item.images && item.images.length">
-              <img v-for="img in item.images" :key="img" :src="img.url" class="img-placeholder result-img" />
+              <img 
+                v-for="(img, imgIndex) in item.images" 
+                :key="img" 
+                :src="img.url || img" 
+                class="img-placeholder result-img" 
+                @click.stop="openImageViewer(item.images.map(i => i.url || i), imgIndex, item.title)"
+                style="cursor: pointer;"
+              />
             </div>
           </div>
           <div class="result-source">
@@ -478,7 +499,14 @@
             <div class="result-desc">{{ item.desc }}</div>
             <div class="result-imgs">
               <div v-if="item.images && item.images.length">
-                <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
+                <img 
+                  v-for="(img, imgIndex) in item.images" 
+                  :key="img" 
+                  :src="img" 
+                  class="img-placeholder result-img" 
+                  @click.stop="openImageViewer(item.images, imgIndex, item.title)"
+                  style="cursor: pointer;"
+                />
               </div>
             </div>
             <div class="result-source">
@@ -559,11 +587,18 @@
         >
           <div class="result-title">{{ item.title }}</div>
           <div class="result-desc">{{ item.desc }}</div>
-          <div class="result-imgs">
-            <div v-if="item.images && item.images.length">
-              <img v-for="img in item.images" :key="img" :src="img" class="img-placeholder result-img" />
+            <div class="result-imgs">
+              <div v-if="item.images && item.images.length">
+                <img 
+                  v-for="(img, imgIndex) in item.images" 
+                  :key="img" 
+                  :src="img" 
+                  class="img-placeholder result-img" 
+                  @click.stop="openImageViewer(item.images, imgIndex, item.title)"
+                  style="cursor: pointer;"
+                />
+              </div>
             </div>
-          </div>
           <div class="result-source">
             <img v-if="item.icon" :src="item.icon" class="result-source-icon" />
             {{ item.source }}
@@ -717,18 +752,15 @@
       </div>
     </div>
 
-    <!-- 全屏图片模态框 -->
-    <div v-if="fullscreenImage" class="fullscreen-modal" @click="closeFullscreenImage">
-      <div class="fullscreen-content">
-        <img :src="fullscreenImage" class="fullscreen-image" @click.stop />
-        <button class="close-btn" @click="closeFullscreenImage">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-    </div>
+    <!-- ImageViewer组件 -->
+    <ImageViewer
+      :show="showImageViewerModal"
+      :images="imageViewerImages"
+      :current-index="imageViewerCurrentIndex"
+      :keyword="imageViewerKeyword"
+      @update:show="showImageViewerModal = $event"
+      @update:current-index="imageViewerCurrentIndex = $event"
+    />
   </div>
 </template>
 
@@ -736,6 +768,7 @@
 import { ref, nextTick, watchEffect, computed, onMounted, watch } from 'vue'; // 引入 watch
 import { useRoute } from 'vue-router'; // 引入 useRoute
 import { marked } from 'marked';
+import ImageViewer from '@/base/views/ImageViewer.vue';
 
 const route = useRoute(); // 获取路由实例
 
@@ -838,15 +871,26 @@ function formatDate(dateStr) {
   }
 }
 
-// 全屏图片显示相关
-const fullscreenImage = ref('');
+// ImageViewer相关状态
+const showImageViewerModal = ref(false);
+const imageViewerImages = ref([]);
+const imageViewerCurrentIndex = ref(0);
+const imageViewerKeyword = ref('');
 
-function showFullscreenImage(imageUrl) {
-  fullscreenImage.value = imageUrl;
+// 显示图片查看器
+function openImageViewer(images, currentIndex = 0, keyword = '') {
+  imageViewerImages.value = images.map(img => ({
+    url: typeof img === 'string' ? img : img.url,
+    keyword: keyword || '图片'
+  }));
+  imageViewerCurrentIndex.value = currentIndex;
+  imageViewerKeyword.value = keyword;
+  showImageViewerModal.value = true;
 }
 
-function closeFullscreenImage() {
-  fullscreenImage.value = '';
+function showFullscreenImage(imageUrl) {
+  // 使用ImageViewer替代原有的全屏显示
+  openImageViewer([imageUrl], 0, '图片预览');
 }
 
 // 定義每個tab對應的網頁卡片接口
