@@ -159,6 +159,11 @@ export const routes = [ // Add export here
     component: () => import('../views/PicTranslateView.vue')
   },
   {
+    path: '/text-recognition',
+    name: '识文字',
+    component: () => import('@/views/TextRecognizeView.vue')
+  },
+  {
     path: '/baidu-faxingbao',
     name: '法行宝',
     component: () => import('../views/BaiduFaXingBaoView.vue')
