@@ -70,7 +70,7 @@
 <script setup>
 import { ref } from 'vue'
 import { translateImage } from '@/api/pic-translate'
-import ImageViewer from '@/components/modals/ImageViewer.vue'
+import ImageViewer from '@/base/views/ImageViewer.vue'
 
 const file = ref(null)
 const originalImage = ref(null)

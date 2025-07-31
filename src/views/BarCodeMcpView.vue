@@ -120,7 +120,7 @@
 import { ref, nextTick, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { handleStreamingResponse } from '../utils/streamUtils';
-import ImageViewer from '../components/modals/ImageViewer.vue';
+import ImageViewer from '../base/views/ImageViewer.vue';
 import ProductWindow from '../components/modals/ProductWindow.vue';
 import SettingsModal from '../components/modals/SettingsModal.vue';
 import VideoPlayer from '../components/modals/VideoPlayer.vue';

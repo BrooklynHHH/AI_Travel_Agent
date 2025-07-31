@@ -361,7 +361,7 @@
 /* eslint-disable no-unused-vars */
 import { ref, onMounted, nextTick, computed, watch, onBeforeUnmount } from 'vue';
 /* eslint-enable no-unused-vars */
-import ImageViewer from '../components/modals/ImageViewer.vue';
+import ImageViewer from '../base/views/ImageViewer.vue';
 import ProductWindow from '../components/modals/ProductWindow.vue';
 import SettingsModal from '../components/modals/SettingsModal.vue';
 import { handleStreamingResponse } from '../utils/streamUtils';
