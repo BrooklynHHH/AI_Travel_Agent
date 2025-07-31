@@ -21,7 +21,7 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   color: #333;
   background-color: #f5f7fa;
-  overflow: hidden;
+  overflow-x: hidden;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }

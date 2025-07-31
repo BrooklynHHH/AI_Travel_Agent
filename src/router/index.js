@@ -6,6 +6,7 @@ import AdvancedView from '../views/AdvancedView.vue'
 import AdvancedResultView from '../views/AdvancedResultView.vue'
 import OcrView from '../views/OcrView.vue'
 import PodcastView from '../views/PodcastView.vue'
+import AiNewsPodcastView from '../views/AiNewsPodcastView.vue'
 import FortuneView from '../views/FortuneView.vue'
 
 import MultiAgentMixExpertView from '../views/MultiAgentMixExpertView.vue'
@@ -21,6 +22,11 @@ export const routes = [ // Add export here
     path: '/podcast',
     name: '播客',
     component: PodcastView
+  },
+  {
+    path: '/ai-news-podcast',
+    name: 'AI日报',
+    component: AiNewsPodcastView
   },
   {
     path: '/search',
