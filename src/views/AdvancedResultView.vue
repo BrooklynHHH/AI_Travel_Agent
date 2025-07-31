@@ -340,15 +340,11 @@
           class="image-card"
           v-for="item in resultListMap['百度图片搜索']"
           :key="item.url"
-          @click="onResultCardClick(item.url)"
+          @click="showFullscreenImage(item.images[0])"
           style="cursor: pointer;"
         >
           <div class="image-container">
             <img :src="item.images[0]" :alt="item.title" class="gallery-image" />
-          </div>
-          <div class="image-info">
-            <div class="image-title">{{ item.title }}</div>
-            <div class="image-source">{{ item.source }}</div>
           </div>
         </div>
       </div>
@@ -720,6 +716,19 @@
         <div class="deving-content">开发中</div>
       </div>
     </div>
+
+    <!-- 全屏图片模态框 -->
+    <div v-if="fullscreenImage" class="fullscreen-modal" @click="closeFullscreenImage">
+      <div class="fullscreen-content">
+        <img :src="fullscreenImage" class="fullscreen-image" @click.stop />
+        <button class="close-btn" @click="closeFullscreenImage">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -829,6 +838,17 @@ function formatDate(dateStr) {
   }
 }
 
+// 全屏图片显示相关
+const fullscreenImage = ref('');
+
+function showFullscreenImage(imageUrl) {
+  fullscreenImage.value = imageUrl;
+}
+
+function closeFullscreenImage() {
+  fullscreenImage.value = '';
+}
+
 // 定義每個tab對應的網頁卡片接口
 const tabApiMap = {
   '博查搜索': {
@@ -867,23 +887,57 @@ const tabApiMap = {
     body: (query) => JSON.stringify({ query }),
     adapt: (data) => {
       console.log('百度图片搜索API原始数据：', data);
-      if (data && Array.isArray(data.answer)) {
-        const adaptedData = data.answer.map((imageUrl, index) => {
-          if (imageUrl && typeof imageUrl === 'string') {
-            return {
-              title: `图片 ${index + 1}`,
-              desc: '',
-              source: '百度图片',
-              icon: '',
-              images: [imageUrl],
-              url: imageUrl,
-              type: 'image'
-            };
+      if (data && data.answer) {
+        try {
+          // 如果answer是字符串，需要先解析为数组
+          let imageUrls = data.answer;
+          if (typeof data.answer === 'string') {
+            // Python风格的字符串，将单引号替换为双引号后解析
+            const jsonString = data.answer.replace(/'/g, '"');
+            imageUrls = JSON.parse(jsonString);
           }
-          return null;
-        }).filter(Boolean);
-        console.log('百度图片搜索API适配后数据：', adaptedData);
-        return adaptedData;
+          
+          if (Array.isArray(imageUrls)) {
+            const adaptedData = imageUrls.map((imageUrl, index) => {
+              if (imageUrl && typeof imageUrl === 'string') {
+                return {
+                  title: `图片 ${index + 1}`,
+                  desc: '',
+                  source: '百度图片',
+                  icon: '',
+                  images: [imageUrl],
+                  url: imageUrl,
+                  type: 'image'
+                };
+              }
+              return null;
+            }).filter(Boolean);
+            console.log('百度图片搜索API适配后数据：', adaptedData);
+            return adaptedData;
+          }
+        } catch (e) {
+          console.error('百度图片搜索API数据解析失败：', e);
+          // 如果JSON解析失败，尝试使用正则表达式提取URL
+          try {
+            if (typeof data.answer === 'string') {
+              const urlRegex = /https?:\/\/[^\s'",\]]+/g;
+              const urls = data.answer.match(urlRegex) || [];
+              const adaptedData = urls.map((imageUrl, index) => ({
+                title: `图片 ${index + 1}`,
+                desc: '',
+                source: '百度图片',
+                icon: '',
+                images: [imageUrl],
+                url: imageUrl,
+                type: 'image'
+              }));
+              console.log('百度图片搜索API正则提取后数据：', adaptedData);
+              return adaptedData;
+            }
+          } catch (regexError) {
+            console.error('正则表达式提取URL失败：', regexError);
+          }
+        }
       }
       console.log('百度图片搜索API数据格式不正确或为空');
       return [];
@@ -1948,5 +2002,61 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 全屏图片模态框样式 */
+.fullscreen-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: pointer;
+}
+
+.fullscreen-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullscreen-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.close-btn {
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.close-btn svg {
+  stroke: white;
 }
 </style>
