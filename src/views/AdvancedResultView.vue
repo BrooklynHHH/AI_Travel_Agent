@@ -275,6 +275,84 @@
         </div>
       </div>
     </div>
+    <div v-if="activeTab === '百度图片搜索'">
+      <div class="ai-answer-card">
+        <div class="ai-answer-header">
+          <span class="ai-label">AI为你找到参考资料</span>
+          <div style="display: flex; align-items: center;">
+            <span class="source-icons">
+              <template v-for="(icon, idx) in refIcons" :key="idx">
+                <img
+                  v-if="icon"
+                  :src="icon"
+                  class="source-icon"
+                  :style="{ marginLeft: idx === 0 ? '0' : '-8px', zIndex: 10 - idx }"
+                />
+              </template>
+            </span>
+            <span style="margin-left: 2px;" class="source-count">{{ refList.length }}个来源</span>
+          </div>
+        </div>
+        <div v-if="thinkingList.length" class="ai-thinking-bar" @click="toggleThinkingExpand">
+          <div v-if="!thinkingEnd" class="marquee">
+            <span>{{ thinkingDisplay }}</span>
+          </div>
+          <div v-else class="thinking-finished">
+            已完成思考（耗时{{ thinkingDuration }}秒）
+          </div>
+        </div>
+        <div v-if="thinkingExpand && thinkingList.length" class="ai-thinking-detail">
+          <pre v-html="thinkingMarkdown"></pre>
+        </div>
+        <div class="ai-answer-content markdown-body" v-html="renderedAnswer"></div>
+        <div class="ai-answer-actions">
+          <div class="action-group">
+            <span class="action-btn" title="点赞">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 10V21a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-7"></path>
+                <path d="M14 9V5a3 3 0 0 0-6 0v5"></path>
+                <path d="M2 10h5"></path>
+              </svg>
+            </span>
+            <span class="action-btn" title="点踩">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 14V3a2 2 0 0 0-2-2H9A2 2 0 0 0 7 3v7"></path>
+                <path d="M10 15v4a3 3 0 0 0 6 0v-5"></path>
+                <path d="M22 14h-5"></path>
+              </svg>
+            </span>
+            <span class="action-btn" title="复制">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </span>
+          </div>
+          <div class="action-group action-group-right">
+            <span class="action-btn action-btn-refresh" title="刷新">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"></path><path d="M1 14l5.37 5.36A9 9 0 0 0 20.49 15"></path></svg>
+            </span>
+            <span class="action-btn" title="分享">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="image-gallery">
+        <div
+          class="image-card"
+          v-for="item in resultListMap['百度图片搜索']"
+          :key="item.url"
+          @click="onResultCardClick(item.url)"
+          style="cursor: pointer;"
+        >
+          <div class="image-container">
+            <img :src="item.images[0]" :alt="item.title" class="gallery-image" />
+          </div>
+          <div class="image-info">
+            <div class="image-title">{{ item.title }}</div>
+            <div class="image-source">{{ item.source }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div v-if="activeTab === '豆包联网问答Agent'">
       <div class="ai-answer-card">
         <!-- TODO: 豆包接口數據，請在此處替換為豆包相關接口 -->
@@ -637,7 +715,7 @@
         </div>
       </div>
     </div>
-    <div v-if="!['博查搜索','百度基础搜索','百度AI搜索','豆包联网问答Agent','豆包融合信息搜索Agent'].includes(activeTab)">
+    <div v-if="!['博查搜索','百度基础搜索','百度AI搜索','百度图片搜索','豆包联网问答Agent','豆包融合信息搜索Agent'].includes(activeTab)">
       <div class="deving-block">
         <div class="deving-content">开发中</div>
       </div>
@@ -676,6 +754,7 @@ const tabs = [
   { name: '博查搜索', icon: '🤖' },
   { name: '百度基础搜索', icon: '🌐' },
   { name: '百度AI搜索', icon: '🦊' }, // 原搜狗tab改名
+  { name: '百度图片搜索', icon: '🖼️' }, // 新增百度图片搜索tab
   { name: '豆包联网问答Agent', icon: '🟢' }, // 原360改為豆包
   { name: '豆包融合信息搜索Agent', icon: '🔍' }, // 新增第五个标签页
 ];
@@ -778,6 +857,35 @@ const tabApiMap = {
           };
         });
       }
+      return [];
+    }
+  },
+  '百度图片搜索': {
+    url: 'http://staging-llm.search.miui.srv/agent-api/qianfan-image-search',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: (query) => JSON.stringify({ query }),
+    adapt: (data) => {
+      console.log('百度图片搜索API原始数据：', data);
+      if (data && Array.isArray(data.answer)) {
+        const adaptedData = data.answer.map((imageUrl, index) => {
+          if (imageUrl && typeof imageUrl === 'string') {
+            return {
+              title: `图片 ${index + 1}`,
+              desc: '',
+              source: '百度图片',
+              icon: '',
+              images: [imageUrl],
+              url: imageUrl,
+              type: 'image'
+            };
+          }
+          return null;
+        }).filter(Boolean);
+        console.log('百度图片搜索API适配后数据：', adaptedData);
+        return adaptedData;
+      }
+      console.log('百度图片搜索API数据格式不正确或为空');
       return [];
     }
   },
@@ -986,6 +1094,7 @@ const resultListMap = ref({
   '博查搜索': [],
   '百度基础搜索': [],
   '百度AI搜索': [],
+  '百度图片搜索': [],
   '豆包联网问答Agent': [],
   '豆包融合信息搜索Agent': []
 });
@@ -1777,5 +1886,67 @@ onMounted(() => {
 .weather-source .result-source-icon {
   filter: brightness(0) invert(1);
   opacity: 0.7;
+}
+
+/* 图片画廊样式 */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 0;
+}
+
+.image-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.image-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.image-container {
+  width: 100%;
+  height: 150px;
+  overflow: hidden;
+  position: relative;
+}
+
+.gallery-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.image-card:hover .gallery-image {
+  transform: scale(1.05);
+}
+
+.image-info {
+  padding: 8px 12px;
+}
+
+.image-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-source {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
