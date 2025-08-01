@@ -421,7 +421,7 @@ const handleFeature = (feature) => {
     router.push('/fortune');
   } else if (feature === '全国物流查询') {
     // 全国物流查询功能跳转到指定页面
-    router.push('/quanguo-kuaidi-wuliu-mcp');
+    router.push('/aliyun-mcp-delivery');
   } else if (feature === '股票实时查询') {
     // 股票实时查询功能跳转到指定页面
     router.push('/aliyun-mcp-stocks');
