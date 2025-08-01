@@ -106,7 +106,7 @@
 import { ref, nextTick, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { handleStreamingResponse } from '../utils/streamUtils';
-import ImageViewer from '../components/modals/ImageViewer.vue';
+import ImageViewer from '../base/views/ImageViewer.vue';
 import ProductWindow from '../components/modals/ProductWindow.vue';
 import VideoPlayer from '../components/modals/VideoPlayer.vue';
 // 使用 markdown-it 替代 marked
@@ -591,7 +591,7 @@ const videoDescription = ref('');
 const isStreaming = ref(false);
 
 // 百度法行宝API配置
-const BAIDU_API_URL = 'http://localhost:3001/api/baidu-faxingbao';
+const BAIDU_API_URL = 'http://staging-llm.search.miui.srv/agent-api/baidu-faxingbao';
 
 // 消息类型说明
 // messageType: 1 - 法律咨询

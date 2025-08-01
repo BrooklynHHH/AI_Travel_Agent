@@ -136,6 +136,18 @@
               </div>
               <div class="item-label">图片翻译</div>
             </div>
+            <div class="category-item" @click="handleFeature('识文字')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+              <div class="item-label">识文字</div>
+            </div>
+            <div class="category-item" @click="handleFeature('视频生成-对比demo')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+              <div class="item-label">视频生成-对比demo</div>
+            </div>
           </div>
         </div>
       </div>
@@ -143,6 +155,12 @@
         <div class="category-box">
           <h3 class="category-title">创作</h3>
           <div class="category-items">
+            <div class="category-item" @click="handleFeature('千帆视频')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+              </div>
+              <div class="item-label">千帆视频</div>
+            </div>
             <div class="category-item" @click="handleFeature('AI生图')">
               <div class="item-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
@@ -155,11 +173,25 @@
               </div>
               <div class="item-label">播客</div>
             </div>
+          </div>
+          <div class="category-items" style="margin-top: 12px;">
             <div class="category-item" @click="handleFeature('视频生成')">
               <div class="item-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
               </div>
               <div class="item-label">视频生成</div>
+            </div>
+            <div class="category-item" style="visibility: hidden;">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+              </div>
+              <div class="item-label"></div>
+            </div>
+            <div class="category-item" style="visibility: hidden;">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+              </div>
+              <div class="item-label"></div>
             </div>
           </div>
         </div>
@@ -423,9 +455,24 @@ const handleFeature = (feature) => {
   } else if (feature === '图片翻译'){
     // 图片翻译功能跳转至图片翻译界面
     router.push('/pic-translate');
+  } else if (feature === 'AI生图') {
+    // AI生图功能跳转到图像生成页面
+    router.push('/image');
+  } else if (feature === '千帆视频') {
+    // 千帆视频功能跳转到千帆页面
+    router.push('/qianfan');
   } else if (feature === '法行宝') {
     // 百度法行宝功能跳转至百度法行宝界面
     router.push('/baidu-faxingbao');
+  } else if (feature === '百度文库') {
+    // 百度文库功能跳转至百度文库界面
+    router.push('/baidu-wenku');
+  } else if (feature === '识文字') {
+    // 识文字功能跳转至识文字界面
+    router.push('/text-recognition');
+  } else if (feature === '视频生成-对比demo') {
+    // 视频生成功能跳转至视频生成界面
+    router.push('/video-gen');
   } else {
     // 其他功能正常跳转到结果页
     router.push({

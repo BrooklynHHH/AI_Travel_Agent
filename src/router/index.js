@@ -6,10 +6,12 @@ import AdvancedView from '../views/AdvancedView.vue'
 import AdvancedResultView from '../views/AdvancedResultView.vue'
 import OcrView from '../views/OcrView.vue'
 import PodcastView from '../views/PodcastView.vue'
+import AiNewsPodcastView from '../views/AiNewsPodcastView.vue'
 import FortuneView from '../views/FortuneView.vue'
 
 import MultiAgentMixExpertView from '../views/MultiAgentMixExpertView.vue'
 import VideoGenerationView from '@/views/VideoGenerationView.vue'
+import ImageGenerationView from '@/views/ImageGenerationView.vue'
 
 export const routes = [ // Add export here
   {
@@ -21,6 +23,11 @@ export const routes = [ // Add export here
     path: '/podcast',
     name: '播客',
     component: PodcastView
+  },
+  {
+    path: '/ai-news-podcast',
+    name: 'AI日报',
+    component: AiNewsPodcastView
   },
   {
     path: '/search',
@@ -36,6 +43,11 @@ export const routes = [ // Add export here
     path: '/video',
     name: '视频生成', // Translated
     component: VideoGenerationView
+  },
+  {
+    path: '/image',
+    name: '图像生成',
+    component: ImageGenerationView
   },
   {
     path: '/ocr',
@@ -147,9 +159,29 @@ export const routes = [ // Add export here
     component: () => import('../views/PicTranslateView.vue')
   },
   {
+    path: '/text-recognition',
+    name: '识文字',
+    component: () => import('@/views/TextRecognizeView.vue')
+  },
+  {
+    path: '/video-gen',
+    name: '视频生成-对比demo',
+    component: () => import('@/views/VideoGenView.vue')
+  },
+  {
     path: '/baidu-faxingbao',
     name: '法行宝',
     component: () => import('../views/BaiduFaXingBaoView.vue')
+  },
+  {
+    path: '/qianfan',
+    name: '千帆',
+    component: () => import('../views/QianfanVideoGenerate.vue')
+  },
+  {
+    path: '/baidu-wenku',
+    name: '百度文库',
+    component: () => import('../views/BaiduWenKuView.vue')
   }
 ]
 

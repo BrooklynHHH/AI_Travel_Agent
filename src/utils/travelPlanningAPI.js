@@ -4,7 +4,7 @@
  */
 
 class TravelPlanningAPI {
-  constructor(baseURL = 'http://localhost:8000') {
+  constructor(baseURL = 'http://staging-llm.search.miui.srv') {
     this.baseURL = baseURL
     this.sessionId = null
   }

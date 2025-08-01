@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const BASE_URL = 'http://staging-llm.search.miui.srv/agent-pic-translate';
+const BASE_URL = 'http://staging-llm.search.miui.srv/agent-ai-tools/translate';
+//const DEV_URL = 'http://127.0.0.1:8080/agent-ai-tools/translate'
 
 export async function translateImage(provider, file, to, from = 'auto') {
     const formData = new FormData();

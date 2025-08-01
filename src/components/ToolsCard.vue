@@ -86,7 +86,7 @@
       <!-- 正常内容显示 -->
       <div v-else-if="parsedContent" class="parsed-content">
         <!-- 搜索结果展示 -->
-        <div v-if="contentType === 'search'" class="search-results-display">
+        <div v-if="contentType === 'search' || contentType === 'search_ref'" class="search-results-display">
           <div v-html="renderedContent"></div>
         </div>
 
@@ -135,7 +135,7 @@
         <span class="stat-item">
           📏 {{ getContentLength() }} 字符
         </span>
-        <span v-if="contentType === 'search'" class="stat-item">
+        <span v-if="contentType === 'search' || contentType === 'search_ref'" class="stat-item">
           🔍 {{ getSearchResultCount() }} 条结果
         </span>
         <span class="stat-item">
@@ -227,12 +227,14 @@ export default {
           detectedType = ContentFormatter.detectContentType(pureContent)
         }
         
-        contentType.value = detectedType
         console.log(`🔧 [ToolsCard] 工具类型: ${detectedType}, 内容长度: ${pureContent.length}`)
 
         // 根据工具类型采用不同的解析策略
         switch (detectedType) {
           case 'search':
+          case 'search_ref':
+          case 'search_tool':
+            contentType.value = 'search_ref'  // 统一设置为search_ref类型
             await parseSearchContent(pureContent)
             break
             
@@ -268,8 +270,44 @@ export default {
     // 解析搜索内容
     const parseSearchContent = async (content) => {
       try {
-        const searchData = await SearchContentParser.parseSearchContent(content)
-        if (searchData) {
+        let searchData = null
+        let parsedObject = null
+        
+        // 首先尝试将内容作为结构化数据处理
+        if (typeof content === 'object') {
+          parsedObject = content
+          searchData = SearchContentParser.processStructuredData(content)
+        } else if (typeof content === 'string') {
+          // 如果是字符串，先尝试解析为JSON对象
+          try {
+            parsedObject = JSON.parse(content)
+            searchData = SearchContentParser.processStructuredData(parsedObject)
+          } catch (jsonError) {
+            // 如果JSON解析失败，使用原来的字符串解析方法
+            searchData = SearchContentParser.parseSearchContent(content)
+          }
+        }
+        
+        // 🔑 关键改进：专门处理 search_ref 类型
+        if (parsedObject && parsedObject.type === 'search_ref') {
+          console.log('🔧 [ToolsCard] 检测到 search_ref 类型，使用专门的渲染方法')
+          
+          // 使用新的 renderSearchRefAsHTML 方法渲染
+          const htmlContent = SearchContentParser.renderSearchRefAsHTML(parsedObject, {
+            maxItems: 10,
+            summaryLength: 150,
+            showIndex: true,
+            cardStyle: true
+          })
+          
+          parsedContent.value = parsedObject
+          renderedContent.value = htmlContent
+          console.log(`✅ [ToolsCard] search_ref 内容渲染成功，结果数: ${parsedObject.datas?.length || 0}`)
+          return
+        }
+        
+        // 处理其他搜索类型
+        if (searchData && searchData.results) {
           parsedContent.value = searchData
           renderedContent.value = SearchContentParser.renderSearchResults(searchData, {
             showSummary: true,
@@ -441,7 +479,12 @@ export default {
       try {
         let textToCopy = ''
         
-        if (contentType.value === 'search' && parsedContent.value) {
+        // 🔑 关键改进：专门处理 search_ref 类型的复制
+        if (parsedContent.value && parsedContent.value.type === 'search_ref') {
+          // 使用 markdown 格式复制 search_ref 数据
+          textToCopy = SearchContentParser.renderSearchRefAsMarkdown(parsedContent.value, 10, 150)
+          console.log('📋 [ToolsCard] 复制 search_ref 为 markdown 格式')
+        } else if (contentType.value === 'search' && parsedContent.value) {
           textToCopy = SearchContentParser.getTextSummary(parsedContent.value)
         } else if (contentType.value === 'json') {
           textToCopy = formatJsonContent()
@@ -1099,5 +1142,228 @@ export default {
 
 .search-results-display .search-item-title:hover {
   color: #b45309;
+}
+
+/* search_ref 参考资料样式 */
+.search-ref-container {
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
+.search-ref-header {
+  background: rgba(245, 158, 11, 0.1);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+  padding: 12px 16px;
+  border-radius: 8px 8px 0 0;
+}
+
+.search-ref-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #d97706;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-ref-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 0 0 8px 8px;
+}
+
+.search-ref-item {
+  /* 核心：增加与其他卡片之间的距离 */
+  margin-bottom: 16px;
+
+  /* 增加卡片内部的"呼吸空间" */
+  padding: 16px;
+
+  /* 给卡片一个背景色，与页面背景区分开 */
+  background-color: #ffffff; /* 白色背景 */
+
+  /* 添加柔和的边框和圆角 */
+  border: 1px solid #e0e0e0; /* 淡灰色边框 */
+  border-radius: 8px; /* 8像素的圆角 */
+
+  /* 添加细微的阴影，营造"浮起"的立体感 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  /* 添加一个平滑的过渡效果 */
+  transition: box-shadow 0.3s ease;
+  
+  position: relative;
+}
+
+/* 当鼠标悬停时，让阴影变深，提供交互反馈 */
+.search-ref-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  transform: translateY(-1px);
+}
+
+.search-ref-item.search-ref-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.search-ref-item.search-ref-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.search-ref-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.search-ref-index {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d97706;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.1));
+  padding: 4px 8px;
+  border-radius: 6px;
+  min-width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.search-ref-title-link {
+  color: #d97706;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+  flex: 1;
+  display: block;
+}
+
+.search-ref-title-link:hover {
+  color: #b45309;
+  text-decoration: underline;
+  text-decoration-color: rgba(180, 83, 9, 0.5);
+  text-underline-offset: 2px;
+}
+
+.search-ref-title {
+  color: #2d3748;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.search-ref-summary {
+  display: block;
+  margin-top: 10px;
+  padding-left: 36px; /* 对齐索引号 */
+}
+
+.search-ref-summary-label {
+  font-size: 12px;
+  color: #718096;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: inline-block;
+}
+
+.search-ref-summary-text {
+  font-size: 14px;
+  color: #4a5568;
+  line-height: 1.6;
+  display: block;
+  text-align: justify;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.search-ref-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #a0aec0;
+  font-size: 14px;
+  background: rgba(160, 174, 192, 0.05);
+  border: 1px dashed rgba(160, 174, 192, 0.3);
+  border-radius: 8px;
+  margin: 16px;
+}
+
+/* 分隔线样式 */
+.search-ref-separator {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.3), transparent);
+  margin: 16px 0;
+  position: relative;
+}
+
+.search-ref-separator::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  background: rgba(245, 158, 11, 0.5);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .search-ref-list {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .search-ref-item {
+    padding: 10px 12px;
+  }
+  
+  .search-ref-summary {
+    padding-left: 24px;
+  }
+  
+  .search-ref-title-link,
+  .search-ref-title {
+    font-size: 13px;
+  }
+  
+  .search-ref-summary-text {
+    font-size: 12px;
+  }
+  
+  .search-ref-separator {
+    margin: 12px 0;
+  }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .search-ref-item {
+    background: rgba(45, 55, 72, 0.8);
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+  
+  .search-ref-title {
+    color: #e2e8f0;
+  }
+  
+  .search-ref-summary-text {
+    color: #cbd5e0;
+  }
+  
+  .search-ref-list {
+    background: rgba(26, 32, 44, 0.3);
+  }
 }
 </style>
