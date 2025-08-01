@@ -158,6 +158,11 @@ export const routes = [ // Add export here
     component: () => import('@/views/TextRecognizeView.vue')
   },
   {
+    path: '/video-gen',
+    name: '视频生成-对比demo',
+    component: () => import('@/views/VideoGenView.vue')
+  },
+  {
     path: '/baidu-faxingbao',
     name: '法行宝',
     component: () => import('../views/BaiduFaXingBaoView.vue')
