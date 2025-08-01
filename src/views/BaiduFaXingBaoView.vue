@@ -119,7 +119,8 @@ import FabricCanvas from '../components/FabricCanvas.vue';
 const md = new MarkdownIt({
   html: true,
   linkify: true,
-  typographer: true
+  typographer: true,
+  breaks: true // 启用换行符转换为<br>标签
 });
 
 const router = useRouter();
@@ -226,7 +227,7 @@ const processImageWithAPI = async (fileId) => {
     const response = await fetch('http://10.18.4.170/v1/workflows/run', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer app-KKnaWRUs5gw15CUBHGZkqWd2',
+        'Authorization': 'Bearer app-knyYuGAXUX37ss2ynsdxLqME',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestData)
@@ -594,6 +595,7 @@ const BAIDU_API_URL = 'http://localhost:3001/api/baidu-faxingbao';
 
 // 消息类型说明
 // messageType: 1 - 法律咨询
+// messageType: 2 - 案例卡片
 // messageType: 6 - 预约律师卡片
 // messageType: 9 - 法律咨询（带法规标）
 // messageType: 19 - 微服务卡片（对话召回）
@@ -645,6 +647,51 @@ const renderCardList = (cards) => {
       </div>
       <div class="cards-grid">
         ${cardHtml}
+      </div>
+    </div>
+  `;
+};
+
+// 渲染案例卡片组件
+const renderCaseCardComponent = (caseItem) => {
+  // 根据设备类型选择合适的链接
+  const linkUrl = caseItem.pcLinkUrl || caseItem.mobileLinkUrl || '#';
+  
+  return `
+    <div class="case-card" onclick="window.open('${linkUrl}', '_blank')">
+      <div class="case-header">
+        <div class="case-icon">
+          📋
+        </div>
+        <div class="case-title">${caseItem.linkName || '案例标题'}</div>
+      </div>
+      <div class="case-content">
+        <div class="case-description">${caseItem.linkDesc || '案例描述'}</div>
+        ${caseItem.linkIds ? `<div class="case-id">案例ID: ${caseItem.linkIds}</div>` : ''}
+        ${linkUrl !== '#' ? `<div class="case-url">${linkUrl}</div>` : ''}
+      </div>
+      <div class="case-footer">
+        <span class="case-action">查看案例 →</span>
+      </div>
+    </div>
+  `;
+};
+
+// 渲染案例卡片列表
+const renderCaseCards = (cases) => {
+  if (!Array.isArray(cases) || cases.length === 0) {
+    return '<div class="no-cards">暂无相关案例</div>';
+  }
+  
+  const caseHtml = cases.map(caseItem => renderCaseCardComponent(caseItem)).join('');
+  return `
+    <div class="case-cards-container">
+      <div class="cards-header">
+        <h3>📋 相关案例推荐</h3>
+        <p>为您找到以下相关案例，点击查看详情</p>
+      </div>
+      <div class="case-cards-grid">
+        ${caseHtml}
       </div>
     </div>
   `;
@@ -798,6 +845,49 @@ const renderLawExtCards = (extArr) => {
   `;
 };
 
+// 法律类问题判断接口
+const checkLegalQuestion = async (query) => {
+  try {
+    const response = await fetch('https://service.mify.mioffice.cn/api/v1/workflows/run', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer app-knyYuGAXUX37ss2ynsdxLqME',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        inputs: {
+          query: query
+        },
+        response_mode: "blocking",
+        user: "taoliang1",
+        custom_id: "legal_check"
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`法律类判断接口请求失败: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('法律类判断结果:', result);
+
+    // 检查是否有错误
+    if (result.data && result.data.error) {
+      throw new Error(`法律类判断接口错误: ${result.data.error}`);
+    }
+
+    // 返回判断结果
+    if (result.data && result.data.outputs && result.data.outputs.text) {
+      return result.data.outputs.text;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('法律类问题判断失败:', error);
+    return null;
+  }
+};
+
 // 发送消息
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value || isStreaming.value) return;
@@ -813,6 +903,25 @@ const sendMessage = async () => {
   isLoading.value = true;
 
   try {
+    // 首先判断是否为法律类问题
+    console.log('开始判断是否为法律类问题...');
+    const legalCheckResult = await checkLegalQuestion(userMessage);
+    
+    if (legalCheckResult === '0' || legalCheckResult === 0) {
+      // 不是法律类问题，直接返回提示
+      messages.value.push({
+        role: 'assistant',
+        content: '很抱歉，您的问题不属于法律类，法行宝无法帮助您。'
+      });
+      isLoading.value = false;
+      nextTick(() => {
+        scrollToBottom();
+      });
+      return;
+    }
+    
+    console.log('问题属于法律类，继续处理...');
+
     // 创建占位AI消息
     const lastIndex = messages.value.push({
       role: 'assistant',
@@ -891,11 +1000,12 @@ const sendMessage = async () => {
         switch (messageType) {
           case 1: // 法律咨询
             if (data.content) {
-              // 将文本内容包装在容器中，确保后续HTML能正确渲染
+              // 使用Markdown解析器处理文本内容
+              const markdownContent = md.render(data.content);
               const textContent = `
                 <div class="text-content-container">
-                  <div class="text-content">
-                    ${data.content}
+                  <div class="text-content markdown-content">
+                    ${markdownContent}
                   </div>
                 </div>
               `;
@@ -904,12 +1014,28 @@ const sendMessage = async () => {
             }
             break;
             
+          case 2: // 案例卡片
+            if (data.content && Array.isArray(data.content)) {
+              // 存储卡片数据
+              cardData.value = data.content;
+              
+              // 渲染案例卡片组件
+              const caseCardsHtml = renderCaseCards(data.content);
+              
+              // 将卡片HTML添加到内容中
+              streamingContent += caseCardsHtml;
+              messages.value[lastIndex].content = streamingContent;
+            }
+            break;
+            
           case 9: // 法律咨询（带法规标）
             if (data.content) {
+              // 使用Markdown解析器处理文本内容
+              const markdownContent = md.render(data.content);
               const textContent = `
                 <div class="text-content-container">
-                  <div class="text-content">
-                    ${data.content}
+                  <div class="text-content markdown-content">
+                    ${markdownContent}
                   </div>
                 </div>
               `;
@@ -977,11 +1103,12 @@ const sendMessage = async () => {
             // 处理其他类型的消息
             if (data.content) {
               if (typeof data.content === 'string') {
-                // 将文本内容包装在容器中
+                // 使用Markdown解析器处理文本内容
+                const markdownContent = md.render(data.content);
                 const textContent = `
                   <div class="text-content-container">
-                    <div class="text-content">
-                      ${data.content}
+                    <div class="text-content markdown-content">
+                      ${markdownContent}
                     </div>
                   </div>
                 `;
@@ -1020,7 +1147,7 @@ const sendMessage = async () => {
                 const parsedObjectContent = md.render(objectContent);
                 const objectContentHtml = `
                   <div class="text-content-container">
-                    <div class="text-content">
+                    <div class="text-content markdown-content">
                       ${parsedObjectContent}
                     </div>
                   </div>
@@ -1326,6 +1453,160 @@ const sendMessage = async () => {
   }
 }
 
+/* 案例卡片样式 */
+.case-cards-container {
+  margin: 20px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+}
+
+.case-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.case-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #bae6fd;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.case-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0284c7, #0369a1);
+}
+
+.case-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-color: #0284c7;
+}
+
+.case-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.case-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: white;
+  border-radius: 8px;
+}
+
+.case-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.case-content {
+  margin-bottom: 16px;
+}
+
+.case-description {
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.case-id {
+  color: #64748b;
+  font-size: 12px;
+  font-family: monospace;
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+.case-url {
+  color: #0284c7;
+  font-size: 12px;
+  font-family: monospace;
+  background: #f0f9ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.case-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.case-action {
+  color: #0284c7;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.case-action::after {
+  content: '→';
+  transition: transform 0.2s ease;
+}
+
+.case-card:hover .case-action::after {
+  transform: translateX(2px);
+}
+
+/* 案例卡片移动端响应式 */
+@media (max-width: 768px) {
+  .case-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .case-card {
+    padding: 16px;
+  }
+  
+  .case-header {
+    gap: 8px;
+  }
+  
+  .case-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+  
+  .case-title {
+    font-size: 14px;
+  }
+  
+  .case-description {
+    font-size: 13px;
+  }
+}
+
 /* 法律卡片样式 */
 .law-cards-container {
   margin: 20px 0;
@@ -1505,15 +1786,158 @@ const sendMessage = async () => {
 
 /* 文本内容容器样式 */
 .text-content-container {
-  margin: 16px 0;
+  margin: 4px 0;
 }
 
 .text-content {
   color: #2d3748;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
-  padding: 12px 0;
+  padding: 3px 0;
 }
+
+/* Markdown内容样式 */
+.markdown-content {
+  color: #2d3748;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  color: #1a202c;
+  font-weight: 600;
+  margin: 4px 0 2px 0;
+  line-height: 1.4;
+}
+
+.markdown-content h1 {
+  font-size: 26px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.markdown-content h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
+}
+
+.markdown-content h3 {
+  font-size: 22px;
+  color: #2d3748;
+}
+
+.markdown-content h4 {
+  font-size: 20px;
+  color: #4a5568;
+}
+
+.markdown-content h5 {
+  font-size: 18px;
+  color: #4a5568;
+}
+
+.markdown-content h6 {
+  font-size: 16px;
+  color: #4a5568;
+}
+
+.markdown-content p {
+  margin: 2px 0;
+  line-height: 1.6;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 2px 0;
+  padding-left: 24px;
+}
+
+.markdown-content li {
+  margin: 1px 0;
+  line-height: 1.5;
+}
+
+.markdown-content strong,
+.markdown-content b {
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.markdown-content em,
+.markdown-content i {
+  font-style: italic;
+  color: #4a5568;
+}
+
+.markdown-content code {
+  background: #f7fafc;
+  color: #e53e3e;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+}
+
+.markdown-content pre {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px;
+  overflow-x: auto;
+  margin: 3px 0;
+}
+
+.markdown-content pre code {
+  background: none;
+  color: #2d3748;
+  padding: 0;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #3182ce;
+  background: #f7fafc;
+  margin: 3px 0;
+  padding: 4px 8px;
+  color: #4a5568;
+  font-style: italic;
+}
+
+.markdown-content hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 4px 0;
+}
+
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 3px 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-content th {
+  background: #f7fafc;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.markdown-content tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+
 
 /* 澄清追问卡片样式 */
 .clarification-container {
