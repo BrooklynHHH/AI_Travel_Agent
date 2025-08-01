@@ -227,7 +227,7 @@ const processImageWithAPI = async (fileId) => {
     const response = await fetch('http://10.18.4.170/v1/workflows/run', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer app-knyYuGAXUX37ss2ynsdxLqME',
+        'Authorization': 'Bearer app-KKnaWRUs5gw15CUBHGZkqWd2',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestData)
@@ -799,6 +799,9 @@ const renderClarificationCard = (content) => {
     `).join('');
   }
   
+  // 确保消息内容不为空
+  const message = content.message || '为了更好地回答您的问题，请选择以下选项：';
+  
   return `
     <div class="clarification-container">
       <div class="clarification-header">
@@ -806,7 +809,7 @@ const renderClarificationCard = (content) => {
         <div class="clarification-title">需要进一步澄清</div>
       </div>
       <div class="clarification-content">
-        <div class="clarification-message">${content.message || '为了更好地回答您的问题，请选择以下选项：'}</div>
+        <div class="clarification-message">${message}</div>
         ${optionsHtml ? `<div class="clarification-options">${optionsHtml}</div>` : ''}
       </div>
     </div>
@@ -846,7 +849,7 @@ const renderLawExtCards = (extArr) => {
 };
 
 // 法律类问题判断接口
-const checkLegalQuestion = async (query) => {
+const checkLegalQuestion = async (query, historyQuery = '') => {
   try {
     const response = await fetch('https://service.mify.mioffice.cn/api/v1/workflows/run', {
       method: 'POST',
@@ -856,7 +859,8 @@ const checkLegalQuestion = async (query) => {
       },
       body: JSON.stringify({
         inputs: {
-          query: query
+          query: query,
+          historyquery: historyQuery
         },
         response_mode: "blocking",
         user: "taoliang1",
@@ -903,9 +907,25 @@ const sendMessage = async () => {
   isLoading.value = true;
 
   try {
+    // 准备历史对话记录用于法律问题判断
+    const historyForLegalCheck = [];
+    // 获取最近几轮对话作为历史记录（用于法律问题判断）
+    const recentMessagesForCheck = messages.value.slice(-6); // 最近3轮对话（6条消息）
+    for (let i = 0; i < recentMessagesForCheck.length; i += 2) {
+      if (recentMessagesForCheck[i] && recentMessagesForCheck[i + 1]) {
+        historyForLegalCheck.push(recentMessagesForCheck[i].content);
+        historyForLegalCheck.push(recentMessagesForCheck[i + 1].content);
+      }
+    }
+    
+    // 构建历史对话字符串
+    const historyQuery = historyForLegalCheck.join('\n');
+    
     // 首先判断是否为法律类问题
     console.log('开始判断是否为法律类问题...');
-    const legalCheckResult = await checkLegalQuestion(userMessage);
+    console.log('当前问题:', userMessage);
+    console.log('历史对话:', historyQuery);
+    const legalCheckResult = await checkLegalQuestion(userMessage, historyQuery);
     
     if (legalCheckResult === '0' || legalCheckResult === 0) {
       // 不是法律类问题，直接返回提示
@@ -970,7 +990,16 @@ const sendMessage = async () => {
     let streamingContent = '';
     
     // 用于存储澄清追问数据，等待流式输出完成后显示
-    let clarificationData = null;
+    let clarificationData = {
+      message: '',
+      options: []
+    };
+    
+    // 重置澄清追问数据，确保每次对话都是新的
+    clarificationData = {
+      message: '',
+      options: []
+    };
 
     // 处理流式输出
     await handleStreamingResponse(response, {
@@ -1093,8 +1122,13 @@ const sendMessage = async () => {
             
           case 27: // 澄清追问
             if (data.content) {
-              // 存储澄清追问数据，等待流式输出完成后显示
-              clarificationData = data.content;
+              // 合并澄清追问数据
+              if (data.content.message) {
+                clarificationData.message += data.content.message;
+              }
+              if (data.content.options && Array.isArray(data.content.options)) {
+                clarificationData.options = data.content.options;
+              }
               // 暂时不渲染，等待流式输出完成
             }
             break;
@@ -1168,8 +1202,8 @@ const sendMessage = async () => {
         console.log('百度法行宝流式响应完成');
         
         // 如果有澄清追问数据，在流式输出完成后渲染
-        if (clarificationData) {
-          console.log('渲染澄清追问卡片');
+        if (clarificationData && (clarificationData.message || clarificationData.options.length > 0)) {
+          console.log('渲染澄清追问卡片:', clarificationData);
           const clarificationHtml = renderClarificationCard(clarificationData);
           streamingContent += clarificationHtml;
           messages.value[lastIndex].content = streamingContent;
@@ -1816,34 +1850,34 @@ const sendMessage = async () => {
 }
 
 .markdown-content h1 {
-  font-size: 26px;
+  font-size: 24px;
   border-bottom: 2px solid #e2e8f0;
   padding-bottom: 8px;
 }
 
 .markdown-content h2 {
-  font-size: 24px;
+  font-size: 22px;
   border-bottom: 1px solid #e2e8f0;
   padding-bottom: 6px;
 }
 
 .markdown-content h3 {
-  font-size: 22px;
+  font-size: 20px;
   color: #2d3748;
 }
 
 .markdown-content h4 {
-  font-size: 20px;
-  color: #4a5568;
-}
-
-.markdown-content h5 {
   font-size: 18px;
   color: #4a5568;
 }
 
-.markdown-content h6 {
+.markdown-content h5 {
   font-size: 16px;
+  color: #4a5568;
+}
+
+.markdown-content h6 {
+  font-size: 14px;
   color: #4a5568;
 }
 
