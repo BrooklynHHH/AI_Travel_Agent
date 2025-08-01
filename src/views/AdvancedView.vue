@@ -142,7 +142,11 @@
               </div>
               <div class="item-label">识文字</div>
             </div>
-            <div class="category-item">
+            <div class="category-item" @click="handleFeature('视频生成-对比demo')">
+              <div class="item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+              <div class="item-label">视频生成-对比demo</div>
             </div>
           </div>
         </div>
@@ -466,6 +470,9 @@ const handleFeature = (feature) => {
   } else if (feature === '识文字') {
     // 识文字功能跳转至识文字界面
     router.push('/text-recognition');
+  } else if (feature === '视频生成-对比demo') {
+    // 视频生成功能跳转至视频生成界面
+    router.push('/video-gen');
   } else {
     // 其他功能正常跳转到结果页
     router.push({
