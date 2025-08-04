@@ -351,16 +351,78 @@ const scrollToBottom = () => {
 };
 
 // 处理澄清追问选项点击
-const handleClarificationOption = (option) => {
+const handleClarificationOption = (option, event) => {
   console.log('用户选择了澄清选项:', option);
   
-  // 将选择的选项作为用户消息发送
-  userInput.value = option;
+  // 获取当前选项元素
+  const optionElement = event.target.closest('.clarification-option');
+  if (!optionElement) return;
+  
+  // 切换选中状态
+  optionElement.classList.toggle('selected');
+  
+  // 检查是否为多选模式
+  const isMultiple = optionElement.querySelector('.checkbox-multiple');
+  if (!isMultiple) {
+    // 单选模式：取消其他选项的选中状态
+    const allOptions = document.querySelectorAll('.clarification-option');
+    allOptions.forEach(opt => {
+      if (opt !== optionElement) {
+        opt.classList.remove('selected');
+      }
+    });
+  }
+  
+  // 更新确认按钮状态
+  updateConfirmButtonState();
+};
+
+// 更新确认按钮状态
+const updateConfirmButtonState = () => {
+  const selectedElements = document.querySelectorAll('.clarification-option.selected');
+  const confirmButton = document.querySelector('.confirm-button');
+  
+  if (confirmButton) {
+    if (selectedElements.length === 0) {
+      confirmButton.disabled = true;
+      confirmButton.style.opacity = '0.5';
+      confirmButton.style.cursor = 'not-allowed';
+    } else {
+      confirmButton.disabled = false;
+      confirmButton.style.opacity = '1';
+      confirmButton.style.cursor = 'pointer';
+    }
+  }
+};
+
+// 处理澄清追问确认按钮点击
+const handleClarificationConfirm = () => {
+  console.log('用户点击了确认按钮');
+  
+  // 收集所有选中的选项
+  const selectedOptions = [];
+  const selectedElements = document.querySelectorAll('.clarification-option.selected');
+  
+  selectedElements.forEach(element => {
+    const optionText = element.querySelector('.option-text').textContent;
+    selectedOptions.push(optionText);
+  });
+  
+  if (selectedOptions.length === 0) {
+    alert('请至少选择一个选项');
+    return;
+  }
+  
+  // 将选中的选项作为用户消息发送
+  const selectedText = selectedOptions.join('、');
+  userInput.value = selectedText;
   sendMessage();
 };
 
 // 将处理函数暴露到全局，以便HTML中的onclick可以调用
 window.handleClarificationOption = handleClarificationOption;
+window.handleClarificationConfirm = handleClarificationConfirm;
+window.updateConfirmButtonState = updateConfirmButtonState;
 
 
 const onCropConfirm = async (box) => {
@@ -613,20 +675,37 @@ const renderCardComponent = (card) => {
   // 根据设备类型选择合适的链接
   const linkUrl = card.pcLinkUrl || card.mobileLinkUrl || card.linkUrl || '#';
   
+  // 根据服务类型确定按钮文本
+  const getButtonText = (card) => {
+    const name = card.linkName || '';
+    if (name.includes('律师费') || name.includes('费用') || name.includes('计算')) {
+      return '点击计算';
+    } else if (name.includes('咨询') || name.includes('律师')) {
+      return '点击咨询';
+    } else if (name.includes('查询') || name.includes('搜索')) {
+      return '点击查询';
+    } else {
+      return '点击查看';
+    }
+  };
+  
+  const buttonText = getButtonText(card);
+  
   return `
-    <div class="service-card" onclick="window.open('${linkUrl}', '_blank')">
-      <div class="card-header">
-        <div class="card-icon">
-          ${card.linkLogo ? `<img src="${card.linkLogo}" alt="服务图标" style="width: 24px; height: 24px; border-radius: 4px;">` : '🔗'}
+    <div class="service-card">
+      <div class="service-card-header">
+        <div class="service-icon">
+          ${card.linkLogo ? `<img src="${card.linkLogo}" alt="服务图标">` : '🔗'}
         </div>
-        <div class="card-title">${card.linkName || '相关服务'}</div>
+        <div class="service-title">${card.linkName || '相关服务'}</div>
       </div>
-      <div class="card-content">
-        <div class="card-description">${card.linkDesc || '暂无描述'}</div>
-        ${linkUrl !== '#' ? `<div class="card-url">${linkUrl}</div>` : ''}
+      <div class="service-description">
+        ${card.linkDesc || '暂无描述'}
       </div>
-      <div class="card-footer">
-        <span class="card-action">点击查看 →</span>
+      <div class="service-action">
+        <button class="service-button" onclick="window.open('${linkUrl}', '_blank')">
+          ${buttonText}
+        </button>
       </div>
     </div>
   `;
@@ -640,14 +719,8 @@ const renderCardList = (cards) => {
   
   const cardHtml = cards.map(card => renderCardComponent(card)).join('');
   return `
-    <div class="service-cards-container">
-      <div class="cards-header">
-        <h3>🔗 相关服务推荐</h3>
-        <p>为您推荐以下相关服务，点击查看详情</p>
-      </div>
-      <div class="cards-grid">
-        ${cardHtml}
-      </div>
+    <div class="service-cards-grid">
+      ${cardHtml}
     </div>
   `;
 };
@@ -658,20 +731,20 @@ const renderCaseCardComponent = (caseItem) => {
   const linkUrl = caseItem.pcLinkUrl || caseItem.mobileLinkUrl || '#';
   
   return `
-    <div class="case-card" onclick="window.open('${linkUrl}', '_blank')">
-      <div class="case-header">
+    <div class="case-card">
+      <div class="case-card-header">
         <div class="case-icon">
           📋
         </div>
         <div class="case-title">${caseItem.linkName || '案例标题'}</div>
       </div>
-      <div class="case-content">
-        <div class="case-description">${caseItem.linkDesc || '案例描述'}</div>
-        ${caseItem.linkIds ? `<div class="case-id">案例ID: ${caseItem.linkIds}</div>` : ''}
-        ${linkUrl !== '#' ? `<div class="case-url">${linkUrl}</div>` : ''}
+      <div class="case-description">
+        ${caseItem.linkDesc || '案例描述'}
       </div>
-      <div class="case-footer">
-        <span class="case-action">查看案例 →</span>
+      <div class="case-action">
+        <button class="case-button" onclick="window.open('${linkUrl}', '_blank')">
+          查看案例
+        </button>
       </div>
     </div>
   `;
@@ -685,14 +758,8 @@ const renderCaseCards = (cases) => {
   
   const caseHtml = cases.map(caseItem => renderCaseCardComponent(caseItem)).join('');
   return `
-    <div class="case-cards-container">
-      <div class="cards-header">
-        <h3>📋 相关案例推荐</h3>
-        <p>为您找到以下相关案例，点击查看详情</p>
-      </div>
-      <div class="case-cards-grid">
-        ${caseHtml}
-      </div>
+    <div class="case-cards-grid">
+      ${caseHtml}
     </div>
   `;
 };
@@ -729,6 +796,11 @@ const renderLawTermCard = (item) => {
             <span class="meta-value">${item.effective_date || '未知'}</span>
           </div>
         </div>
+      </div>
+      <div class="law-term-action">
+        <button class="law-term-button">
+          查看详情
+        </button>
       </div>
     </div>
   `;
@@ -773,14 +845,8 @@ const renderLawCards = (laws) => {
   });
   
   return `
-    <div class="law-cards-container">
-      <div class="cards-header">
-        <h3>⚖️ 相关法律条款</h3>
-        <p>为您找到以下相关法律条款和规定</p>
-      </div>
-      <div class="law-cards-content">
-        ${allCardsHtml}
-      </div>
+    <div class="law-cards-content">
+      ${allCardsHtml}
     </div>
   `;
 };
@@ -788,13 +854,15 @@ const renderLawCards = (laws) => {
 // 渲染澄清追问卡片
 const renderClarificationCard = (content) => {
   let optionsHtml = '';
+  const isMultiple = content.isMultiple !== false; // 默认为多选
   
   if (content.options && Array.isArray(content.options)) {
-    optionsHtml = content.options.map((option, index) => `
-      <div class="clarification-option" onclick="handleClarificationOption('${option}')">
-        <div class="option-number">${index + 1}</div>
+    optionsHtml = content.options.map((option) => `
+      <div class="clarification-option" onclick="handleClarificationOption('${option}', event)">
+        <div class="option-checkbox ${isMultiple ? 'checkbox-multiple' : 'checkbox-single'}">
+          <div class="checkbox-inner"></div>
+        </div>
         <div class="option-text">${option}</div>
-        <div class="option-arrow">→</div>
       </div>
     `).join('');
   }
@@ -802,15 +870,22 @@ const renderClarificationCard = (content) => {
   // 确保消息内容不为空
   const message = content.message || '为了更好地回答您的问题，请选择以下选项：';
   
+  // 根据是否多选显示不同的文本
+  const selectText = isMultiple ? '多选' : '单选';
+  
   return `
-    <div class="clarification-container">
-      <div class="clarification-header">
-        <div class="clarification-icon">❓</div>
-        <div class="clarification-title">需要进一步澄清</div>
+    <div class="clarification-question">
+      <span class="question-text">${message}</span>
+      <span class="question-type">
+        <span class="type-text">${selectText}</span>
+      </span>
+    </div>
+    <div class="clarification-card">
+      <div class="clarification-options">
+        ${optionsHtml}
       </div>
-      <div class="clarification-content">
-        <div class="clarification-message">${message}</div>
-        ${optionsHtml ? `<div class="clarification-options">${optionsHtml}</div>` : ''}
+      <div class="clarification-confirm">
+        <button class="confirm-button" onclick="handleClarificationConfirm()" disabled>确定</button>
       </div>
     </div>
   `;
@@ -820,30 +895,31 @@ const renderClarificationCard = (content) => {
 const renderLawExtCards = (extArr) => {
   if (!Array.isArray(extArr) || extArr.length === 0) return '';
   return `
-    <div class="law-cards-container">
-      <div class="cards-header">
-        <h3>📖 相关法律条款</h3>
-      </div>
-      <div class="law-cards-content">
-        ${extArr.map(item => `
-          <div class="law-term-card">
-            <div class="law-term-header">
-              <div class="law-term-icon">⚖️</div>
-              <div class="law-term-title">${item.title || ''}</div>
-            </div>
-            <div class="law-term-content">
-              <div class="law-term-text">${item.termContent || item.term_content || ''}</div>
-              <div class="law-term-meta">
-                <div class="meta-item"><span class="meta-label">时效性:</span><span class="meta-value">${item.timeliness || ''}</span></div>
-                <div class="meta-item"><span class="meta-label">索引:</span><span class="meta-value">${item.termIndex || item.term_index || ''}</span></div>
-                <div class="meta-item"><span class="meta-label">发布日期:</span><span class="meta-value">${item.publishDate || item.publish_date || ''}</span></div>
-                <div class="meta-item"><span class="meta-label">生效日期:</span><span class="meta-value">${item.effectiveDate || item.effective_date || ''}</span></div>
-                ${(item.mobileLinkUrl || item.pcLinkUrl) ? `<div class="meta-item"><a href="${item.pcLinkUrl || item.mobileLinkUrl}" target="_blank" class="card-url">查看原文</a></div>` : ''}
-              </div>
+    <div class="law-ext-cards-grid">
+      ${extArr.map(item => `
+        <div class="law-term-card">
+          <div class="law-term-header">
+            <div class="law-term-icon">⚖️</div>
+            <div class="law-term-title">${item.title || ''}</div>
+          </div>
+          <div class="law-term-content">
+            <div class="law-term-text">${item.termContent || item.term_content || ''}</div>
+            <div class="law-term-meta">
+              <div class="meta-item"><span class="meta-label">时效性:</span><span class="meta-value">${item.timeliness || ''}</span></div>
+              <div class="meta-item"><span class="meta-label">索引:</span><span class="meta-value">${item.termIndex || item.term_index || ''}</span></div>
+              <div class="meta-item"><span class="meta-label">发布日期:</span><span class="meta-value">${item.publishDate || item.publish_date || ''}</span></div>
+              <div class="meta-item"><span class="meta-label">生效日期:</span><span class="meta-value">${item.effectiveDate || item.effective_date || ''}</span></div>
             </div>
           </div>
-        `).join('')}
-      </div>
+          ${(item.mobileLinkUrl || item.pcLinkUrl) ? `
+            <div class="law-term-action">
+              <button class="law-term-button" onclick="window.open('${item.pcLinkUrl || item.mobileLinkUrl}', '_blank')">
+                查看原文
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('')}
     </div>
   `;
 };
@@ -1207,6 +1283,11 @@ const sendMessage = async () => {
           const clarificationHtml = renderClarificationCard(clarificationData);
           streamingContent += clarificationHtml;
           messages.value[lastIndex].content = streamingContent;
+          
+          // 初始化确认按钮状态
+          nextTick(() => {
+            updateConfirmButtonState();
+          });
         }
         
         // 标记流式输出完成
@@ -1314,36 +1395,11 @@ const sendMessage = async () => {
 }
 
 /* 服务卡片样式 */
-.service-cards-container {
-  margin: 20px 0;
-  padding: 20px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-}
-
-.cards-header {
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-.cards-header h3 {
-  color: #1e293b;
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-}
-
-.cards-header p {
-  color: #64748b;
-  font-size: 14px;
-  margin: 0;
-}
-
-.cards-grid {
+.service-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
+  margin: 20px 0;
 }
 
 .service-card {
@@ -1352,20 +1408,8 @@ const sendMessage = async () => {
   padding: 20px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border: 1px solid #e2e8f0;
-  cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
-}
-
-.service-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
 }
 
 .service-card:hover {
@@ -1374,14 +1418,14 @@ const sendMessage = async () => {
   border-color: #3b82f6;
 }
 
-.card-header {
+.service-card-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
-.card-icon {
+.service-icon {
   font-size: 24px;
   width: 40px;
   height: 40px;
@@ -1394,61 +1438,52 @@ const sendMessage = async () => {
   overflow: hidden;
 }
 
-.card-icon img {
+.service-icon img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.card-title {
+.service-title {
   font-size: 16px;
   font-weight: 600;
   color: #1e293b;
   flex: 1;
 }
 
-.card-content {
-  margin-bottom: 16px;
-}
-
-.card-description {
+.service-description {
   color: #475569;
   font-size: 14px;
   line-height: 1.5;
-  margin-bottom: 8px;
+  margin-bottom: 20px;
 }
 
-.card-url {
-  color: #3b82f6;
-  font-size: 12px;
-  font-family: monospace;
-  background: #f1f5f9;
-  padding: 4px 8px;
-  border-radius: 4px;
-  word-break: break-all;
-}
-
-.card-footer {
+.service-action {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
 }
 
-.card-action {
-  color: #3b82f6;
-  font-size: 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.service-button {
+  background: #dbeafe;
+  color: #1e40af;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
 }
 
-.card-action::after {
-  content: '→';
-  transition: transform 0.2s ease;
+.service-button:hover {
+  background: #bfdbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
 }
 
-.service-card:hover .card-action::after {
-  transform: translateX(2px);
+.service-button:active {
+  transform: translateY(0);
 }
 
 .no-cards {
@@ -1460,7 +1495,7 @@ const sendMessage = async () => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .cards-grid {
+  .service-cards-grid {
     grid-template-columns: 1fr;
   }
   
@@ -1468,38 +1503,36 @@ const sendMessage = async () => {
     padding: 16px;
   }
   
-  .card-header {
+  .service-card-header {
     gap: 8px;
   }
   
-  .card-icon {
+  .service-icon {
     width: 32px;
     height: 32px;
     font-size: 18px;
   }
   
-  .card-title {
+  .service-title {
     font-size: 14px;
   }
   
-  .card-description {
+  .service-description {
     font-size: 13px;
+  }
+  
+  .service-button {
+    padding: 10px 16px;
+    font-size: 14px;
   }
 }
 
 /* 案例卡片样式 */
-.case-cards-container {
-  margin: 20px 0;
-  padding: 20px;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border-radius: 12px;
-  border: 1px solid #bae6fd;
-}
-
 .case-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 16px;
+  margin: 20px 0;
 }
 
 .case-card {
@@ -1507,21 +1540,9 @@ const sendMessage = async () => {
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid #bae6fd;
-  cursor: pointer;
+  border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
-}
-
-.case-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #0284c7, #0369a1);
 }
 
 .case-card:hover {
@@ -1530,11 +1551,11 @@ const sendMessage = async () => {
   border-color: #0284c7;
 }
 
-.case-header {
+.case-card-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .case-icon {
@@ -1557,59 +1578,41 @@ const sendMessage = async () => {
   line-height: 1.4;
 }
 
-.case-content {
-  margin-bottom: 16px;
-}
-
 .case-description {
   color: #475569;
   font-size: 14px;
   line-height: 1.5;
-  margin-bottom: 8px;
+  margin-bottom: 20px;
 }
 
-.case-id {
-  color: #64748b;
-  font-size: 12px;
-  font-family: monospace;
-  background: #f1f5f9;
-  padding: 4px 8px;
-  border-radius: 4px;
-  margin-bottom: 8px;
-  word-break: break-all;
-}
 
-.case-url {
-  color: #0284c7;
-  font-size: 12px;
-  font-family: monospace;
-  background: #f0f9ff;
-  padding: 4px 8px;
-  border-radius: 4px;
-  word-break: break-all;
-}
-
-.case-footer {
-  display: flex;
-  justify-content: flex-end;
-}
 
 .case-action {
-  color: #0284c7;
-  font-size: 14px;
-  font-weight: 500;
   display: flex;
-  align-items: center;
-  gap: 4px;
+  justify-content: center;
 }
 
-.case-action::after {
-  content: '→';
-  transition: transform 0.2s ease;
+.case-button {
+  background: #dbeafe;
+  color: #1e40af;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
 }
 
-.case-card:hover .case-action::after {
-  transform: translateX(2px);
+.case-button:hover {
+  background: #bfdbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+}
+
+.case-button:active {
+  transform: translateY(0);
 }
 
 /* 案例卡片移动端响应式 */
@@ -1622,7 +1625,7 @@ const sendMessage = async () => {
     padding: 16px;
   }
   
-  .case-header {
+  .case-card-header {
     gap: 8px;
   }
   
@@ -1639,28 +1642,65 @@ const sendMessage = async () => {
   .case-description {
     font-size: 13px;
   }
+  
+  .case-button {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  .law-term-card {
+    padding: 16px;
+  }
+  
+  .law-term-header {
+    gap: 8px;
+  }
+  
+  .law-term-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+  
+  .law-term-title {
+    font-size: 14px;
+  }
+  
+  .law-term-text {
+    font-size: 13px;
+  }
+  
+  .law-term-button {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  .law-ext-cards-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 法律卡片样式 */
-.law-cards-container {
-  margin: 20px 0;
-  padding: 20px;
-  background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
-  border-radius: 12px;
-  border: 1px solid #e9d5ff;
-}
-
 .law-cards-content {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  margin: 20px 0;
+}
+
+.law-ext-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
 }
 
 .law-section {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
 }
 
 .law-section-header {
@@ -1705,40 +1745,41 @@ const sendMessage = async () => {
 }
 
 .law-term-card {
-  background: #faf5ff;
-  border: 1px solid #e9d5ff;
-  border-radius: 8px;
-  padding: 16px;
-  transition: all 0.2s ease;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .law-term-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(124, 58, 237, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   border-color: #7c3aed;
 }
 
 .law-term-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .law-term-icon {
-  font-size: 18px;
-  width: 32px;
-  height: 32px;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #7c3aed;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
   color: white;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .law-term-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: #1e293b;
   flex: 1;
@@ -1748,13 +1789,14 @@ const sendMessage = async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-bottom: 20px;
 }
 
 .law-term-text {
   color: #374151;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
-  background: white;
+  background: #f8fafc;
   padding: 12px;
   border-radius: 6px;
   border-left: 3px solid #7c3aed;
@@ -1782,6 +1824,34 @@ const sendMessage = async () => {
 .meta-value {
   color: #374151;
   font-weight: 600;
+}
+
+.law-term-action {
+  display: flex;
+  justify-content: center;
+}
+
+.law-term-button {
+  background: #dbeafe;
+  color: #1e40af;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.law-term-button:hover {
+  background: #bfdbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+}
+
+.law-term-button:active {
+  transform: translateY(0);
 }
 
 /* 移动端响应式 */
@@ -1974,130 +2044,191 @@ const sendMessage = async () => {
 
 
 /* 澄清追问卡片样式 */
-.clarification-container {
-  margin: 20px 0;
-  padding: 20px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-radius: 12px;
-  border: 1px solid #f59e0b;
-}
-
-.clarification-header {
+.clarification-question {
+  margin: 20px 0 12px 0;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-.clarification-icon {
-  font-size: 24px;
-  width: 40px;
-  height: 40px;
+.question-text {
+  color: #2d3748;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.question-type {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: #f59e0b;
-  color: white;
-  border-radius: 8px;
-}
-
-.clarification-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #92400e;
-}
-
-.clarification-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.clarification-message {
-  color: #92400e;
-  font-size: 14px;
-  line-height: 1.5;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 12px;
+  background: white;
+  color: #1e40af;
+  border: 2px solid #1e40af;
+  padding: 4px 8px;
   border-radius: 6px;
-  border-left: 3px solid #f59e0b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.type-text {
+  font-size: 12px;
+}
+
+.clarification-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  position: relative;
+  margin-bottom: 20px;
 }
 
 .clarification-options {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .clarification-option {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: white;
-  border: 1px solid #fbbf24;
-  border-radius: 8px;
   padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  background: #f8fafc;
 }
 
 .clarification-option:hover {
-  background: #fef3c7;
-  border-color: #f59e0b;
-  transform: translateX(4px);
+  background: #f1f5f9;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
-.option-number {
-  width: 24px;
-  height: 24px;
-  background: #f59e0b;
-  color: white;
-  border-radius: 50%;
+.option-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
   flex-shrink: 0;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.checkbox-single {
+  border-radius: 50%;
+}
+
+.checkbox-multiple {
+  border-radius: 4px;
+}
+
+.clarification-option:hover .option-checkbox {
+  border-color: #3b82f6;
+}
+
+.clarification-option.selected .option-checkbox {
+  border-color: #3b82f6;
+  background: #3b82f6;
+}
+
+.checkbox-inner {
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.checkbox-multiple .checkbox-inner {
+  border-radius: 1px;
+}
+
+.clarification-option.selected .checkbox-inner {
+  opacity: 1;
 }
 
 .option-text {
   flex: 1;
-  color: #374151;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.option-arrow {
-  color: #f59e0b;
+  color: #1e293b;
   font-size: 16px;
-  font-weight: bold;
-  transition: transform 0.2s ease;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
-.clarification-option:hover .option-arrow {
-  transform: translateX(4px);
+.clarification-confirm {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.confirm-button {
+  background: #dbeafe;
+  color: #1e40af;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: none;
+}
+
+.confirm-button:hover {
+  background: #bfdbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+}
+
+.confirm-button:active {
+  transform: translateY(0);
+}
+
+.confirm-button:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.confirm-button:disabled:hover {
+  background: #e2e8f0;
+  transform: none;
+  box-shadow: none;
 }
 
 /* 移动端响应式 */
 @media (max-width: 768px) {
-  .clarification-header {
+  .clarification-question {
     gap: 8px;
   }
   
-  .clarification-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 18px;
-  }
-  
-  .clarification-title {
+  .question-text {
     font-size: 14px;
   }
   
-  .clarification-message {
-    font-size: 13px;
-    padding: 10px;
+  .question-type {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+  
+  .type-text {
+    font-size: 11px;
+  }
+  
+  .clarification-card {
+    padding: 16px;
   }
   
   .clarification-option {
@@ -2105,7 +2236,12 @@ const sendMessage = async () => {
   }
   
   .option-text {
-    font-size: 13px;
+    font-size: 14px;
+  }
+  
+  .confirm-button {
+    padding: 10px 16px;
+    font-size: 14px;
   }
 }
 </style>
