@@ -1,6 +1,0 @@
-appid: "3629151115"
-token: "uGFwSN8p4R7u6MJiuDcj3Pi3zS7hM8Oy"
-cluster: "volcano_tts"
-voice_types:
-  female: "BV002_streaming "
-host: "openspeech.bytedance.com" 
