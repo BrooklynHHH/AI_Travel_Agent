@@ -4,6 +4,12 @@
 
 ## 🎬 操作演示
 
+### 📺 B站演示视频
+[![AI Travel Agent 操作演示](https://i0.hdslb.com/bfs/archive/1135874a67dcb433e83bd1d42efb5712.jpg)](https://www.bilibili.com/video/BV1xftJzQEGp/?share_source=copy_web&vd_source=1135874a67dcb433e83bd1d42efb5712)
+
+**点击上方图片观看完整演示视频** → [B站链接](https://www.bilibili.com/video/BV1xftJzQEGp/?share_source=copy_web&vd_source=1135874a67dcb433e83bd1d42efb5712)
+
+### 🎥 本地演示视频
 ![AI Travel Agent 操作演示](./ai_travel.mp4)
 
 ## 📋 产品方案
