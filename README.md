@@ -2,6 +2,10 @@
 
 一个基于AI的智能旅游代理系统，专门为用户提供个性化的旅游规划服务。
 
+## 操作演示
+
+https://github.com/BrooklynHHH/AI_Travel_Agent/assets/ai_travel.mp4
+
 ## 功能特性
 
 - 🗺️ **智能旅游规划**：根据用户需求生成个性化旅游行程
