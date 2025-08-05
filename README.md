@@ -4,7 +4,7 @@
 
 ## 操作演示
 
-https://github.com/BrooklynHHH/AI_Travel_Agent/assets/ai_travel.mp4
+![AI Travel Agent 操作演示](./ai_travel.mp4)
 
 ## 功能特性
 
